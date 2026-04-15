@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+langgraph
+langchain-core
+langchain-groq
+langchain-openai
+tavily-python
+arxiv
+sse-starlette
+python-dotenv
