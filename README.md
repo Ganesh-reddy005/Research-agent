@@ -1,92 +1,101 @@
-# Multi-Agent Research Paper Assistant
+# Research Agent v2.0 - Multi-Agent Discovery System
 
-A production-ready Multi-Agent Research system built with **LangGraph**, **FastAPI**, and **Next.js**. It generates structured, IEEE-style research reports by leveraging real-time data from the web and academic sources.
+A professional-grade AI Research Production System built with **LangGraph**, **FastAPI**, and **Next.js**. Research Agent v2.0 is designed for high-fidelity academic synthesis, deep-source retrieval, and real-time "Live Lab" analysis.
 
-## 🚀 Features
+![Research Agent v2.0 Banner](https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070&auto=format&fit=crop)
 
-- **Multi-Agent Workflow**: Sequential pipeline using LangGraph (Planner → Retriever → Writer → Critic).
-- **Dual Retrieval**: Combines real-time web search (Tavily) with academic paper fetching (arXiv).
-- **Professional Reports**: Generates structured IEEE-style reports with inline citations.
-- **Real-time Updates**: Live agent-level progress streaming via Server-Sent Events (SSE).
-- **Resilient LLM Integration**: Primary support for OpenRouter with automatic fallback to Groq.
-- **Exportable Results**: Download reports as PDFs directly from the browser.
+##  Version 2.0 Highlights
 
-## 🛠️ Tech Stack
+- **Perplexity-Style "Live Lab"**: A real-time dynamic workspace that streams "thinking" tokens and drafted sections as they are generated.
+- **Light vs. Deep Research**: 
+    - **Light Mode**: Quick scans of 10-15 sources for rapid insight.
+    - **Deep Research**: Exhaustive investigation across 50+ academic and web sources.
+- **High-Velocity Parallel Retrieval**: Flattened search architecture that queries Tavily, OpenAlex, and arXiv simultaneously.
+- **Academic Precision (IEEE)**: Specialized agents for writing, critiquing, and refining manuscripts with strict adherence to academic standards and citation styles.
+- **Persistent Knowledge Base**: Integrated **Qdrant Vector Store** for indexing retrieved literature, allowing for semantic cross-referencing during drafting.
+- **ArXiv & OpenAlex Native**: Robust handling of academic APIs with rate-limit resilience, retry logic, and API key support.
 
-### Backend
-- **Framework**: LangGraph (LangChain ecosystem)
-- **API**: FastAPI
-- **LLMs**: OpenRouter (Primary), Groq (Fallback)
-- **Retrieval**: Tavily API, arXiv API
-- **Concurrency**: Parallel search query execution
+## 🛠️ Performance Tech Stack
 
-### Frontend
-- **Framework**: Next.js 14+ (TypeScript)
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Report Rendering**: React Markdown + HTML2PDF
+### Intelligence & Orchestration
+- **Framework**: LangGraph (Async Node Execution)
+- **API Engine**: FastAPI + Server-Sent Events (SSE) for per-token streaming
+- **Vector Intelligence**: Qdrant (Local or Cloud)
+- **Primary LLM**: OpenRouter (Gemini 2.0 Pro / Llama-3-70B)
+- **Fallback LLM**: Groq (High-speed Llama-3 nodes)
 
-## 📂 Project Structure
+### Frontend "Live Lab"
+- **Framework**: Next.js 14+ (App Router, TypeScript)
+- **Motion**: Framer Motion (Agent status animations)
+- **Aesthetics**: Premium Glassmorphism & Parchment Theme
+- **PDF Export**: html2pdf.js for automated IEEE manuscript generation
+
+## 📂 Architecture
 
 ```text
 ├── backend/
-│   ├── agents/          # Individual agent nodes (Planner, Retriever, Writer, Critic)
-│   ├── api/             # FastAPI routes and SSE implementation
-│   ├── graph/           # LangGraph workflow definition
-│   ├── utils/           # LLM initialization and helper functions
-│   └── .env             # Environment variables
+│   ├── agents/          # Async Agent Nodes (Planner, Retriever, Indexer, Synthesis, Writer, Critic, Refinement)
+│   ├── api/             # SSE Event Generators and FastAPI Endpoints
+│   ├── graph/           # Persistent LangGraph State Workflow
+│   ├── utils/           # LLM Providers & Custom Embeddings (Mistral/OpenRouter)
+│   └── requirements.txt
 ├── frontend/
-│   ├── src/app/         # Next.js app router pages
-│   ├── src/components/  # UI components (Agent steps, Report viewer)
-│   └── src/lib/         # API client and utilities
-└── details.md           # Original project requirements
+│   ├── src/components/  # Dashboard, Live Workspace, and Report Viewer
+│   ├── src/lib/         # SSE Event Callbacks and API Client
+│   └── tailwind.config.ts
+└── README.md
 ```
 
-## ⚙️ Setup Instructions
+## ⚙️ Setup & Deployment
 
 ### 1. Prerequisites
-- Python 3.9+
+- Python 3.10+
 - Node.js 18+
 - [Tavily API Key](https://tavily.com/)
-- [Groq API Key](https://wow.groq.com/)
-- [OpenRouter API Key](https://openrouter.ai/) (Optional, but recommended)
+- [OpenAlex API Key](https://openalex.org/) (Recommended for higher rate limits)
+- [OpenRouter API Key](https://openrouter.ai/) (Primary provider)
 
-### 2. Backend Setup
+### 2. Backend Initialization
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in the `backend/` directory:
+Create a `.env` in `backend/`:
 ```env
-OPENROUTER_API_KEY=your_openrouter_key
-GROQ_API_KEY=your_groq_key
-TAVILY_API_KEY=your_tavily_key
+# API Keys
+OPENROUTER_API_KEY=your_key
+TAVILY_API_KEY=your_key
+OPENALEX_API_KEY=your_key
+
+# Vector Database
+QDRANT_URL=http://localhost:6333
+# QDRANT_API_KEY=if_using_cloud
+
+# Model Config
+EMBEDDING_MODEL=mistralai/mistral-embed-2312
+WRITING_MODEL=google/gemini-2.0-pro-exp-02-05:free
 ```
 
-Run the backend:
-```bash
-uvicorn api.main:app --reload
-```
-
-### 3. Frontend Setup
+### 3. Frontend Initialization
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:3000` in your browser.
 
-## 🤖 How it Works
+## 🤖 Research Workflow (v2)
 
-1. **Planner Agent**: Breaks down the research query into 10-15 targeted search terms.
-2. **Retriever Agent**: Executes searches in parallel across Tavily and arXiv, collecting up to 15 unique sources.
-3. **Writer Agent**: Processes the collected data to write an IEEE-style report with citations.
-4. **Critic Agent**: Reviews the draft for coherence, structure, and academic tone to produce the final version.
+1. **Clarification**: Agent aligns with your intent through 2-3 scoping questions.
+2. **Strategy**: A detailed research brief and 5-7 section blueprint are generated.
+3. **Retrieval**: Parallel extraction from Web, ArXiv, and OpenAlex.
+4. **Indexing**: Semantic chunks are stored in Qdrant.
+5. **Synthesis**: The "Live Lab" begins streaming the core findings.
+6. **Drafting**: The Writer streams a full IEEE manuscript section-by-section.
+7. **Critique & Polish**: A specialized agent reviews and refines for academic perfection.
 
 ## 📝 License
 
-MIT
+Developed for high-impact research automation. Distributed under the MIT License.

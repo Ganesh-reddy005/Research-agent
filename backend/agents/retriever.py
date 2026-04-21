@@ -2,14 +2,44 @@ import os
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+import requests
+import json
 from tavily import TavilyClient
 import concurrent.futures
+from langchain_core.messages import SystemMessage, HumanMessage
+from utils.llm import ainvoke_llm
 
-def search_arxiv(query, max_results=2):
+import time
+
+def search_openalex(query, max_results=3):
+    sources = []
+    api_key = os.getenv("OPENALEX_API_KEY")
+    try:
+        email = os.getenv("CONTACT_EMAIL", "research-agent@example.com")
+        headers = {"User-Agent": f"mailto:{email}"}
+        if api_key:
+            headers["api-key"] = api_key
+            
+        url = f"https://api.openalex.org/works?search={urllib.parse.quote(query)}&per_page={max_results}"
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            for work in data.get("results", []):
+                title = work.get("title", "No Title")
+                url = work.get("doi") or work.get("id")
+                summary = "Detailed academic paper."
+                sources.append({"title": title, "url": url, "summary": summary, "source": "OpenAlex"})
+    except Exception as e:
+        print(f"OpenAlex search failed: {e}")
+    return sources
+
+def search_arxiv(query, max_results=3):
     url = f'http://export.arxiv.org/api/query?search_query=all:{urllib.parse.quote(query)}&start=0&max_results={max_results}'
     sources = []
     try:
-        response = urllib.request.urlopen(url)
+        # Reduced timeout to 3s for maximum responsiveness
+        response = urllib.request.urlopen(url, timeout=3)
         xml_data = response.read()
         root = ET.fromstring(xml_data)
         namespace = {'atom': 'http://www.w3.org/2005/Atom'}
@@ -17,52 +47,71 @@ def search_arxiv(query, max_results=2):
             title = entry.find('atom:title', namespace).text.replace('\n', ' ').strip()
             summary = entry.find('atom:summary', namespace).text.replace('\n', ' ').strip()
             link = entry.find('atom:id', namespace).text
-            sources.append({"title": title, "url": link, "summary": summary})
+            sources.append({"title": title, "url": link, "summary": summary, "source": "arXiv"})
     except Exception as e:
-        print(f"arXiv search failed: {e}")
+        print(f"arXiv skipped for '{query}': {e}")
     return sources
 
-def search_single_query(topic, tavily):
-    results = []
-    # 1. Tavily Search
-    if tavily:
-        try:
-            response = tavily.search(query=topic, search_depth="basic", max_results=2)
-            for res in response.get("results", []):
-                results.append({
-                    "title": res.get("title", ""),
-                    "url": res.get("url", ""),
-                    "summary": res.get("content", "")
-                })
-        except Exception as e:
-            print(f"Tavily search failed for topic '{topic}': {e}")
-            
-    # 2. arXiv
-    arxiv_results = search_arxiv(topic, max_results=2)
-    results.extend(arxiv_results)
-    return results
-
-def retriever_node(state):
+async def retriever_node(state):
     print("--- RETRIEVER AGENT ---")
-    search_queries = state.get("search_queries", [])
-    if not search_queries:
-        search_queries = [state.get("query")]
-        
+    topic = state.get("topic")
+    plan = state.get("research_plan", {})
+    mode = state.get("research_mode", "deep")
+    
+    num_queries = 3 if mode == "light" else 7
+    results_per_query = 3 if mode == "light" else 5
+    
+    sections = plan.get("sections", [])
+    section_texts = [f"{s.get('title')}: {s.get('description')}" for s in sections]
+    
+    system_prompt = f"Generate exactly {num_queries} distinct, highly technical search queries. Return strictly as a JSON array of strings."
+    messages = [SystemMessage(content=system_prompt), HumanMessage(content=f"Topic: {topic}\nPlan Sections:\n" + "\n".join(section_texts))]
+    
+    response = await ainvoke_llm(messages, agent_name="retrieval")
+    try:
+        content = response.content.strip()
+        if "```json" in content: content = content.split("```json")[1].split("```")[0].strip()
+        search_queries = json.loads(content)
+    except:
+        search_queries = [topic]
+
     tavily_key = os.getenv("TAVILY_API_KEY")
     tavily = TavilyClient(api_key=tavily_key) if tavily_key else None
     
     all_sources = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(search_single_query, q, tavily) for q in search_queries]
-        for future in concurrent.futures.as_completed(futures):
-            all_sources.extend(future.result())
+    normalized_queries = [str(q.get("query", q)) if isinstance(q, dict) else str(q) for q in search_queries]
+
+    # FLATTENED PARALLEL SEARCH: One large pool for all (query, source) pairs
+    # This is much faster than nested pools and avoids overhead
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        future_to_query = []
+        
+        for q in normalized_queries:
+            # 1. Tavily
+            if tavily:
+                future_to_query.append(executor.submit(tavily.search, query=q, search_depth="basic", max_results=results_per_query))
+            # 2. OpenAlex
+            future_to_query.append(executor.submit(search_openalex, q, max_results=results_per_query))
+            # 3. arXiv
+            future_to_query.append(executor.submit(search_arxiv, q, max_results=results_per_query))
+            
+        for future in concurrent.futures.as_completed(future_to_query):
+            try:
+                res = future.result()
+                if isinstance(res, dict) and "results" in res: # Tavily response
+                    web_results = [{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"} for r in res.get("results", [])]
+                    all_sources.extend(web_results)
+                elif isinstance(res, list): # OpenAlex or arXiv result list
+                    all_sources.extend(res)
+            except Exception as e:
+                print(f"Search task failed: {e}")
         
     seen_urls = set()
     unique_sources = []
     for source in all_sources:
-        if source.get("url") not in seen_urls:
-            seen_urls.add(source["url"])
+        url = source.get("url")
+        if url and url not in seen_urls:
+            seen_urls.add(url)
             unique_sources.append(source)
             
-    # Limit to top 15 sources to avoid overwhelming context
-    return {"sources": unique_sources[:15]}
+    return {"raw_sources": unique_sources, "current_step": "retriever"}

@@ -5,7 +5,11 @@ langgraph
 langchain-core
 langchain-groq
 langchain-openai
+langchain-qdrant
 tavily-python
 arxiv
 sse-starlette
 python-dotenv
+requests
+qdrant-client
+langchain-community

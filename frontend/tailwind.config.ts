@@ -9,13 +9,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        parchment: {
+          DEFAULT: "#fbfaf7",
+          dark: "#f2f0e9",
+        },
+        "deep-green": {
+          DEFAULT: "#064e45",
+          hover: "#043a33",
+        },
+        sage: "#8ba888",
+        slate: {
+          950: "#0b1215",
+        }
+      },
+      fontFamily: {
+        serif: ["var(--font-serif)", "serif"],
+        sans: ["var(--font-sans)", "sans-serif"],
       },
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
+    require("@tailwindcss/typography"),
   ],
 };
 export default config;
