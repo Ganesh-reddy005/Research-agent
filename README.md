@@ -32,6 +32,7 @@ A professional-grade AI Research Production System built with **LangGraph**, **F
 
 ## 📂 Architecture
 
+### Directory Structure
 ```text
 ├── backend/
 │   ├── agents/          # Async Agent Nodes (Planner, Retriever, Indexer, Synthesis, Writer, Critic, Refinement)
@@ -44,6 +45,21 @@ A professional-grade AI Research Production System built with **LangGraph**, **F
 │   ├── src/lib/         # SSE Event Callbacks and API Client
 │   └── tailwind.config.ts
 └── README.md
+```
+
+### Agent Workflow Diagram
+```mermaid
+graph TD
+    START((START)) --> Clarification[Clarification Node<br><i>Human-in-the-loop</i>]
+    Clarification --> Planning[Planning Node<br><i>Human-in-the-loop</i>]
+    Planning --> Retriever[Retriever Node]
+    Retriever --> Indexer[Indexer Node]
+    Indexer --> Assistance[Assistance Node<br><i>Human-in-the-loop</i>]
+    Assistance --> Synthesis[Synthesis Node]
+    Synthesis --> Writer[Writer Node]
+    Writer --> Critic[Critic Node]
+    Critic --> Refinement[Refinement Node]
+    Refinement --> END((END))
 ```
 
 ## ⚙️ Setup & Deployment
