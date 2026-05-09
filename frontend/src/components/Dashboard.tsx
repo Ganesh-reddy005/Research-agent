@@ -22,11 +22,11 @@ import {
   Zap,
   Flame
 } from 'lucide-react';
-import { startResearch, resumeResearch } from '@/lib/api';
+import { startResearch, resumeResearch, chatWithData } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Types ---
-type Stage = 'idle' | 'clarification' | 'planning' | 'researching' | 'reviewing' | 'completed';
+type Stage = 'idle' | 'clarification' | 'planning' | 'researching' | 'assistance_review' | 'reviewing' | 'completed';
 type ResearchMode = 'light' | 'deep';
 
 export default function Dashboard() {
@@ -46,6 +46,11 @@ export default function Dashboard() {
   const [allSources, setAllSources] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
+  
+  // Assistance specific state
+  const [assistanceSummary, setAssistanceSummary] = useState('');
+  const [chatQuery, setChatQuery] = useState('');
+  const [chatHistory, setChatHistory] = useState<{role: 'user'|'assistant', text: string}[]>([]);
   
   // Streaming Thought
   const [activeThought, setActiveThought] = useState<{agent: string, text: string} | null>(null);
@@ -67,6 +72,7 @@ export default function Dashboard() {
       if (state.clarification_questions) setQuestions(state.clarification_questions);
       if (state.research_plan) setPlan(state.research_plan);
       if (state.research_brief) setBrief(state.research_brief);
+      if (state.assistance_summary) setAssistanceSummary(state.assistance_summary);
       if (state.final_report) setReport(state.final_report);
       if (state.raw_sources) setAllSources(state.raw_sources);
       
@@ -87,6 +93,7 @@ export default function Dashboard() {
       setIsProcessing(false);
       if (next.includes('planning')) setStage('clarification');
       if (next.includes('retriever')) setStage('planning');
+      if (next.includes('synthesis')) setStage('assistance_review');
     },
     onDone: (tid: string) => {
       setStage('completed');
@@ -140,6 +147,31 @@ export default function Dashboard() {
     };
 
     html2pdf().set(opt).from(reportRef.current).save();
+  };
+
+  const handleChatSubmit = async () => {
+    if (!chatQuery.trim() || !threadId) return;
+    
+    // Optimistically add user query to history
+    const queryText = chatQuery.trim();
+    setChatHistory(prev => [...prev, { role: 'user', text: queryText }]);
+    setIsProcessing(true);
+    setChatQuery('');
+    
+    try {
+      const response = await chatWithData(threadId, queryText);
+      setChatHistory(prev => [...prev, { role: 'assistant', text: response.answer }]);
+    } catch (err: any) {
+      setChatHistory(prev => [...prev, { role: 'assistant', text: 'Error connecting to data vector store...' }]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCreateFullPaper = async () => {
+    setStage('researching');
+    setIsProcessing(true);
+    await resumeResearch(threadId!, 'continue', {}, callbacks);
   };
 
   // Helper to get icon for agent
@@ -227,7 +259,7 @@ export default function Dashboard() {
                     value={topic}
                     onChange={e => setTopic(e.target.value)}
                     placeholder="Describe your research topic in technical detail..."
-                    className="w-full px-8 py-6 rounded-3xl bg-white border border-parchment-dark shadow-2xl shadow-sage/10 focus:ring-2 focus:ring-sage focus:outline-none text-xl transition-all group-hover:shadow-sage/20 font-serif"
+                    className="w-full pl-8 pr-20 py-6 rounded-3xl bg-white border border-parchment-dark shadow-2xl shadow-sage/10 focus:ring-2 focus:ring-sage focus:outline-none text-xl transition-all group-hover:shadow-sage/20 font-serif"
                   />
                   <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover transition-all active:scale-95">
                     <ChevronRight className="w-6 h-6" />
@@ -380,6 +412,84 @@ export default function Dashboard() {
                 </motion.div>
               )}
 
+              {stage === 'assistance_review' && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
+                  <div className="space-y-3">
+                    <h2 className="text-4xl font-serif text-deep-green">Data Discovery</h2>
+                    <p className="text-gray-500 font-serif italic text-lg">Initial data retrieval is complete. Review the executive summary or chat with the extracted sources.</p>
+                  </div>
+
+                  <div className="bg-white border border-parchment-dark rounded-[2.5rem] shadow-2xl shadow-sage/5 overflow-hidden p-8">
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Executive Summary</h3>
+                    <p className="text-gray-700 leading-relaxed font-serif text-lg leading-loose bg-parchment/30 p-6 rounded-2xl">{assistanceSummary}</p>
+                    
+                    <div className="mt-8 space-y-4">
+                      <div className="border-t border-parchment-dark pt-8">
+                        <h3 className="text-sm font-bold text-deep-green mb-6">Chat with Research Data</h3>
+                        <div className="h-72 overflow-y-auto mb-6 pr-4 space-y-6 scrollbar-thin scrollbar-thumb-parchment-dark scrollbar-track-transparent">
+                          {chatHistory.length === 0 && <div className="text-center text-gray-400 italic text-sm mt-16">Ask questions about the retrieved sources before generating the full paper...</div>}
+                          {chatHistory.map((msg, i) => (
+                            <div key={i} className={`p-5 rounded-[2rem] max-w-[85%] flex gap-4 ${msg.role === 'user' ? 'bg-parchment-dark/10 text-deep-green ml-auto' : 'bg-white border border-parchment-dark/50 shadow-sm text-gray-800'}`}>
+                              <div className="shrink-0 mt-1">
+                                {msg.role === 'user' ? (
+                                  <div className="w-8 h-8 rounded-full bg-deep-green text-white flex items-center justify-center shadow-md"><Zap className="w-3.5 h-3.5"/></div>
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-sage text-white flex items-center justify-center shadow-md"><Sparkles className="w-3.5 h-3.5"/></div>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[10px] font-bold mb-2 opacity-50 uppercase tracking-[0.2em]">{msg.role === 'user' ? 'You' : 'Assistant'}</div>
+                                <div className="text-[15px] font-serif leading-relaxed text-gray-700">{msg.text}</div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Live Thinking Indicator */}
+                          {isProcessing && chatQuery === '' && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && (
+                            <div className="p-5 rounded-[2rem] max-w-[85%] flex gap-4 bg-white border border-parchment-dark/50 shadow-sm text-gray-800 animate-pulse">
+                              <div className="shrink-0 mt-1">
+                                <div className="w-8 h-8 rounded-full bg-sage text-white flex items-center justify-center shadow-md"><Sparkles className="w-3.5 h-3.5"/></div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[10px] font-bold mb-2 opacity-50 uppercase tracking-[0.2em]">Assistant</div>
+                                <div className="text-[15px] font-serif leading-relaxed text-gray-400 flex items-center gap-2">Gathering intelligence... <Loader2 className="w-4 h-4 animate-spin"/></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="relative group">
+                          <input 
+                            type="text" 
+                            disabled={isProcessing}
+                            value={chatQuery}
+                            onChange={(e) => setChatQuery(e.target.value)}
+                            onKeyDown={async (e) => {
+                              if (e.key === 'Enter') handleChatSubmit();
+                            }}
+                            className="w-full pl-6 pr-16 py-4 rounded-2xl border border-parchment-dark focus:ring-2 focus:ring-sage focus:outline-none bg-white font-serif text-gray-700 shadow-sm group-hover:shadow-md transition-shadow disabled:bg-gray-50"
+                            placeholder="E.g. What were the main methodologies used in the top studies?"
+                          />
+                          <button onClick={handleChatSubmit} disabled={isProcessing || !chatQuery.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-deep-green text-white rounded-xl hover:bg-deep-green-hover disabled:bg-gray-300 transition-all flex items-center justify-center">
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin"/> : <Send className="w-4 h-4 ml-0.5"/>}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={handleCreateFullPaper}
+                      disabled={isProcessing}
+                      className="px-10 py-5 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover disabled:bg-gray-300 shadow-2xl shadow-deep-green/20 font-bold tracking-widest text-xs uppercase"
+                    >
+                      Initialize Full Paper
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
               {(stage === 'completed' || (stage === 'reviewing' && report)) && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 pb-32">
                   <div ref={reportRef} className="prose prose-stone max-w-none font-serif bg-white p-12 md:p-20 rounded-[3rem] shadow-2xl border border-parchment-dark">
@@ -389,10 +499,10 @@ export default function Dashboard() {
                     </div>
                     
                     {report.split('\n').map((line, i) => {
-                      if (line.startsWith('## ')) return <h2 key={i} className="text-3xl text-deep-green mt-16 mb-8 border-b border-parchment-dark pb-3 font-serif italic">{line.replace('## ', '')}</h2>;
-                      if (line.startsWith('### ')) return <h3 key={i} className="text-xl text-deep-green mt-12 mb-6 font-bold">{line.replace('### ', '')}</h3>;
+                      if (line.startsWith('## ')) return <h2 key={i} className="text-2xl text-deep-green mt-12 mb-6 border-b border-parchment-dark pb-2 font-serif italic">{line.replace('## ', '')}</h2>;
+                      if (line.startsWith('### ')) return <h3 key={i} className="text-lg text-deep-green mt-8 mb-4 font-bold">{line.replace('### ', '')}</h3>;
                       if (!line.trim()) return <br key={i} />;
-                      return <p key={i} className="text-gray-800 leading-[2.2] mb-8 text-lg indent-8">{line}</p>;
+                      return <p key={i} className="text-gray-800 leading-[1.8] mb-6 text-base">{line}</p>;
                     })}
 
                     {/* --- Reference Gallery inside Report (for PDF) --- */}
@@ -473,7 +583,7 @@ export default function Dashboard() {
                     initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden bg-white/50 border border-parchment-dark/50 rounded-2xl mx-1"
                   >
-                    <pre className="p-4 text-[10px] text-gray-500 overflow-x-auto font-mono leading-relaxed max-h-64">
+                    <pre className="p-4 text-[10px] text-gray-500 overflow-y-auto whitespace-pre-wrap break-words font-mono leading-relaxed max-h-64">
                       {JSON.stringify(log.data, null, 2)}
                     </pre>
                   </motion.div>

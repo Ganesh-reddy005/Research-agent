@@ -11,7 +11,9 @@ async def writer_node(state):
     
     qdrant_url = os.getenv("QDRANT_URL")
     qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    collection_name = "research_assistant"
+    
+    thread_id = state.get("thread_id", "default_thread")
+    collection_name = f"research_{thread_id.replace('-', '_')}"
     
     embeddings = OpenRouterEmbeddings()
     vectorstore = None
@@ -55,7 +57,7 @@ STRICT FORMATTING & LENGTH RULES:
 1. NO MARKDOWN BOLDING (**text**). Use plain text for emphasis.
 2. Use professional, third-person objective academic tone.
 3. Use formal IEEE citation style [1], [2] based on the context provided.
-4. OPTIMAL LENGTH: Be concise but rigorous. Target 250-400 words for this section. Avoid fluff.
+4. OPTIMAL LENGTH: Be concise but rigorous. Target 150-250 words for this section. Exclude repetitive fluff and never produce very large blocks of text.
 5. TECHNICAL DEPTH: Focus on evidence and technical data over generic descriptions.
 6. Provide a smooth transition to the potential next section.
 7. The output must be valid text that can be directly used in a LaTeX or Word document.

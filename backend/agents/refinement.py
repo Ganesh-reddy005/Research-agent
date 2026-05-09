@@ -19,7 +19,7 @@ CRITICAL POLISHING RULES:
 6. Maintain perfectly formatted citations [1], [2].
 7. DO NOT include any conversational preamble or metadata description. 
 8. Output ONLY the raw final paper text suitable for professional publication.
-9.keep each section max 300-400 words only keeping it concise and to the point.
+9. Keep each section max 150-250 words, keeping it highly concise and strictly to the point, avoiding any fluff or large text blocks.
 
 Critique Feedback to Incorporate:
 {critic_feedback}

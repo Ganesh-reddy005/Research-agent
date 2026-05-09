@@ -10,7 +10,9 @@ async def synthesis_node(state):
     
     qdrant_url = os.getenv("QDRANT_URL")
     qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    collection_name = "research_assistant"
+    
+    thread_id = state.get("thread_id", "default_thread")
+    collection_name = f"research_{thread_id.replace('-', '_')}"
     
     findings = ""
     if qdrant_url:
@@ -35,7 +37,7 @@ Identify:
 4. Solid evidence versus assumptions
 
 Provide a structured synthesis report (Markdown format).
-Make sure you maintain max 300-400 words only keeping it concise and to the point.
+Make sure you maintain max 200 words only keeping it concise and to the point, avoiding large text blocks.
 """
 
     input_text = f"Topic: {topic}\nBrief: {brief}\n\nRetrieved Data:\n{findings}"

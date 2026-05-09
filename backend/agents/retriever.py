@@ -11,6 +11,29 @@ from utils.llm import ainvoke_llm
 
 import time
 
+def search_core(query, max_results=3):
+    sources = []
+    api_key = os.getenv("CORE_API_KEY")
+    if not api_key:
+        return sources
+    
+    try:
+        url = f"https://api.core.ac.uk/v3/search/works"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        params = {"q": query, "limit": max_results}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            for work in data.get("results", []):
+                title = work.get("title", "No Title")
+                url = work.get("downloadUrl") or work.get("sourceFulltextUrls", [None])[0] or "https://core.ac.uk/"
+                summary = work.get("abstract") or "Detailed academic paper from CORE."
+                sources.append({"title": title, "url": url, "summary": summary, "source": "CORE"})
+    except Exception as e:
+        print(f"CORE search failed for '{query}': {e}")
+    return sources
+
 def search_openalex(query, max_results=3):
     sources = []
     api_key = os.getenv("OPENALEX_API_KEY")
@@ -94,6 +117,8 @@ async def retriever_node(state):
             future_to_query.append(executor.submit(search_openalex, q, max_results=results_per_query))
             # 3. arXiv
             future_to_query.append(executor.submit(search_arxiv, q, max_results=results_per_query))
+            # 4. CORE
+            future_to_query.append(executor.submit(search_core, q, max_results=results_per_query))
             
         for future in concurrent.futures.as_completed(future_to_query):
             try:

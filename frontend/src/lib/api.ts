@@ -72,7 +72,7 @@ export async function startResearch(
 
 export async function resumeResearch(
   threadId: string,
-  action: 'answer' | 'approve',
+  action: 'answer' | 'approve' | 'continue',
   data: any,
   callbacks: EventCallbacks
 ) {
@@ -86,4 +86,21 @@ export async function resumeResearch(
   } catch (error: any) {
     callbacks.onError(error.message);
   }
+}
+
+export async function chatWithData(
+  threadId: string,
+  query: string
+) {
+  const response = await fetch('http://127.0.0.1:8000/api/research/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, query })
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch chat response');
+  }
+  
+  return await response.json();
 }

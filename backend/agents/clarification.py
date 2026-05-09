@@ -8,12 +8,13 @@ async def clarification_node(state):
     
     system_prompt = """You are an expert research consultant.
 Your goal is to help the user define the scope, objectives, and domain of their research topic.
-Based on the provided topic, generate 5 to 10 critical questions that will help narrow down the research.
+Based on the provided topic, generate 3 to 5 critical questions that will help narrow down the research.
 Focus on:
 1. Specificity (what EXACTLY are we researching?)
 2. Objectives (what is the intended outcome?)
 3. Constraints (timeframes, regions, specific technologies)
 4. Hypothesis direction (what do we suspect is true?)
+5. anything else essential for the research topic
 
 Return the result STRICTLY as a JSON array of objects, where each object has 'id' (string) and 'question' (string)."""
 
