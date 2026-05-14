@@ -36,7 +36,7 @@ export default function ReportViewer({ report, sources }: ReportViewerProps) {
       parentNode.style.background = '#ffffff';
       parentNode.style.color = '#000000';
     }
-    element.className = 'prose prose-slate max-w-none p-4';
+    element.className = 'prose prose-slate max-w-none p-10 font-sans';
 
     try {
       const html2pdfModule = await import('html2pdf.js');
@@ -54,32 +54,38 @@ export default function ReportViewer({ report, sources }: ReportViewerProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <div className="flex justify-end mb-4">
+    <div className="w-full max-w-5xl mx-auto mt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 px-6">
+      <div className="flex justify-end mb-8">
         <button 
           onClick={handleDownload}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors shadow-lg group"
+          className="flex items-center gap-3 px-10 py-3.5 bg-mistral-black hover:bg-mistral-orange text-white rounded-xl shadow-sm transition-all active:scale-95 group font-sans font-bold text-xs uppercase tracking-[0.2em]"
         >
-          <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
-          Download PDF
+          <Download className="w-5 h-5 group-hover:scale-110 transition-transform text-mistral-orange/80" />
+          Generate PDF
         </button>
       </div>
       
-      <div className="glass rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden transition-all hover:border-cyan-500/20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        
-        <div id="report-content" className="prose prose-invert prose-cyan max-w-none selection:bg-cyan-500/30">
-          <ReactMarkdown>{report}</ReactMarkdown>
+      <div className="bg-white border border-mistral-border/50 p-12 md:p-24 shadow-xl rounded-[3rem] relative overflow-hidden transition-all">
+        <div id="report-content" className="prose prose-stone prose-lg max-w-none selection:bg-mistral-orange/10 font-sans">
+          <ReactMarkdown 
+            components={{
+              h2: ({node, ...props}) => <h2 className="text-4xl text-mistral-black mt-20 mb-10 border-b border-mistral-border/50 pb-8 font-sans font-bold tracking-tight" {...props} />,
+              h3: ({node, ...props}) => <h3 className="text-2xl text-mistral-black mt-12 mb-8 font-sans font-bold tracking-tight" {...props} />,
+              p: ({node, ...props}) => <p className="text-mistral-black/80 leading-relaxed mb-10 text-xl font-medium" {...props} />,
+            }}
+          >
+            {report}
+          </ReactMarkdown>
         </div>
       </div>
 
       {sources && sources.length > 0 && (
-        <div className="mt-12">
-          <h3 className="text-xl font-semibold mb-6 flex items-center text-cyan-400">
-            <span className="bg-cyan-500/20 px-3 py-1 rounded-md mr-3 text-sm">References</span>
+        <div className="mt-24 space-y-12">
+          <h3 className="text-4xl font-sans font-bold tracking-tight text-mistral-black flex items-center gap-6">
+            <span className="bg-mistral-orange/10 border border-mistral-orange/20 px-6 py-2.5 text-[10px] font-bold text-mistral-orange rounded-full tracking-[0.2em] uppercase">References</span>
             Retrieved Sources
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {sources.map((source, idx) => (
               <SourceCard key={idx} index={idx} source={source} />
             ))}

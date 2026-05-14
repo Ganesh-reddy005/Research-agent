@@ -1,9 +1,12 @@
+import os
 from typing import TypedDict, List, Dict, Any, Optional
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Nodes are imported from their respective files
-# Note: Some nodes will be implemented/renamed as we progress
 from agents.clarification import clarification_node
 from agents.planning import planning_node
 from agents.retriever import retriever_node
@@ -13,40 +16,29 @@ from agents.synthesis import synthesis_node
 from agents.writer import writer_node
 from agents.critic import critic_node
 from agents.refinement import refinement_node
+from agents.auditor import citation_auditor_node
 
 class AgentState(TypedDict, total=False):
-    # Initial input
     topic: str
-    research_mode: str # 'light' or 'deep'
+    research_mode: str 
     thread_id: str
-    
-    # Clarification Phase
-    clarification_questions: List[Dict[str, str]] # [{'id': '1', 'question': '...'}]
-    user_answers: Dict[str, str] # {'1': '...'}
+    clarification_questions: List[Dict[str, str]]
+    user_answers: Dict[str, str]
     research_brief: str
-    
-    # Planning Phase
-    research_plan: Dict[str, Any] # {'sections': [...], 'objective': '...'}
+    research_plan: Dict[str, Any]
     plan_approved: bool
     plan_edits: str
-    
-    # Retrieval Phase
     search_queries: List[str]
     raw_sources: List[Dict[str, Any]]
-    
-    # Assistance Phase
     assistance_summary: str
-    
-    # Synthesis & Writing Phase
     synthesis_report: str
     draft_report: str
     critic_feedback: str
     final_report: str
-    
-    # Metadata
+    citation_audit_log: Dict[str, Any]
     current_step: str
 
-def build_graph():
+def build_graph(checkpointer=None):
     workflow = StateGraph(AgentState)
     
     # Add Nodes
@@ -59,6 +51,7 @@ def build_graph():
     workflow.add_node("writer", writer_node)
     workflow.add_node("critic", critic_node)
     workflow.add_node("refinement", refinement_node)
+    workflow.add_node("auditor", citation_auditor_node)
     
     # Define Edges
     workflow.add_edge(START, "clarification")
@@ -70,13 +63,12 @@ def build_graph():
     workflow.add_edge("synthesis", "writer")
     workflow.add_edge("writer", "critic")
     workflow.add_edge("critic", "refinement")
-    workflow.add_edge("refinement", END)
-    
-    # Initialize MemorySaver for session persistence
-    memory = MemorySaver()
+    workflow.add_edge("refinement", "auditor")
+    workflow.add_edge("auditor", END)
     
     # Compile with interrupts for human-in-the-loop
     return workflow.compile(
-        checkpointer=memory,
+        checkpointer=checkpointer,
         interrupt_after=["clarification", "planning", "assistance"]
     )
+

@@ -9,22 +9,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        parchment: {
-          DEFAULT: "#fbfaf7",
-          dark: "#f2f0e9",
+        mistral: {
+          orange: "#ff511c",
+          black: "#000000",
+          white: "#ffffff",
+          beige: "#f5f2ed",
+          grey: "#1a1a1a",
+          border: "#e5e1da",
         },
-        "deep-green": {
-          DEFAULT: "#064e45",
-          hover: "#043a33",
-        },
-        sage: "#8ba888",
-        slate: {
-          950: "#0b1215",
+        workspace: {
+          ink: "#000000",
+          accent: "#ff511c",
+          "accent-soft": "#fff3f0",
+          border: "#e5e1da",
+          bg: "#ffffff",
+          parchment: "#f5f2ed",
+          "muted": "#666666",
         }
       },
       fontFamily: {
-        serif: ["var(--font-serif)", "serif"],
-        sans: ["var(--font-sans)", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        retro: ["var(--font-retro)", "serif"],
       },
     },
   },

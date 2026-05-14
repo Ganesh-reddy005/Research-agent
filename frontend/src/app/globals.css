@@ -4,33 +4,73 @@
 
 @layer base {
   :root {
-    --background: 45 30% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
   }
 }
 
 body {
-  background-color: #fbfaf7;
-  color: #0b1215;
+  @apply bg-mistral-beige text-mistral-black antialiased selection:bg-mistral-orange selection:text-white;
+}
+
+/* Retro Theme (Scoped to Homepage) */
+.retro-theme .workspace-card {
+  @apply bg-white border-2 border-mistral-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200;
+}
+
+.retro-theme .workspace-card:hover {
+  @apply shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -translate-x-1 -translate-y-1;
+}
+
+.retro-theme .mistral-btn {
+  @apply px-6 py-3 bg-mistral-black text-white font-mono font-bold uppercase tracking-widest border-2 border-mistral-black hover:bg-mistral-orange hover:text-white transition-all active:translate-y-0.5 active:shadow-none shadow-[4px_4px_0px_0px_rgba(255,81,28,1)];
+}
+
+/* Modern Subtle Theme (Scoped to Dashboard) */
+.modern-subtle .workspace-card {
+  @apply bg-white border border-mistral-border shadow-sm transition-all duration-300;
+}
+
+.modern-subtle .workspace-card:hover {
+  @apply shadow-md border-mistral-orange/20;
+}
+
+.modern-subtle .mistral-btn {
+  @apply px-5 py-2.5 bg-mistral-black text-white font-sans font-bold rounded-lg hover:bg-mistral-orange transition-all active:scale-[0.98] shadow-sm;
+}
+
+.workspace-accent-text {
+  @apply text-workspace-accent;
+}
+
+.stitched-border {
+  @apply border-workspace-border;
 }
 
 /* Premium Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 78, 69, 0.1);
-  border-radius: 10px;
+  @apply bg-workspace-border rounded-full hover:bg-workspace-muted/30 transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 78, 69, 0.2);
+/* Ambient Background Animation */
+@keyframes ambient-glow {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2%, 2%) scale(1.1); }
+  66% { transform: translate(-2%, 1%) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.bg-blur-blob {
+  @apply absolute rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-[ambient-glow_15s_infinite_alternate];
 }
 
 .custom-scrollbar {

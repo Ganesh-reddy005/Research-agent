@@ -1,40 +1,34 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  Send, 
-  ChevronRight, 
-  Loader2, 
-  AlertCircle,
-  FileText,
-  Activity,
-  Layers,
-  Sparkles,
-  Download,
-  ChevronDown,
-  ChevronUp,
-  Book,
-  Database,
-  Cpu,
-  CheckCircle,
-  FileSearch,
-  Zap,
-  Flame
-} from 'lucide-react';
-import { startResearch, resumeResearch, chatWithData } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Download, AlertCircle, Activity } from 'lucide-react';
+import { startResearch, resumeResearch, chatWithData, brainstormResearch } from '@/lib/api';
+import { AnimatePresence, motion } from 'framer-motion';
+
+// Modular Components
+import Sidebar from './dashboard/Sidebar';
+import AgentLogsPanel from './dashboard/AgentLogsPanel';
+import LibraryPanel from './dashboard/LibraryPanel';
+import StageIdle from './dashboard/StageIdle';
+import StageClarification from './dashboard/StageClarification';
+import StagePlanning from './dashboard/StagePlanning';
+import StageResearching from './dashboard/StageResearching';
+import StageReview from './dashboard/StageReview';
+import StageCompleted from './dashboard/StageCompleted';
+import StageBrainstorm from './dashboard/StageBrainstorm';
 
 // --- Types ---
-type Stage = 'idle' | 'clarification' | 'planning' | 'researching' | 'assistance_review' | 'reviewing' | 'completed';
+type Stage = 'idle' | 'clarification' | 'planning' | 'researching' | 'assistance_review' | 'reviewing' | 'completed' | 'brainstorming';
 type ResearchMode = 'light' | 'deep';
 
 export default function Dashboard() {
   const [topic, setTopic] = useState('');
   const [stage, setStage] = useState<Stage>('idle');
-  const [researchMode, setResearchMode] = useState<ResearchMode>('deep');
+  const [researchMode, setResearchMode] = useState<ResearchMode>('chat');
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLogsOpen, setIsLogsOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   
   // State from backend
   const [questions, setQuestions] = useState<any[]>([]);
@@ -44,6 +38,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<any[]>([]);
   const [report, setReport] = useState('');
   const [allSources, setAllSources] = useState<any[]>([]);
+  const [auditLog, setAuditLog] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   
@@ -52,37 +47,47 @@ export default function Dashboard() {
   const [chatQuery, setChatQuery] = useState('');
   const [chatHistory, setChatHistory] = useState<{role: 'user'|'assistant', text: string}[]>([]);
   
+  // Brainstorm specific state
+  const [brainstormHistory, setBrainstormHistory] = useState<{role: 'user'|'assistant', content: string}[]>([]);
+  const [brainstormQuery, setBrainstormQuery] = useState('');
+
   // Streaming Thought
   const [activeThought, setActiveThought] = useState<{agent: string, text: string} | null>(null);
   
-  const scrollRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs, activeThought]);
 
   const callbacks = {
     onStep: (step: string, state: any, tid: string) => {
       setThreadId(tid);
-      console.log(`Step: ${step}`, state);
-      
       if (state.clarification_questions) setQuestions(state.clarification_questions);
       if (state.research_plan) setPlan(state.research_plan);
       if (state.research_brief) setBrief(state.research_brief);
       if (state.assistance_summary) setAssistanceSummary(state.assistance_summary);
       if (state.final_report) setReport(state.final_report);
       if (state.raw_sources) setAllSources(state.raw_sources);
-      
-      // Clear thought when step ends
+      if (state.citation_audit_log) setAuditLog(state.citation_audit_log);
       setActiveThought(null);
-      
-      // Add to logs
       setLogs(prev => [...prev, { step, timestamp: new Date().toLocaleTimeString(), data: state }]);
     },
     onThought: (agent: string, token: string) => {
+      if (agent === 'brainstorm') {
+        setBrainstormHistory(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === 'assistant') {
+            return [...prev.slice(0, -1), { ...last, content: last.content + token }];
+          }
+          return prev;
+        });
+        return;
+      }
+
+      if (['clarification', 'planning'].includes(agent.toLowerCase())) {
+        setActiveThought(prev => ({
+          agent: agent,
+          text: (prev?.agent === agent && prev.text.includes('Organizing')) ? prev.text : 'Organizing research parameters...'
+        }));
+        return;
+      }
       setActiveThought(prev => ({
         agent: agent,
         text: (prev?.agent === agent ? prev.text : '') + token
@@ -96,7 +101,9 @@ export default function Dashboard() {
       if (next.includes('synthesis')) setStage('assistance_review');
     },
     onDone: (tid: string) => {
-      setStage('completed');
+      if (stage !== 'brainstorming') {
+        setStage('completed');
+      }
       setIsProcessing(false);
     },
     onError: (err: string) => {
@@ -108,6 +115,10 @@ export default function Dashboard() {
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
+
+    // We check if the user is in brainstorming mode based on some state 
+    // or just handle it here if topic is passed.
+    // For now, let's assume if they click Run Discovery on the Research tab, it's startResearch.
     
     setStage('researching');
     setIsProcessing(true);
@@ -115,8 +126,36 @@ export default function Dashboard() {
     setLogs([]);
     setReport('');
     setAllSources([]);
-    
+    setAuditLog(null);
     await startResearch(topic, callbacks, researchMode);
+  };
+
+  const handleStartBrainstorm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) return;
+    
+    setStage('brainstorming');
+    setIsProcessing(true);
+    setError(null);
+    
+    const initialMessage = { role: 'user', content: topic };
+    setBrainstormHistory([initialMessage, { role: 'assistant', content: '' }]);
+    setTopic(''); // Clear topic for the chat
+    
+    await brainstormResearch([initialMessage], callbacks);
+  };
+
+  const handleBrainstormSubmit = async () => {
+    if (!brainstormQuery.trim()) return;
+    
+    const userMsg = { role: 'user', content: brainstormQuery };
+    const newHistory = [...brainstormHistory, userMsg];
+    
+    setBrainstormHistory([...newHistory, { role: 'assistant', content: '' }]);
+    setBrainstormQuery('');
+    setIsProcessing(true);
+    
+    await brainstormResearch(newHistory, callbacks);
   };
 
   const handleAnswerSubmit = async () => {
@@ -134,30 +173,25 @@ export default function Dashboard() {
     if (!reportRef.current) return;
     const html2pdf = (window as any).html2pdf;
     if (!html2pdf) {
-      alert("PDF exporter loading. Please try again in a moment.");
+      alert("PDF exporter loading...");
       return;
     }
-
     const opt = {
-      margin: 1,
-      filename: `Research_Report_${threadId?.slice(0, 8)}.pdf`,
+      margin: 0.5,
+      filename: `Lume_Report_${threadId?.slice(0, 8)}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
-
     html2pdf().set(opt).from(reportRef.current).save();
   };
 
   const handleChatSubmit = async () => {
     if (!chatQuery.trim() || !threadId) return;
-    
-    // Optimistically add user query to history
     const queryText = chatQuery.trim();
     setChatHistory(prev => [...prev, { role: 'user', text: queryText }]);
     setIsProcessing(true);
     setChatQuery('');
-    
     try {
       const response = await chatWithData(threadId, queryText);
       setChatHistory(prev => [...prev, { role: 'assistant', text: response.answer }]);
@@ -174,439 +208,173 @@ export default function Dashboard() {
     await resumeResearch(threadId!, 'continue', {}, callbacks);
   };
 
-  // Helper to get icon for agent
-  const getAgentIcon = (name: string) => {
-    switch (name.toLowerCase()) {
-      case 'clarification': return <FileSearch className="w-4 h-4" />;
-      case 'planning': return <Layers className="w-4 h-4" />;
-      case 'retriever': return <Search className="w-4 h-4" />;
-      case 'indexer': return <Database className="w-4 h-4" />;
-      case 'synthesis': return <Cpu className="w-4 h-4" />;
-      case 'writer': return <Book className="w-4 h-4" />;
-      case 'critic': return <CheckCircle className="w-4 h-4" />;
-      case 'refinement': return <Sparkles className="w-4 h-4" />;
-      default: return <Activity className="w-4 h-4" />;
-    }
+  const resetResearch = () => {
+    setStage('idle');
+    setTopic('');
+    setLogs([]);
+    setReport('');
+    setAllSources([]);
+    setAuditLog(null);
+    setError(null);
   };
 
   return (
-    <div className="flex h-screen bg-parchment overflow-hidden selection:bg-sage/30">
-      {/* --- External Scripts --- */}
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" async />
+    <div className="modern-subtle">
+      <div className="flex h-screen w-full bg-[#F5F2ED] overflow-hidden selection:bg-mistral-orange selection:text-white font-sans">
+        <Sidebar 
+          onNewResearch={resetResearch} 
+          onOpenLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
+          isLibraryOpen={isLibraryOpen}
+        />
 
-      {/* --- Left Panel: Sidebar / History --- */}
-      <aside className="w-64 border-r border-parchment-dark bg-parchment-dark/50 flex flex-col">
-        <div className="p-6">
-          <div className="flex items-center gap-2 text-deep-green font-serif text-xl font-bold">
-            <Sparkles className="w-6 h-6" />
-            <span>Research AI</span>
-          </div>
-        </div>
-        
-        <nav className="flex-1 px-4 space-y-1">
-          <button 
-            onClick={() => { setStage('idle'); setTopic(''); setLogs([]); setReport(''); setAllSources([]); }}
-            className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/50 text-deep-green shadow-sm border border-parchment-dark text-sm hover:bg-white transition-colors"
-          >
-            <Zap className="w-4 h-4" />
-            <span>New Session</span>
-          </button>
-          <div className="pt-6 pb-2 px-2 text-[10px] uppercase tracking-wider text-gray-400 font-bold">Recently Refined</div>
-          <div className="space-y-1">
-            {['Quantum Encryption', 'Graphene Synthesis', 'LLM Agentic Workflows'].map(t => (
-              <button key={t} className="flex items-center gap-3 w-full p-2 rounded-lg text-gray-500 hover:bg-white/30 text-xs text-left truncate">
-                <FileText className="w-3.5 h-3.5" />
-                {t}
-              </button>
-            ))}
-          </div>
-        </nav>
-      </aside>
-
-      {/* --- Center: Main Content --- */}
-      <main className="flex-1 flex flex-col relative overflow-y-auto">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-parchment-dark sticky top-0 bg-parchment/80 backdrop-blur-md z-10">
-          <div className="text-xs text-gray-400 font-medium tracking-wide">
-            {stage === 'idle' ? 'System Discovery' : `Session: ${threadId?.slice(0, 8)}...`}
-          </div>
-          <div className="flex items-center gap-4">
-            {stage === 'completed' && (
-              <button 
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 bg-deep-green text-white rounded-full text-xs font-bold hover:bg-deep-green-hover transition-all shadow-lg shadow-deep-green/20"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Export IEEE PDF
-              </button>
-            )}
-          </div>
-        </header>
-
-        <div className="flex-1 max-w-4xl mx-auto w-full p-12 space-y-12">
-          {stage === 'idle' ? (
-            <div className="h-[70vh] flex flex-col items-center justify-center space-y-8">
-              <div className="text-center space-y-4">
-                <h1 className="text-6xl font-serif text-deep-green leading-tight">
-                  Accelerate your <br /> <span className="italic">intellectual discovery.</span>
-                </h1>
-                <p className="text-gray-500 italic font-serif text-lg">Cross-reference 50+ academic sources in seconds.</p>
+        <div className="flex-1 flex flex-col min-w-0 bg-white relative z-10 border-r border-mistral-black/5 shadow-sm">
+          <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-mistral-black/5 sticky top-0 z-30">
+            <div className="flex items-center gap-4">
+              <div className="text-[9px] font-bold text-mistral-black/30 uppercase tracking-[0.3em] font-mono">
+                {stage === 'idle' ? 'Protocol Idle' : `Session // ${threadId?.slice(0, 8)}`}
               </div>
-              
-              <div className="w-full max-w-xl space-y-6">
-                <form onSubmit={handleStart} className="relative group">
-                  <input 
-                    type="text" 
-                    value={topic}
-                    onChange={e => setTopic(e.target.value)}
-                    placeholder="Describe your research topic in technical detail..."
-                    className="w-full pl-8 pr-20 py-6 rounded-3xl bg-white border border-parchment-dark shadow-2xl shadow-sage/10 focus:ring-2 focus:ring-sage focus:outline-none text-xl transition-all group-hover:shadow-sage/20 font-serif"
-                  />
-                  <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover transition-all active:scale-95">
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                </form>
-
-                <div className="flex items-center justify-center gap-4 bg-white/50 p-2 rounded-2xl border border-parchment-dark w-fit mx-auto shadow-sm">
-                  <button 
-                    onClick={() => setResearchMode('light')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${researchMode === 'light' ? 'bg-white text-deep-green shadow-sm border border-parchment-dark' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    <Zap className="w-3.5 h-3.5" />
-                    Light Search (15 Papers)
-                  </button>
-                  <button 
-                    onClick={() => setResearchMode('deep')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${researchMode === 'deep' ? 'bg-white text-deep-green shadow-sm border border-parchment-dark' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
-                    <Flame className="w-3.5 h-3.5" />
-                    Deep Research (50+ Papers)
-                  </button>
+              {isProcessing && (
+                <div className="flex gap-2 items-center px-2 py-0.5 border border-mistral-orange/20 bg-mistral-orange/5">
+                  <span className="w-1 h-1 rounded-full bg-mistral-orange animate-pulse" />
+                  <span className="text-[8px] font-bold text-mistral-orange uppercase tracking-widest">Active</span>
                 </div>
-              </div>
+              )}
             </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              {stage === 'clarification' && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                  <div className="space-y-4">
-                    <h2 className="text-4xl font-serif text-deep-green">Session Alignment</h2>
-                    <p className="text-gray-500 italic border-l-2 border-sage pl-4">To ensure academic precision, I need to refine the investigation parameters.</p>
-                  </div>
-                  
-                  <div className="space-y-8">
-                    {questions.map((q, i) => (
-                      <div key={q.id} className="space-y-3">
-                        <label className="text-[10px] font-bold text-sage uppercase tracking-widest flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-sage/10 flex items-center justify-center text-[10px] border border-sage/20">{i+1}</span>
-                          {q.question}
-                        </label>
-                        <input 
-                          type="text" 
-                          placeholder="Provide context..."
-                          className="w-full bg-transparent border-b border-parchment-dark focus:border-sage py-3 outline-none text-deep-green text-lg italic font-serif transition-colors"
-                          onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <button 
-                    onClick={handleAnswerSubmit}
-                    disabled={isProcessing}
-                    className="w-full sm:w-auto px-10 py-4 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover disabled:bg-gray-300 shadow-xl shadow-deep-green/20 transition-all font-bold tracking-wider text-sm flex items-center justify-center gap-3"
-                  >
-                    {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                    Lock Scopes & Proceed
-                  </button>
-                </motion.div>
+            <div className="flex items-center gap-3">
+              {stage === 'completed' && (
+                <button 
+                  onClick={handleExport}
+                  className="bg-mistral-black text-white px-3 py-1 text-[9px] font-bold uppercase tracking-widest hover:bg-mistral-orange transition-all"
+                >
+                  Export
+                </button>
               )}
-
-              {stage === 'planning' && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                  <div className="space-y-3">
-                    <h2 className="text-4xl font-serif text-deep-green">Structural Blueprint</h2>
-                    <p className="text-gray-500 font-serif italic text-lg">Proposed architecture for the final paper.</p>
-                  </div>
-
-                  <div className="bg-white border border-parchment-dark rounded-[2.5rem] shadow-2xl shadow-sage/5 overflow-hidden">
-                    <div className="p-8 border-b border-parchment-dark/50 bg-parchment-dark/10">
-                      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Research Brief</h3>
-                      <p className="text-gray-700 leading-relaxed font-serif text-lg leading-loose">{brief}</p>
-                    </div>
-                    
-                    <div className="p-8 space-y-6">
-                      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Validated Sections</h3>
-                      <div className="grid gap-4">
-                        {plan?.sections?.map((s: any, i: number) => (
-                          <div key={i} className="flex gap-6 p-6 rounded-3xl bg-parchment/30 border border-transparent hover:border-sage/20 transition-all duration-300 group">
-                            <div className="text-2xl font-serif text-sage opacity-20 group-hover:opacity-60 transition-opacity">0{i+1}</div>
-                            <div className="space-y-1">
-                              <div className="font-bold text-deep-green text-lg">{s.title}</div>
-                              <div className="text-sm text-gray-500 font-serif leading-relaxed line-clamp-2">{s.description}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <button 
-                      onClick={handlePlanApprove}
-                      disabled={isProcessing}
-                      className="px-10 py-5 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover disabled:bg-gray-300 shadow-2xl shadow-deep-green/20 font-bold tracking-widest text-xs uppercase"
-                    >
-                      Initialize Full Extraction
-                    </button>
-                    <button className="px-10 py-5 border-2 border-parchment-dark bg-white rounded-2xl hover:border-sage/40 text-gray-500 text-xs font-bold uppercase tracking-widest transition-all">
-                      Adjust Methodology
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {(stage === 'researching' && isProcessing) && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                  <div className="flex items-center justify-between bg-white/80 backdrop-blur-md border border-parchment-dark p-6 rounded-[2rem] shadow-xl">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-deep-green text-white rounded-2xl animate-pulse">
-                        {getAgentIcon(activeThought?.agent || 'system')}
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-bold text-sage uppercase tracking-widest">Active Intelligence</div>
-                        <div className="text-xl font-serif text-deep-green capitalize">{activeThought?.agent || 'System'} is working...</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Loader2 className="w-5 h-5 text-sage animate-spin" />
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-parchment-dark rounded-[3rem] shadow-2xl p-10 min-h-[50vh] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-parchment-dark">
-                      <motion.div 
-                        className="h-full bg-deep-green"
-                        animate={{ width: ['0%', '100%'] }}
-                        transition={{ duration: 10, repeat: Infinity }}
-                      />
-                    </div>
-                    
-                    <div className="prose prose-stone max-w-none font-serif">
-                      <div className="text-xs font-bold text-gray-300 uppercase tracking-widest mb-8 flex items-center gap-2">
-                        <Zap className="w-3 h-3" />
-                        Live Streamed Intelligence
-                      </div>
-                      
-                      {activeThought ? (
-                        <div className="text-gray-800 leading-[2] text-xl whitespace-pre-wrap animate-in fade-in slide-in-from-bottom-2 duration-500">
-                          {activeThought.text}
-                          <span className="inline-block w-2 h-5 bg-deep-green ml-1 animate-pulse" />
-                        </div>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center py-20 opacity-30 italic font-serif">
-                          Waiting for agent signals...
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {stage === 'assistance_review' && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                  <div className="space-y-3">
-                    <h2 className="text-4xl font-serif text-deep-green">Data Discovery</h2>
-                    <p className="text-gray-500 font-serif italic text-lg">Initial data retrieval is complete. Review the executive summary or chat with the extracted sources.</p>
-                  </div>
-
-                  <div className="bg-white border border-parchment-dark rounded-[2.5rem] shadow-2xl shadow-sage/5 overflow-hidden p-8">
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Executive Summary</h3>
-                    <p className="text-gray-700 leading-relaxed font-serif text-lg leading-loose bg-parchment/30 p-6 rounded-2xl">{assistanceSummary}</p>
-                    
-                    <div className="mt-8 space-y-4">
-                      <div className="border-t border-parchment-dark pt-8">
-                        <h3 className="text-sm font-bold text-deep-green mb-6">Chat with Research Data</h3>
-                        <div className="h-72 overflow-y-auto mb-6 pr-4 space-y-6 scrollbar-thin scrollbar-thumb-parchment-dark scrollbar-track-transparent">
-                          {chatHistory.length === 0 && <div className="text-center text-gray-400 italic text-sm mt-16">Ask questions about the retrieved sources before generating the full paper...</div>}
-                          {chatHistory.map((msg, i) => (
-                            <div key={i} className={`p-5 rounded-[2rem] max-w-[85%] flex gap-4 ${msg.role === 'user' ? 'bg-parchment-dark/10 text-deep-green ml-auto' : 'bg-white border border-parchment-dark/50 shadow-sm text-gray-800'}`}>
-                              <div className="shrink-0 mt-1">
-                                {msg.role === 'user' ? (
-                                  <div className="w-8 h-8 rounded-full bg-deep-green text-white flex items-center justify-center shadow-md"><Zap className="w-3.5 h-3.5"/></div>
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-sage text-white flex items-center justify-center shadow-md"><Sparkles className="w-3.5 h-3.5"/></div>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-[10px] font-bold mb-2 opacity-50 uppercase tracking-[0.2em]">{msg.role === 'user' ? 'You' : 'Assistant'}</div>
-                                <div className="text-[15px] font-serif leading-relaxed text-gray-700">{msg.text}</div>
-                              </div>
-                            </div>
-                          ))}
-                          
-                          {/* Live Thinking Indicator */}
-                          {isProcessing && chatQuery === '' && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && (
-                            <div className="p-5 rounded-[2rem] max-w-[85%] flex gap-4 bg-white border border-parchment-dark/50 shadow-sm text-gray-800 animate-pulse">
-                              <div className="shrink-0 mt-1">
-                                <div className="w-8 h-8 rounded-full bg-sage text-white flex items-center justify-center shadow-md"><Sparkles className="w-3.5 h-3.5"/></div>
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-[10px] font-bold mb-2 opacity-50 uppercase tracking-[0.2em]">Assistant</div>
-                                <div className="text-[15px] font-serif leading-relaxed text-gray-400 flex items-center gap-2">Gathering intelligence... <Loader2 className="w-4 h-4 animate-spin"/></div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="relative group">
-                          <input 
-                            type="text" 
-                            disabled={isProcessing}
-                            value={chatQuery}
-                            onChange={(e) => setChatQuery(e.target.value)}
-                            onKeyDown={async (e) => {
-                              if (e.key === 'Enter') handleChatSubmit();
-                            }}
-                            className="w-full pl-6 pr-16 py-4 rounded-2xl border border-parchment-dark focus:ring-2 focus:ring-sage focus:outline-none bg-white font-serif text-gray-700 shadow-sm group-hover:shadow-md transition-shadow disabled:bg-gray-50"
-                            placeholder="E.g. What were the main methodologies used in the top studies?"
-                          />
-                          <button onClick={handleChatSubmit} disabled={isProcessing || !chatQuery.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-deep-green text-white rounded-xl hover:bg-deep-green-hover disabled:bg-gray-300 transition-all flex items-center justify-center">
-                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin"/> : <Send className="w-4 h-4 ml-0.5"/>}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button 
-                      onClick={handleCreateFullPaper}
-                      disabled={isProcessing}
-                      className="px-10 py-5 bg-deep-green text-white rounded-2xl hover:bg-deep-green-hover disabled:bg-gray-300 shadow-2xl shadow-deep-green/20 font-bold tracking-widest text-xs uppercase"
-                    >
-                      Initialize Full Paper
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {(stage === 'completed' || (stage === 'reviewing' && report)) && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 pb-32">
-                  <div ref={reportRef} className="prose prose-stone max-w-none font-serif bg-white p-12 md:p-20 rounded-[3rem] shadow-2xl border border-parchment-dark">
-                    <div className="text-center mb-16 space-y-4">
-                      <div className="text-xs font-bold uppercase tracking-[0.3em] text-sage">Technical Manuscript</div>
-                      <div className="h-px w-24 bg-sage/30 mx-auto" />
-                    </div>
-                    
-                    {report.split('\n').map((line, i) => {
-                      if (line.startsWith('## ')) return <h2 key={i} className="text-2xl text-deep-green mt-12 mb-6 border-b border-parchment-dark pb-2 font-serif italic">{line.replace('## ', '')}</h2>;
-                      if (line.startsWith('### ')) return <h3 key={i} className="text-lg text-deep-green mt-8 mb-4 font-bold">{line.replace('### ', '')}</h3>;
-                      if (!line.trim()) return <br key={i} />;
-                      return <p key={i} className="text-gray-800 leading-[1.8] mb-6 text-base">{line}</p>;
-                    })}
-
-                    {/* --- Reference Gallery inside Report (for PDF) --- */}
-                    {allSources.length > 0 && (
-                      <div className="mt-24 pt-12 border-t-2 border-parchment-dark border-dashed">
-                        <h2 className="text-2xl font-serif italic mb-8">References & Research Methodology</h2>
-                        <div className="grid gap-6">
-                          {allSources.slice(0, 15).map((src, i) => (
-                            <div key={i} className="text-sm text-gray-600 font-serif leading-relaxed">
-                              [{i+1}] "{src.title}". Retrieved from <span className="underline italic text-sage">{src.url}</span>. ({src.source})
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
-        </div>
-      </main>
-
-      {/* --- Right Panel: Agent Discovery Lab --- */}
-      <aside className="w-[22rem] border-l border-parchment-dark bg-white flex flex-col shadow-inner">
-        <div className="p-8 border-b border-parchment-dark flex items-center justify-between bg-parchment-dark/5">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
-            <Activity className="w-4 h-4 text-sage" />
-            Agent Signals
-          </div>
-          {isProcessing && (
-            <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-sage animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-sage animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-sage animate-bounce" />
+              <button 
+                onClick={() => setIsLogsOpen(!isLogsOpen)}
+                className={`p-1.5 transition-colors ${isLogsOpen ? 'text-mistral-orange' : 'text-mistral-black/30 hover:text-mistral-black'}`}
+              >
+                <Activity className="w-4 h-4" />
+              </button>
             </div>
-          )}
+          </header>
+
+          <main className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className={`mx-auto w-full transition-all duration-300 ${stage === 'idle' ? 'max-w-3xl' : 'max-w-4xl'} px-6 py-10`}>
+              <AnimatePresence mode="wait">
+                {stage === 'idle' && (
+                  <StageIdle 
+                    key="idle"
+                    topic={topic}
+                    setTopic={setTopic}
+                    researchMode={researchMode}
+                    setResearchMode={setResearchMode}
+                    onSubmit={handleStart}
+                    onBrainstorm={handleStartBrainstorm}
+                  />
+                )}
+                {stage === 'brainstorming' && (
+                  <StageBrainstorm 
+                    key="brainstorming"
+                    chatHistory={brainstormHistory}
+                    chatQuery={brainstormQuery}
+                    setChatQuery={setBrainstormQuery}
+                    onChatSubmit={handleBrainstormSubmit}
+                    isProcessing={isProcessing}
+                  />
+                )}
+                {stage === 'clarification' && (
+                  <StageClarification 
+                    key="clarification"
+                    questions={questions}
+                    answers={answers}
+                    setAnswers={setAnswers}
+                    onSubmit={handleAnswerSubmit}
+                    isProcessing={isProcessing}
+                  />
+                )}
+                {stage === 'planning' && (
+                  <StagePlanning 
+                    key="planning"
+                    brief={brief}
+                    plan={plan}
+                    onApprove={handlePlanApprove}
+                    isProcessing={isProcessing}
+                  />
+                )}
+                {stage === 'researching' && isProcessing && (
+                  <StageResearching 
+                    key="researching"
+                    activeThought={activeThought}
+                  />
+                )}
+                {stage === 'assistance_review' && (
+                  <StageReview 
+                    key="review"
+                    summary={assistanceSummary}
+                    chatHistory={chatHistory}
+                    chatQuery={chatQuery}
+                    setChatQuery={setChatQuery}
+                    onChatSubmit={handleChatSubmit}
+                    onGeneratePaper={handleCreateFullPaper}
+                    isProcessing={isProcessing}
+                  />
+                )}
+                {(stage === 'completed' || (stage === 'reviewing' && report)) && (
+                  <StageCompleted 
+                    key="completed"
+                    report={report}
+                    allSources={allSources}
+                    auditLog={auditLog}
+                    reportRef={reportRef}
+                  />
+                )}
+              </AnimatePresence>
+              
+              {error && (
+                <div className="my-8 p-4 border border-red-100 bg-red-50/50 flex gap-3 items-center">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <div className="text-xs text-red-900 font-medium">{error}</div>
+                </div>
+              )}
+            </div>
+          </main>
         </div>
-        
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-parchment-dark/5">
-          {/* --- Live Thought Stream --- */}
-          {activeThought && (
-            <motion.div 
-              initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
-              className="p-5 rounded-[1.5rem] bg-deep-green text-white/90 shadow-2xl shadow-deep-green/20"
+
+        <AnimatePresence>
+          {isLogsOpen && (
+            <motion.div
+              initial={{ x: 300 }}
+              animate={{ x: 0 }}
+              exit={{ x: 300 }}
+              transition={{ type: 'tween', duration: 0.2 }}
+              className="fixed right-0 top-0 h-full w-[300px] z-40 shadow-2xl"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1 hex-bg rounded-lg bg-white/10">{getAgentIcon(activeThought.agent)}</div>
-                <div className="text-[9px] font-bold uppercase tracking-widest">{activeThought.agent} thinking...</div>
-              </div>
-              <div className="text-xs font-serif leading-relaxed italic opacity-80 break-words line-clamp-6">
-                {activeThought.text}
-              </div>
+              <AgentLogsPanel 
+                logs={logs}
+                activeThought={activeThought}
+                isProcessing={isProcessing}
+                expandedLog={expandedLog}
+                setExpandedLog={setExpandedLog}
+                onClose={() => setIsLogsOpen(false)}
+              />
             </motion.div>
           )}
 
-          {logs.map((log, i) => (
-            <div key={i} className="space-y-3">
-              <button 
-                onClick={() => setExpandedLog(expandedLog === i ? null : i)}
-                className="w-full text-left p-4 rounded-2xl border border-parchment-dark/50 bg-white hover:shadow-lg hover:border-sage/30 transition-all flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl border border-parchment-dark/50 text-sage group-hover:bg-sage/10 transition-colors`}>
-                    {getAgentIcon(log.step)}
-                  </div>
-                  <div>
-                    <div className="text-[9px] font-bold text-gray-300 uppercase tracking-tighter mb-0.5">{log.timestamp}</div>
-                    <div className="text-xs font-bold text-deep-green capitalize">{log.step} Complete</div>
-                  </div>
-                </div>
-                {expandedLog === i ? <ChevronUp className="w-4 h-4 text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-300" />}
-              </button>
-              
-              <AnimatePresence>
-                {expandedLog === i && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-white/50 border border-parchment-dark/50 rounded-2xl mx-1"
-                  >
-                    <pre className="p-4 text-[10px] text-gray-500 overflow-y-auto whitespace-pre-wrap break-words font-mono leading-relaxed max-h-64">
-                      {JSON.stringify(log.data, null, 2)}
-                    </pre>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-
-          {logs.length === 0 && !activeThought && (
-            <div className="h-full flex flex-col items-center justify-center opacity-10 text-center space-y-6 mt-20">
-              <Layers className="w-20 h-20" />
-              <div className="text-xs uppercase font-bold tracking-[0.3em]">Quantum Void</div>
-            </div>
+          {isLibraryOpen && (
+            <motion.div
+              initial={{ x: 300 }}
+              animate={{ x: 0 }}
+              exit={{ x: 300 }}
+              transition={{ type: 'tween', duration: 0.2 }}
+              className="fixed right-0 top-0 h-full w-[300px] z-40 shadow-2xl"
+            >
+              <LibraryPanel 
+                onClose={() => setIsLibraryOpen(false)}
+              />
+            </motion.div>
           )}
-        </div>
-        
-        {error && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="m-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex gap-4 items-start shadow-xl">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-red-600 font-medium leading-relaxed">{error}</div>
-          </motion.div>
-        )}
-      </aside>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

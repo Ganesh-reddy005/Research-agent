@@ -1,31 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ 
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-sans" 
+  variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const playfair = Playfair_Display({ 
+const ibmPlexMono = IBM_Plex_Mono({ 
   subsets: ["latin"],
-  variable: "--font-serif" 
+  variable: "--font-mono",
+  weight: ["400", "500", "600", "700"],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "AI Research Production System",
-  description: "Evidence-based research workflow engine",
+  title: "Research Agent | Retro Engine",
+  description: "High-performance research synthesis with a retro touch.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout(props: LayoutProps) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} font-sans bg-parchment text-slate-950 antialiased`}>
-        {children}
+      <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} font-sans antialiased text-mistral-black`}>
+        {props.children}
       </body>
     </html>
   );

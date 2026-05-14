@@ -17,7 +17,8 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "synthesis": "SYNTHESIS_MODEL",
         "writer": "WRITING_MODEL",
         "critic": "CRITIC_MODEL",
-        "refinement": "REFINEMENT_MODEL"
+        "refinement": "REFINEMENT_MODEL",
+        "brainstorm": "BRAINSTORM_MODEL"
     }
     
     model_id = os.getenv(env_map.get(agent_name, "DEFAULT_MODEL"), "llama-3.3-70b-versatile")

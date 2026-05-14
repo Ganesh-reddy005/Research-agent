@@ -35,13 +35,13 @@ async def indexer_node(state):
     collection_name = f"research_{thread_id.replace('-', '_')}"
     
     # Create collection if it doesn't exist
-    # 1024 is the dimensionality for llama-nemotron-embed
+    # 1024 is the dimensionality for mistralai/mistral-embed-2312
     try:
         client.get_collection(collection_name)
     except:
         client.create_collection(
             collection_name=collection_name,
-            vectors_config=models.VectorParams(size=2048, distance=models.Distance.COSINE)
+            vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
         )
     
     print(f"Scraping deep full-text for top 15 sources...")

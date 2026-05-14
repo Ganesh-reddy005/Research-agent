@@ -7,9 +7,45 @@ import json
 from tavily import TavilyClient
 import concurrent.futures
 from langchain_core.messages import SystemMessage, HumanMessage
-from utils.llm import ainvoke_llm
+from utils.llm import ainvoke_llm, OpenRouterEmbeddings
+from qdrant_client import QdrantClient
+from langchain_qdrant import QdrantVectorStore
 
 import time
+
+def search_private_library(query, user_id, max_results=5):
+    sources = []
+    qdrant_url = os.getenv("QDRANT_URL")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    if not qdrant_url or not user_id:
+        return sources
+        
+    embeddings = OpenRouterEmbeddings()
+    collection_name = f"user_{str(user_id).replace('-', '_')}_library"
+    
+    try:
+        client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+        # Check if collection exists
+        collections = client.get_collections().collections
+        if not any(c.name == collection_name for c in collections):
+            return sources
+
+        vector_store = QdrantVectorStore(
+            client=client,
+            collection_name=collection_name,
+            embedding=embeddings,
+        )
+        docs = vector_store.similarity_search(query, k=max_results)
+        for d in docs:
+            sources.append({
+                "title": d.metadata.get("source", "Private Document"),
+                "url": f"local://{d.metadata.get('source')}",
+                "summary": d.page_content[:500] + "...",
+                "source": "Private Library"
+            })
+    except Exception as e:
+        print(f"Private library search failed: {e}")
+    return sources
 
 def search_core(query, max_results=3):
     sources = []
@@ -106,6 +142,7 @@ async def retriever_node(state):
 
     # FLATTENED PARALLEL SEARCH: One large pool for all (query, source) pairs
     # This is much faster than nested pools and avoids overhead
+    user_id = state.get("user_id")
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         future_to_query = []
         
@@ -119,6 +156,9 @@ async def retriever_node(state):
             future_to_query.append(executor.submit(search_arxiv, q, max_results=results_per_query))
             # 4. CORE
             future_to_query.append(executor.submit(search_core, q, max_results=results_per_query))
+            # 5. Private Library
+            if user_id:
+                future_to_query.append(executor.submit(search_private_library, q, user_id, max_results=results_per_query))
             
         for future in concurrent.futures.as_completed(future_to_query):
             try:

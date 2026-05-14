@@ -1,0 +1,5396 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "postcss.config.mjs",
+      "file_type": "code",
+      "source_file": "frontend/postcss.config.mjs",
+      "source_location": "L1",
+      "id": "frontend_postcss_config_mjs",
+      "community": 21,
+      "norm_label": "postcss.config.mjs"
+    },
+    {
+      "label": "config",
+      "file_type": "code",
+      "source_file": "frontend/postcss.config.mjs",
+      "source_location": "L2",
+      "id": "frontend_postcss_config_config",
+      "community": 21,
+      "norm_label": "config"
+    },
+    {
+      "label": "next.config.mjs",
+      "file_type": "code",
+      "source_file": "frontend/next.config.mjs",
+      "source_location": "L1",
+      "id": "frontend_next_config_mjs",
+      "community": 22,
+      "norm_label": "next.config.mjs"
+    },
+    {
+      "label": "nextConfig",
+      "file_type": "code",
+      "source_file": "frontend/next.config.mjs",
+      "source_location": "L2",
+      "id": "frontend_next_config_nextconfig",
+      "community": 22,
+      "norm_label": "nextconfig"
+    },
+    {
+      "label": "next-env.d.ts",
+      "file_type": "code",
+      "source_file": "frontend/next-env.d.ts",
+      "source_location": "L1",
+      "id": "frontend_next_env_d_ts",
+      "community": 25,
+      "norm_label": "next-env.d.ts"
+    },
+    {
+      "label": "tailwind.config.ts",
+      "file_type": "code",
+      "source_file": "frontend/tailwind.config.ts",
+      "source_location": "L1",
+      "id": "frontend_tailwind_config_ts",
+      "community": 23,
+      "norm_label": "tailwind.config.ts"
+    },
+    {
+      "label": "config",
+      "file_type": "code",
+      "source_file": "frontend/tailwind.config.ts",
+      "source_location": "L3",
+      "id": "frontend_tailwind_config_config",
+      "community": 23,
+      "norm_label": "config"
+    },
+    {
+      "label": "layout.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_app_layout_tsx",
+      "community": 11,
+      "norm_label": "layout.tsx"
+    },
+    {
+      "label": "spaceGrotesk",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L5",
+      "id": "app_layout_spacegrotesk",
+      "community": 11,
+      "norm_label": "spacegrotesk"
+    },
+    {
+      "label": "ibmPlexMono",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L11",
+      "id": "app_layout_ibmplexmono",
+      "community": 11,
+      "norm_label": "ibmplexmono"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L18",
+      "id": "app_layout_metadata",
+      "community": 11,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "RootLayout()",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L23",
+      "id": "app_layout_rootlayout",
+      "community": 11,
+      "norm_label": "rootlayout()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_app_page_tsx",
+      "community": 3,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "LandingPage()",
+      "file_type": "code",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L11",
+      "id": "app_page_landingpage",
+      "community": 3,
+      "norm_label": "landingpage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/app/dashboard/page.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_app_dashboard_page_tsx",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "DashboardPage()",
+      "file_type": "code",
+      "source_file": "frontend/src/app/dashboard/page.tsx",
+      "source_location": "L5",
+      "id": "dashboard_page_dashboardpage",
+      "community": 0,
+      "norm_label": "dashboardpage()"
+    },
+    {
+      "label": "Dashboard.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_tsx",
+      "community": 0,
+      "norm_label": "dashboard.tsx"
+    },
+    {
+      "label": "Stage",
+      "file_type": "code",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L20",
+      "id": "components_dashboard_stage",
+      "community": 0,
+      "norm_label": "stage"
+    },
+    {
+      "label": "ResearchMode",
+      "file_type": "code",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L21",
+      "id": "components_dashboard_researchmode",
+      "community": 0,
+      "norm_label": "researchmode"
+    },
+    {
+      "label": "Dashboard()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L23",
+      "id": "components_dashboard_dashboard",
+      "community": 0,
+      "norm_label": "dashboard()"
+    },
+    {
+      "label": "QueryForm.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/QueryForm.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_queryform_tsx",
+      "community": 20,
+      "norm_label": "queryform.tsx"
+    },
+    {
+      "label": "QueryFormProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/QueryForm.tsx",
+      "source_location": "L5",
+      "id": "components_queryform_queryformprops",
+      "community": 20,
+      "norm_label": "queryformprops"
+    },
+    {
+      "label": "QueryForm()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/QueryForm.tsx",
+      "source_location": "L10",
+      "id": "components_queryform_queryform",
+      "community": 20,
+      "norm_label": "queryform()"
+    },
+    {
+      "label": "ReportViewer.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_reportviewer_tsx",
+      "community": 7,
+      "norm_label": "reportviewer.tsx"
+    },
+    {
+      "label": "ReportViewerProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L6",
+      "id": "components_reportviewer_reportviewerprops",
+      "community": 7,
+      "norm_label": "reportviewerprops"
+    },
+    {
+      "label": "ReportViewer()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L11",
+      "id": "components_reportviewer_reportviewer",
+      "community": 7,
+      "norm_label": "reportviewer()"
+    },
+    {
+      "label": "ProgressStepper.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_progressstepper_tsx",
+      "community": 16,
+      "norm_label": "progressstepper.tsx"
+    },
+    {
+      "label": "ProgressStepperProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L5",
+      "id": "components_progressstepper_progressstepperprops",
+      "community": 16,
+      "norm_label": "progressstepperprops"
+    },
+    {
+      "label": "steps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L9",
+      "id": "components_progressstepper_steps",
+      "community": 16,
+      "norm_label": "steps"
+    },
+    {
+      "label": "ProgressStepper()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L16",
+      "id": "components_progressstepper_progressstepper",
+      "community": 16,
+      "norm_label": "progressstepper()"
+    },
+    {
+      "label": "AgentLogsViewer.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_agentlogsviewer_tsx",
+      "community": 7,
+      "norm_label": "agentlogsviewer.tsx"
+    },
+    {
+      "label": "AgentLogsViewerProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L7",
+      "id": "components_agentlogsviewer_agentlogsviewerprops",
+      "community": 7,
+      "norm_label": "agentlogsviewerprops"
+    },
+    {
+      "label": "AgentLogsViewer()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L16",
+      "id": "components_agentlogsviewer_agentlogsviewer",
+      "community": 7,
+      "norm_label": "agentlogsviewer()"
+    },
+    {
+      "label": "SourceCard.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/SourceCard.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_sourcecard_tsx",
+      "community": 7,
+      "norm_label": "sourcecard.tsx"
+    },
+    {
+      "label": "SourceCardProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/SourceCard.tsx",
+      "source_location": "L4",
+      "id": "components_sourcecard_sourcecardprops",
+      "community": 7,
+      "norm_label": "sourcecardprops"
+    },
+    {
+      "label": "SourceCard()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/SourceCard.tsx",
+      "source_location": "L13",
+      "id": "components_sourcecard_sourcecard",
+      "community": 7,
+      "norm_label": "sourcecard()"
+    },
+    {
+      "label": "Hero.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Hero.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_hero_tsx",
+      "community": 3,
+      "norm_label": "hero.tsx"
+    },
+    {
+      "label": "Hero()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Hero.tsx",
+      "source_location": "L9",
+      "id": "landing_hero_hero",
+      "community": 3,
+      "norm_label": "hero()"
+    },
+    {
+      "label": "Navbar.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_navbar_tsx",
+      "community": 3,
+      "norm_label": "navbar.tsx"
+    },
+    {
+      "label": "Navbar()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L9",
+      "id": "landing_navbar_navbar",
+      "community": 3,
+      "norm_label": "navbar()"
+    },
+    {
+      "label": "Features.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Features.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_features_tsx",
+      "community": 3,
+      "norm_label": "features.tsx"
+    },
+    {
+      "label": "Features()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Features.tsx",
+      "source_location": "L6",
+      "id": "landing_features_features",
+      "community": 3,
+      "norm_label": "features()"
+    },
+    {
+      "label": "AuthModal.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_authmodal_tsx",
+      "community": 3,
+      "norm_label": "authmodal.tsx"
+    },
+    {
+      "label": "AuthModalProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L8",
+      "id": "landing_authmodal_authmodalprops",
+      "community": 3,
+      "norm_label": "authmodalprops"
+    },
+    {
+      "label": "AuthModal()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L13",
+      "id": "landing_authmodal_authmodal",
+      "community": 3,
+      "norm_label": "authmodal()"
+    },
+    {
+      "label": "ValueProp.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/ValueProp.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_valueprop_tsx",
+      "community": 3,
+      "norm_label": "valueprop.tsx"
+    },
+    {
+      "label": "ValueProp()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/ValueProp.tsx",
+      "source_location": "L6",
+      "id": "landing_valueprop_valueprop",
+      "community": 3,
+      "norm_label": "valueprop()"
+    },
+    {
+      "label": "Footer.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Footer.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_footer_tsx",
+      "community": 3,
+      "norm_label": "footer.tsx"
+    },
+    {
+      "label": "Footer()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/Footer.tsx",
+      "source_location": "L6",
+      "id": "landing_footer_footer",
+      "community": 3,
+      "norm_label": "footer()"
+    },
+    {
+      "label": "CTA.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/CTA.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_landing_cta_tsx",
+      "community": 3,
+      "norm_label": "cta.tsx"
+    },
+    {
+      "label": "CTA()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/landing/CTA.tsx",
+      "source_location": "L5",
+      "id": "landing_cta_cta",
+      "community": 3,
+      "norm_label": "cta()"
+    },
+    {
+      "label": "StageReview.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageReview.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stagereview_tsx",
+      "community": 0,
+      "norm_label": "stagereview.tsx"
+    },
+    {
+      "label": "StageReviewProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageReview.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stagereview_stagereviewprops",
+      "community": 0,
+      "norm_label": "stagereviewprops"
+    },
+    {
+      "label": "StageReview()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageReview.tsx",
+      "source_location": "L17",
+      "id": "dashboard_stagereview_stagereview",
+      "community": 0,
+      "norm_label": "stagereview()"
+    },
+    {
+      "label": "StageIdle.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stageidle_tsx",
+      "community": 17,
+      "norm_label": "stageidle.tsx"
+    },
+    {
+      "label": "StageIdleProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stageidle_stageidleprops",
+      "community": 17,
+      "norm_label": "stageidleprops"
+    },
+    {
+      "label": "Tab",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L15",
+      "id": "dashboard_stageidle_tab",
+      "community": 17,
+      "norm_label": "tab"
+    },
+    {
+      "label": "StageIdle()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L17",
+      "id": "dashboard_stageidle_stageidle",
+      "community": 17,
+      "norm_label": "stageidle()"
+    },
+    {
+      "label": "StagePlanning.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StagePlanning.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stageplanning_tsx",
+      "community": 0,
+      "norm_label": "stageplanning.tsx"
+    },
+    {
+      "label": "StagePlanningProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StagePlanning.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stageplanning_stageplanningprops",
+      "community": 0,
+      "norm_label": "stageplanningprops"
+    },
+    {
+      "label": "StagePlanning()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StagePlanning.tsx",
+      "source_location": "L14",
+      "id": "dashboard_stageplanning_stageplanning",
+      "community": 0,
+      "norm_label": "stageplanning()"
+    },
+    {
+      "label": "StageResearching.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stageresearching_tsx",
+      "community": 18,
+      "norm_label": "stageresearching.tsx"
+    },
+    {
+      "label": "StageResearchingProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stageresearching_stageresearchingprops",
+      "community": 18,
+      "norm_label": "stageresearchingprops"
+    },
+    {
+      "label": "StageResearching()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L11",
+      "id": "dashboard_stageresearching_stageresearching",
+      "community": 18,
+      "norm_label": "stageresearching()"
+    },
+    {
+      "label": "StageCompleted.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageCompleted.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stagecompleted_tsx",
+      "community": 0,
+      "norm_label": "stagecompleted.tsx"
+    },
+    {
+      "label": "StageCompletedProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageCompleted.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stagecompleted_stagecompletedprops",
+      "community": 0,
+      "norm_label": "stagecompletedprops"
+    },
+    {
+      "label": "StageCompleted()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageCompleted.tsx",
+      "source_location": "L14",
+      "id": "dashboard_stagecompleted_stagecompleted",
+      "community": 0,
+      "norm_label": "stagecompleted()"
+    },
+    {
+      "label": "AgentLogsPanel.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_agentlogspanel_tsx",
+      "community": 19,
+      "norm_label": "agentlogspanel.tsx"
+    },
+    {
+      "label": "AgentLogsPanelProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L7",
+      "id": "dashboard_agentlogspanel_agentlogspanelprops",
+      "community": 19,
+      "norm_label": "agentlogspanelprops"
+    },
+    {
+      "label": "getAgentIcon()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L16",
+      "id": "dashboard_agentlogspanel_getagenticon",
+      "community": 19,
+      "norm_label": "getagenticon()"
+    },
+    {
+      "label": "AgentLogsPanel()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L31",
+      "id": "dashboard_agentlogspanel_agentlogspanel",
+      "community": 19,
+      "norm_label": "agentlogspanel()"
+    },
+    {
+      "label": "LibraryPanel.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_librarypanel_tsx",
+      "community": 0,
+      "norm_label": "librarypanel.tsx"
+    },
+    {
+      "label": "LibraryPanelProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L7",
+      "id": "dashboard_librarypanel_librarypanelprops",
+      "community": 0,
+      "norm_label": "librarypanelprops"
+    },
+    {
+      "label": "LibraryPanel()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L11",
+      "id": "dashboard_librarypanel_librarypanel",
+      "community": 0,
+      "norm_label": "librarypanel()"
+    },
+    {
+      "label": "StageClarification.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageClarification.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_stageclarification_tsx",
+      "community": 0,
+      "norm_label": "stageclarification.tsx"
+    },
+    {
+      "label": "StageClarificationProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageClarification.tsx",
+      "source_location": "L7",
+      "id": "dashboard_stageclarification_stageclarificationprops",
+      "community": 0,
+      "norm_label": "stageclarificationprops"
+    },
+    {
+      "label": "StageClarification()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageClarification.tsx",
+      "source_location": "L15",
+      "id": "dashboard_stageclarification_stageclarification",
+      "community": 0,
+      "norm_label": "stageclarification()"
+    },
+    {
+      "label": "Sidebar.tsx",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_dashboard_sidebar_tsx",
+      "community": 3,
+      "norm_label": "sidebar.tsx"
+    },
+    {
+      "label": "SidebarProps",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L9",
+      "id": "dashboard_sidebar_sidebarprops",
+      "community": 3,
+      "norm_label": "sidebarprops"
+    },
+    {
+      "label": "Sidebar()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L15",
+      "id": "dashboard_sidebar_sidebar",
+      "community": 3,
+      "norm_label": "sidebar()"
+    },
+    {
+      "label": "supabaseClient.ts",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/supabaseClient.ts",
+      "source_location": "L1",
+      "id": "frontend_src_lib_supabaseclient_ts",
+      "community": 3,
+      "norm_label": "supabaseclient.ts"
+    },
+    {
+      "label": "supabase",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/supabaseClient.ts",
+      "source_location": "L6",
+      "id": "lib_supabaseclient_supabase",
+      "community": 3,
+      "norm_label": "supabase"
+    },
+    {
+      "label": "api.ts",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L1",
+      "id": "frontend_src_lib_api_ts",
+      "community": 0,
+      "norm_label": "api.ts"
+    },
+    {
+      "label": "EventCallbacks",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L3",
+      "id": "lib_api_eventcallbacks",
+      "community": 0,
+      "norm_label": "eventcallbacks"
+    },
+    {
+      "label": "getAuthHeaders()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L13",
+      "id": "lib_api_getauthheaders",
+      "community": 0,
+      "norm_label": "getauthheaders()"
+    },
+    {
+      "label": "handleSSEResponse()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L21",
+      "id": "lib_api_handlesseresponse",
+      "community": 0,
+      "norm_label": "handlesseresponse()"
+    },
+    {
+      "label": "startResearch()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L68",
+      "id": "lib_api_startresearch",
+      "community": 0,
+      "norm_label": "startresearch()"
+    },
+    {
+      "label": "resumeResearch()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L90",
+      "id": "lib_api_resumeresearch",
+      "community": 0,
+      "norm_label": "resumeresearch()"
+    },
+    {
+      "label": "chatWithData()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L113",
+      "id": "lib_api_chatwithdata",
+      "community": 0,
+      "norm_label": "chatwithdata()"
+    },
+    {
+      "label": "uploadDocument()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L131",
+      "id": "lib_api_uploaddocument",
+      "community": 0,
+      "norm_label": "uploaddocument()"
+    },
+    {
+      "label": "getLibrary()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L152",
+      "id": "lib_api_getlibrary",
+      "community": 0,
+      "norm_label": "getlibrary()"
+    },
+    {
+      "label": "brainstormResearch()",
+      "file_type": "code",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L165",
+      "id": "lib_api_brainstormresearch",
+      "community": 0,
+      "norm_label": "brainstormresearch()"
+    },
+    {
+      "label": "workflow.py",
+      "file_type": "code",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L1",
+      "id": "backend_graph_workflow_py",
+      "community": 14,
+      "norm_label": "workflow.py"
+    },
+    {
+      "label": "AgentState",
+      "file_type": "code",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L21",
+      "id": "graph_workflow_agentstate",
+      "community": 14,
+      "norm_label": "agentstate"
+    },
+    {
+      "label": "TypedDict",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "typeddict",
+      "community": 14,
+      "norm_label": "typeddict"
+    },
+    {
+      "label": "build_graph()",
+      "file_type": "code",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L41",
+      "id": "graph_workflow_build_graph",
+      "community": 14,
+      "norm_label": "build_graph()"
+    },
+    {
+      "label": "planner.py",
+      "file_type": "code",
+      "source_file": "backend/agents/planner.py",
+      "source_location": "L1",
+      "id": "backend_agents_planner_py",
+      "community": 1,
+      "norm_label": "planner.py"
+    },
+    {
+      "label": "planner_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/planner.py",
+      "source_location": "L5",
+      "id": "agents_planner_planner_node",
+      "community": 1,
+      "norm_label": "planner_node()"
+    },
+    {
+      "label": "brainstorm.py",
+      "file_type": "code",
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L1",
+      "id": "backend_agents_brainstorm_py",
+      "community": 1,
+      "norm_label": "brainstorm.py"
+    },
+    {
+      "label": "brainstorm_chat()",
+      "file_type": "code",
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L18",
+      "id": "agents_brainstorm_brainstorm_chat",
+      "community": 1,
+      "norm_label": "brainstorm_chat()"
+    },
+    {
+      "label": "Handles a brainstorming chat session.     Expects messages in format: [{\"role\":",
+      "file_type": "rationale",
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L19",
+      "id": "agents_brainstorm_rationale_19",
+      "community": 1,
+      "norm_label": "handles a brainstorming chat session.     expects messages in format: [{\"role\":"
+    },
+    {
+      "label": "retriever.py",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L1",
+      "id": "backend_agents_retriever_py",
+      "community": 1,
+      "norm_label": "retriever.py"
+    },
+    {
+      "label": "search_private_library()",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L16",
+      "id": "agents_retriever_search_private_library",
+      "community": 1,
+      "norm_label": "search_private_library()"
+    },
+    {
+      "label": "search_core()",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L50",
+      "id": "agents_retriever_search_core",
+      "community": 1,
+      "norm_label": "search_core()"
+    },
+    {
+      "label": "search_openalex()",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L73",
+      "id": "agents_retriever_search_openalex",
+      "community": 1,
+      "norm_label": "search_openalex()"
+    },
+    {
+      "label": "search_arxiv()",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L96",
+      "id": "agents_retriever_search_arxiv",
+      "community": 1,
+      "norm_label": "search_arxiv()"
+    },
+    {
+      "label": "retriever_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L114",
+      "id": "agents_retriever_retriever_node",
+      "community": 1,
+      "norm_label": "retriever_node()"
+    },
+    {
+      "label": "assistance.py",
+      "file_type": "code",
+      "source_file": "backend/agents/assistance.py",
+      "source_location": "L1",
+      "id": "backend_agents_assistance_py",
+      "community": 1,
+      "norm_label": "assistance.py"
+    },
+    {
+      "label": "assistance_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/assistance.py",
+      "source_location": "L4",
+      "id": "agents_assistance_assistance_node",
+      "community": 1,
+      "norm_label": "assistance_node()"
+    },
+    {
+      "label": "refinement.py",
+      "file_type": "code",
+      "source_file": "backend/agents/refinement.py",
+      "source_location": "L1",
+      "id": "backend_agents_refinement_py",
+      "community": 1,
+      "norm_label": "refinement.py"
+    },
+    {
+      "label": "refinement_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/refinement.py",
+      "source_location": "L4",
+      "id": "agents_refinement_refinement_node",
+      "community": 1,
+      "norm_label": "refinement_node()"
+    },
+    {
+      "label": "clarification.py",
+      "file_type": "code",
+      "source_file": "backend/agents/clarification.py",
+      "source_location": "L1",
+      "id": "backend_agents_clarification_py",
+      "community": 1,
+      "norm_label": "clarification.py"
+    },
+    {
+      "label": "clarification_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/clarification.py",
+      "source_location": "L5",
+      "id": "agents_clarification_clarification_node",
+      "community": 1,
+      "norm_label": "clarification_node()"
+    },
+    {
+      "label": "indexer.py",
+      "file_type": "code",
+      "source_file": "backend/agents/indexer.py",
+      "source_location": "L1",
+      "id": "backend_agents_indexer_py",
+      "community": 12,
+      "norm_label": "indexer.py"
+    },
+    {
+      "label": "indexer_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/indexer.py",
+      "source_location": "L10",
+      "id": "agents_indexer_indexer_node",
+      "community": 12,
+      "norm_label": "indexer_node()"
+    },
+    {
+      "label": "planning.py",
+      "file_type": "code",
+      "source_file": "backend/agents/planning.py",
+      "source_location": "L1",
+      "id": "backend_agents_planning_py",
+      "community": 1,
+      "norm_label": "planning.py"
+    },
+    {
+      "label": "planning_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/planning.py",
+      "source_location": "L6",
+      "id": "agents_planning_planning_node",
+      "community": 1,
+      "norm_label": "planning_node()"
+    },
+    {
+      "label": "writer.py",
+      "file_type": "code",
+      "source_file": "backend/agents/writer.py",
+      "source_location": "L1",
+      "id": "backend_agents_writer_py",
+      "community": 1,
+      "norm_label": "writer.py"
+    },
+    {
+      "label": "writer_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/writer.py",
+      "source_location": "L6",
+      "id": "agents_writer_writer_node",
+      "community": 1,
+      "norm_label": "writer_node()"
+    },
+    {
+      "label": "auditor.py",
+      "file_type": "code",
+      "source_file": "backend/agents/auditor.py",
+      "source_location": "L1",
+      "id": "backend_agents_auditor_py",
+      "community": 24,
+      "norm_label": "auditor.py"
+    },
+    {
+      "label": "citation_auditor_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/auditor.py",
+      "source_location": "L5",
+      "id": "agents_auditor_citation_auditor_node",
+      "community": 24,
+      "norm_label": "citation_auditor_node()"
+    },
+    {
+      "label": "critic.py",
+      "file_type": "code",
+      "source_file": "backend/agents/critic.py",
+      "source_location": "L1",
+      "id": "backend_agents_critic_py",
+      "community": 1,
+      "norm_label": "critic.py"
+    },
+    {
+      "label": "critic_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/critic.py",
+      "source_location": "L4",
+      "id": "agents_critic_critic_node",
+      "community": 1,
+      "norm_label": "critic_node()"
+    },
+    {
+      "label": "synthesis.py",
+      "file_type": "code",
+      "source_file": "backend/agents/synthesis.py",
+      "source_location": "L1",
+      "id": "backend_agents_synthesis_py",
+      "community": 1,
+      "norm_label": "synthesis.py"
+    },
+    {
+      "label": "synthesis_node()",
+      "file_type": "code",
+      "source_file": "backend/agents/synthesis.py",
+      "source_location": "L6",
+      "id": "agents_synthesis_synthesis_node",
+      "community": 1,
+      "norm_label": "synthesis_node()"
+    },
+    {
+      "label": "auth.py",
+      "file_type": "code",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L1",
+      "id": "backend_utils_auth_py",
+      "community": 2,
+      "norm_label": "auth.py"
+    },
+    {
+      "label": "get_current_user()",
+      "file_type": "code",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L18",
+      "id": "utils_auth_get_current_user",
+      "community": 2,
+      "norm_label": "get_current_user()"
+    },
+    {
+      "label": "get_supabase_client()",
+      "file_type": "code",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L33",
+      "id": "utils_auth_get_supabase_client",
+      "community": 2,
+      "norm_label": "get_supabase_client()"
+    },
+    {
+      "label": "Verifies the Supabase JWT token and returns the user object.",
+      "file_type": "rationale",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L19",
+      "id": "utils_auth_rationale_19",
+      "community": 2,
+      "norm_label": "verifies the supabase jwt token and returns the user object."
+    },
+    {
+      "label": "ingestion.py",
+      "file_type": "code",
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L1",
+      "id": "backend_utils_ingestion_py",
+      "community": 2,
+      "norm_label": "ingestion.py"
+    },
+    {
+      "label": "process_pdf_ingestion()",
+      "file_type": "code",
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L9",
+      "id": "utils_ingestion_process_pdf_ingestion",
+      "community": 2,
+      "norm_label": "process_pdf_ingestion()"
+    },
+    {
+      "label": "Parses a PDF, chunks it, embeds it, and stores it in the user's Qdrant collectio",
+      "file_type": "rationale",
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L10",
+      "id": "utils_ingestion_rationale_10",
+      "community": 2,
+      "norm_label": "parses a pdf, chunks it, embeds it, and stores it in the user's qdrant collectio"
+    },
+    {
+      "label": "scraper.py",
+      "file_type": "code",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L1",
+      "id": "backend_utils_scraper_py",
+      "community": 12,
+      "norm_label": "scraper.py"
+    },
+    {
+      "label": "fetch_full_text()",
+      "file_type": "code",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L6",
+      "id": "utils_scraper_fetch_full_text",
+      "community": 12,
+      "norm_label": "fetch_full_text()"
+    },
+    {
+      "label": "process_sources_with_full_text()",
+      "file_type": "code",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L39",
+      "id": "utils_scraper_process_sources_with_full_text",
+      "community": 12,
+      "norm_label": "process_sources_with_full_text()"
+    },
+    {
+      "label": "Fetch the full markdown text of a URL using Jina Reader API.     Returns empty s",
+      "file_type": "rationale",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L7",
+      "id": "utils_scraper_rationale_7",
+      "community": 12,
+      "norm_label": "fetch the full markdown text of a url using jina reader api.     returns empty s"
+    },
+    {
+      "label": "Takes an array of source dictionaries, grabs the top `max_sources`,      and app",
+      "file_type": "rationale",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L40",
+      "id": "utils_scraper_rationale_40",
+      "community": 12,
+      "norm_label": "takes an array of source dictionaries, grabs the top `max_sources`,      and app"
+    },
+    {
+      "label": "llm.py",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L1",
+      "id": "backend_utils_llm_py",
+      "community": 1,
+      "norm_label": "llm.py"
+    },
+    {
+      "label": "get_llm()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L9",
+      "id": "utils_llm_get_llm",
+      "community": 1,
+      "norm_label": "get_llm()"
+    },
+    {
+      "label": "ainvoke_llm()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L46",
+      "id": "utils_llm_ainvoke_llm",
+      "community": 1,
+      "norm_label": "ainvoke_llm()"
+    },
+    {
+      "label": "invoke_llm()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L50",
+      "id": "utils_llm_invoke_llm",
+      "community": 1,
+      "norm_label": "invoke_llm()"
+    },
+    {
+      "label": "OpenRouterEmbeddings",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L54",
+      "id": "utils_llm_openrouterembeddings",
+      "community": 2,
+      "norm_label": "openrouterembeddings"
+    },
+    {
+      "label": "Embeddings",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "embeddings",
+      "community": 2,
+      "norm_label": "embeddings"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L58",
+      "id": "utils_llm_openrouterembeddings_init",
+      "community": 2,
+      "norm_label": ".__init__()"
+    },
+    {
+      "label": ".embed_documents()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L66",
+      "id": "utils_llm_openrouterembeddings_embed_documents",
+      "community": 2,
+      "norm_label": ".embed_documents()"
+    },
+    {
+      "label": ".embed_query()",
+      "file_type": "code",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L81",
+      "id": "utils_llm_openrouterembeddings_embed_query",
+      "community": 2,
+      "norm_label": ".embed_query()"
+    },
+    {
+      "label": "Returns an LLM instance based on the agent name or a default.",
+      "file_type": "rationale",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L10",
+      "id": "utils_llm_rationale_10",
+      "community": 1,
+      "norm_label": "returns an llm instance based on the agent name or a default."
+    },
+    {
+      "label": "Custom embeddings class for OpenRouter.",
+      "file_type": "rationale",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L55",
+      "id": "utils_llm_rationale_55",
+      "community": 2,
+      "norm_label": "custom embeddings class for openrouter."
+    },
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L1",
+      "id": "backend_api_main_py",
+      "community": 2,
+      "norm_label": "main.py"
+    },
+    {
+      "label": "lifespan()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L29",
+      "id": "api_main_lifespan",
+      "community": 14,
+      "norm_label": "lifespan()"
+    },
+    {
+      "label": "ResearchStartRequest",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L51",
+      "id": "api_main_researchstartrequest",
+      "community": 2,
+      "norm_label": "researchstartrequest"
+    },
+    {
+      "label": "BaseModel",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "basemodel",
+      "community": 2,
+      "norm_label": "basemodel"
+    },
+    {
+      "label": "ResearchResumeRequest",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L55",
+      "id": "api_main_researchresumerequest",
+      "community": 2,
+      "norm_label": "researchresumerequest"
+    },
+    {
+      "label": "ChatRequest",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L60",
+      "id": "api_main_chatrequest",
+      "community": 2,
+      "norm_label": "chatrequest"
+    },
+    {
+      "label": "BrainstormRequest",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L64",
+      "id": "api_main_brainstormrequest",
+      "community": 2,
+      "norm_label": "brainstormrequest"
+    },
+    {
+      "label": "verify_session()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L67",
+      "id": "api_main_verify_session",
+      "community": 2,
+      "norm_label": "verify_session()"
+    },
+    {
+      "label": "home()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L77",
+      "id": "api_main_home",
+      "community": 2,
+      "norm_label": "home()"
+    },
+    {
+      "label": "start_research()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L81",
+      "id": "api_main_start_research",
+      "community": 2,
+      "norm_label": "start_research()"
+    },
+    {
+      "label": "resume_research()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L153",
+      "id": "api_main_resume_research",
+      "community": 2,
+      "norm_label": "resume_research()"
+    },
+    {
+      "label": "upload_document()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L224",
+      "id": "api_main_upload_document",
+      "community": 2,
+      "norm_label": "upload_document()"
+    },
+    {
+      "label": "list_library()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L250",
+      "id": "api_main_list_library",
+      "community": 2,
+      "norm_label": "list_library()"
+    },
+    {
+      "label": "brainstorm_research()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L256",
+      "id": "api_main_brainstorm_research",
+      "community": 1,
+      "norm_label": "brainstorm_research()"
+    },
+    {
+      "label": "chat_with_data()",
+      "file_type": "code",
+      "source_file": "backend/api/main.py",
+      "source_location": "L265",
+      "id": "api_main_chat_with_data",
+      "community": 2,
+      "norm_label": "chat_with_data()"
+    },
+    {
+      "label": "details.md",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L1",
+      "id": "details_md",
+      "community": 6,
+      "norm_label": "details.md"
+    },
+    {
+      "label": "\ud83c\udfaf Objective",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L3",
+      "id": "research_agent_details_objective",
+      "community": 6,
+      "norm_label": "\ud83c\udfaf objective"
+    },
+    {
+      "label": "\ud83e\uddf1 Tech Stack",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L10",
+      "id": "research_agent_details_tech_stack",
+      "community": 6,
+      "norm_label": "\ud83e\uddf1 tech stack"
+    },
+    {
+      "label": "\ud83e\udd16 Agents Definition",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L29",
+      "id": "research_agent_details_agents_definition",
+      "community": 6,
+      "norm_label": "\ud83e\udd16 agents definition"
+    },
+    {
+      "label": "1. Planner Agent",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L31",
+      "id": "research_agent_details_1_planner_agent",
+      "community": 6,
+      "norm_label": "1. planner agent"
+    },
+    {
+      "label": "2. Retriever Agent",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L39",
+      "id": "research_agent_details_2_retriever_agent",
+      "community": 6,
+      "norm_label": "2. retriever agent"
+    },
+    {
+      "label": "3. Writer Agent",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L54",
+      "id": "research_agent_details_3_writer_agent",
+      "community": 6,
+      "norm_label": "3. writer agent"
+    },
+    {
+      "label": "4. Critic Agent",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L77",
+      "id": "research_agent_details_4_critic_agent",
+      "community": 6,
+      "norm_label": "4. critic agent"
+    },
+    {
+      "label": "\ud83d\udd01 Workflow (LangGraph)",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L90",
+      "id": "research_agent_details_workflow_langgraph",
+      "community": 6,
+      "norm_label": "\ud83d\udd01 workflow (langgraph)"
+    },
+    {
+      "label": "\u2699\ufe0f API Handling",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L101",
+      "id": "research_agent_details_api_handling",
+      "community": 6,
+      "norm_label": "\u2699\ufe0f api handling"
+    },
+    {
+      "label": "\ud83c\udf10 Frontend Requirements",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L109",
+      "id": "research_agent_details_frontend_requirements",
+      "community": 6,
+      "norm_label": "\ud83c\udf10 frontend requirements"
+    },
+    {
+      "label": "\u26a1 Constraints",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L121",
+      "id": "research_agent_details_constraints",
+      "community": 6,
+      "norm_label": "\u26a1 constraints"
+    },
+    {
+      "label": "\ud83d\ude80 Bonus (optional if time permits)",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L129",
+      "id": "research_agent_details_bonus_optional_if_time_permits",
+      "community": 6,
+      "norm_label": "\ud83d\ude80 bonus (optional if time permits)"
+    },
+    {
+      "label": "\ud83d\udce6 Output",
+      "file_type": "document",
+      "source_file": "details.md",
+      "source_location": "L136",
+      "id": "research_agent_details_output",
+      "community": 6,
+      "norm_label": "\ud83d\udce6 output"
+    },
+    {
+      "label": "TODO.md",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L1",
+      "id": "todo_md",
+      "community": 13,
+      "norm_label": "todo.md"
+    },
+    {
+      "label": "Lume.ai - Development Status & Next Steps",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L1",
+      "id": "research_agent_todo_lume_ai_development_status_next_steps",
+      "community": 13,
+      "norm_label": "lume.ai - development status & next steps"
+    },
+    {
+      "label": "\u2705 Completed Tasks",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L3",
+      "id": "research_agent_todo_completed_tasks",
+      "community": 13,
+      "norm_label": "\u2705 completed tasks"
+    },
+    {
+      "label": "\ud83d\ude80 Immediate Next Steps (Pending)",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L23",
+      "id": "research_agent_todo_immediate_next_steps_pending",
+      "community": 13,
+      "norm_label": "\ud83d\ude80 immediate next steps (pending)"
+    },
+    {
+      "label": "\ud83d\udd11 Environment Variables Required",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L29",
+      "id": "research_agent_todo_environment_variables_required",
+      "community": 13,
+      "norm_label": "\ud83d\udd11 environment variables required"
+    },
+    {
+      "label": "Frontend (`.env.local`)",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L30",
+      "id": "research_agent_todo_frontend_env_local",
+      "community": 13,
+      "norm_label": "frontend (`.env.local`)"
+    },
+    {
+      "label": "Backend (`.env`)",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L34",
+      "id": "research_agent_todo_backend_env",
+      "community": 13,
+      "norm_label": "backend (`.env`)"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "readme_md",
+      "community": 5,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "Research Agent v2.0 - Multi-Agent Discovery System",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "community": 5,
+      "norm_label": "research agent v2.0 - multi-agent discovery system"
+    },
+    {
+      "label": "Version 2.0 Highlights",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L7",
+      "id": "research_agent_readme_version_2_0_highlights",
+      "community": 5,
+      "norm_label": "version 2.0 highlights"
+    },
+    {
+      "label": "\ud83d\udee0\ufe0f Performance Tech Stack",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L18",
+      "id": "research_agent_readme_performance_tech_stack",
+      "community": 5,
+      "norm_label": "\ud83d\udee0\ufe0f performance tech stack"
+    },
+    {
+      "label": "Intelligence & Orchestration",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L20",
+      "id": "research_agent_readme_intelligence_orchestration",
+      "community": 5,
+      "norm_label": "intelligence & orchestration"
+    },
+    {
+      "label": "Frontend \"Live Lab\"",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L27",
+      "id": "research_agent_readme_frontend_live_lab",
+      "community": 5,
+      "norm_label": "frontend \"live lab\""
+    },
+    {
+      "label": "\ud83d\udcc2 Architecture",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L33",
+      "id": "research_agent_readme_architecture",
+      "community": 5,
+      "norm_label": "\ud83d\udcc2 architecture"
+    },
+    {
+      "label": "Directory Structure",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L35",
+      "id": "research_agent_readme_directory_structure",
+      "community": 5,
+      "norm_label": "directory structure"
+    },
+    {
+      "label": "code:text (\u251c\u2500\u2500 backend/)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L36",
+      "id": "research_agent_readme_codeblock_1",
+      "community": 5,
+      "norm_label": "code:text (\u251c\u2500\u2500 backend/)"
+    },
+    {
+      "label": "Agent Workflow Diagram",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L50",
+      "id": "research_agent_readme_agent_workflow_diagram",
+      "community": 5,
+      "norm_label": "agent workflow diagram"
+    },
+    {
+      "label": "code:mermaid (graph TD)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L51",
+      "id": "research_agent_readme_codeblock_2",
+      "community": 5,
+      "norm_label": "code:mermaid (graph td)"
+    },
+    {
+      "label": "\u2699\ufe0f Setup & Deployment",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L65",
+      "id": "research_agent_readme_setup_deployment",
+      "community": 5,
+      "norm_label": "\u2699\ufe0f setup & deployment"
+    },
+    {
+      "label": "1. Prerequisites",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L67",
+      "id": "research_agent_readme_1_prerequisites",
+      "community": 5,
+      "norm_label": "1. prerequisites"
+    },
+    {
+      "label": "2. Backend Initialization",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L74",
+      "id": "research_agent_readme_2_backend_initialization",
+      "community": 5,
+      "norm_label": "2. backend initialization"
+    },
+    {
+      "label": "code:bash (cd backend)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L75",
+      "id": "research_agent_readme_codeblock_3",
+      "community": 5,
+      "norm_label": "code:bash (cd backend)"
+    },
+    {
+      "label": "code:env (# API Keys)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L83",
+      "id": "research_agent_readme_codeblock_4",
+      "community": 5,
+      "norm_label": "code:env (# api keys)"
+    },
+    {
+      "label": "3. Frontend Initialization",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L98",
+      "id": "research_agent_readme_3_frontend_initialization",
+      "community": 5,
+      "norm_label": "3. frontend initialization"
+    },
+    {
+      "label": "code:bash (cd frontend)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L99",
+      "id": "research_agent_readme_codeblock_5",
+      "community": 5,
+      "norm_label": "code:bash (cd frontend)"
+    },
+    {
+      "label": "\ud83e\udd16 Research Workflow (v2)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L105",
+      "id": "research_agent_readme_research_workflow_v2",
+      "community": 5,
+      "norm_label": "\ud83e\udd16 research workflow (v2)"
+    },
+    {
+      "label": "\ud83d\udcdd License",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L115",
+      "id": "research_agent_readme_license",
+      "community": 5,
+      "norm_label": "\ud83d\udcdd license"
+    },
+    {
+      "label": "GEMINI.md",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "id": "gemini_md",
+      "community": 9,
+      "norm_label": "gemini.md"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "id": "research_agent_gemini_graphify",
+      "community": 9,
+      "norm_label": "graphify"
+    },
+    {
+      "label": "Gemini.md",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L12",
+      "id": "research_agent_gemini_gemini_md",
+      "community": 9,
+      "norm_label": "gemini.md"
+    },
+    {
+      "label": "1. Think Before Coding",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L18",
+      "id": "research_agent_gemini_1_think_before_coding",
+      "community": 9,
+      "norm_label": "1. think before coding"
+    },
+    {
+      "label": "2. Simplicity First",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
+      "id": "research_agent_gemini_2_simplicity_first",
+      "community": 9,
+      "norm_label": "2. simplicity first"
+    },
+    {
+      "label": "3. Surgical Changes",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L40",
+      "id": "research_agent_gemini_3_surgical_changes",
+      "community": 9,
+      "norm_label": "3. surgical changes"
+    },
+    {
+      "label": "4. Goal-Driven Execution",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L56",
+      "id": "research_agent_gemini_4_goal_driven_execution",
+      "community": 9,
+      "norm_label": "4. goal-driven execution"
+    },
+    {
+      "label": "code:block1 (1. [Step] \u2192 verify: [check])",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L66",
+      "id": "research_agent_gemini_codeblock_1",
+      "community": 9,
+      "norm_label": "code:block1 (1. [step] \u2192 verify: [check])"
+    },
+    {
+      "label": "STRATEGY_V2.md",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L1",
+      "id": "strategy_v2_md",
+      "community": 8,
+      "norm_label": "strategy_v2.md"
+    },
+    {
+      "label": "Lume.ai - Post-v1 Strategic Roadmap",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L1",
+      "id": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "community": 8,
+      "norm_label": "lume.ai - post-v1 strategic roadmap"
+    },
+    {
+      "label": "The Current State",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L3",
+      "id": "research_agent_strategy_v2_the_current_state",
+      "community": 8,
+      "norm_label": "the current state"
+    },
+    {
+      "label": "Competitor Analysis & The \"Missing Link\"",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L9",
+      "id": "research_agent_strategy_v2_competitor_analysis_the_missing_link",
+      "community": 8,
+      "norm_label": "competitor analysis & the \"missing link\""
+    },
+    {
+      "label": "Phase 1: Deepening the Data Moat (The \"Private Corpus\" Feature)",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L20",
+      "id": "research_agent_strategy_v2_phase_1_deepening_the_data_moat_the_private_corpus_feature",
+      "community": 8,
+      "norm_label": "phase 1: deepening the data moat (the \"private corpus\" feature)"
+    },
+    {
+      "label": "Phase 2: Solving Architectural Bottlenecks (Graphify Insights)",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L25",
+      "id": "research_agent_strategy_v2_phase_2_solving_architectural_bottlenecks_graphify_insights",
+      "community": 8,
+      "norm_label": "phase 2: solving architectural bottlenecks (graphify insights)"
+    },
+    {
+      "label": "Phase 3: The UX \"Aha!\" Moment (Visual Knowledge Graphs)",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L33",
+      "id": "research_agent_strategy_v2_phase_3_the_ux_aha_moment_visual_knowledge_graphs",
+      "community": 8,
+      "norm_label": "phase 3: the ux \"aha!\" moment (visual knowledge graphs)"
+    },
+    {
+      "label": "Phase 4: Professional Output Portability",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L38",
+      "id": "research_agent_strategy_v2_phase_4_professional_output_portability",
+      "community": 8,
+      "norm_label": "phase 4: professional output portability"
+    },
+    {
+      "label": "Summary GTM (Go-to-Market) Strategy",
+      "file_type": "document",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L43",
+      "id": "research_agent_strategy_v2_summary_gtm_go_to_market_strategy",
+      "community": 8,
+      "norm_label": "summary gtm (go-to-market) strategy"
+    },
+    {
+      "label": "design.md",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L1",
+      "id": "design_md",
+      "community": 10,
+      "norm_label": "design.md"
+    },
+    {
+      "label": "Lume.ai Design System",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L1",
+      "id": "research_agent_design_lume_ai_design_system",
+      "community": 10,
+      "norm_label": "lume.ai design system"
+    },
+    {
+      "label": "1. Vision",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L3",
+      "id": "research_agent_design_1_vision",
+      "community": 10,
+      "norm_label": "1. vision"
+    },
+    {
+      "label": "2. Color Palette",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L6",
+      "id": "research_agent_design_2_color_palette",
+      "community": 10,
+      "norm_label": "2. color palette"
+    },
+    {
+      "label": "3. Typography",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L14",
+      "id": "research_agent_design_3_typography",
+      "community": 10,
+      "norm_label": "3. typography"
+    },
+    {
+      "label": "4. UI Components (Sharp & Professional)",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L19",
+      "id": "research_agent_design_4_ui_components_sharp_professional",
+      "community": 10,
+      "norm_label": "4. ui components (sharp & professional)"
+    },
+    {
+      "label": "5. Dashboard Principles",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L26",
+      "id": "research_agent_design_5_dashboard_principles",
+      "community": 10,
+      "norm_label": "5. dashboard principles"
+    },
+    {
+      "label": "implementation_plan.md",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "id": "implementation_plan_md",
+      "community": 4,
+      "norm_label": "implementation_plan.md"
+    },
+    {
+      "label": "Multi-Agent Research Paper Assistant \u2014 Implementation Plan",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "id": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "community": 4,
+      "norm_label": "multi-agent research paper assistant \u2014 implementation plan"
+    },
+    {
+      "label": "Project Structure",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L7",
+      "id": "research_agent_implementation_plan_project_structure",
+      "community": 4,
+      "norm_label": "project structure"
+    },
+    {
+      "label": "code:block1 (Research Agent/)",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L9",
+      "id": "research_agent_implementation_plan_codeblock_1",
+      "community": 4,
+      "norm_label": "code:block1 (research agent/)"
+    },
+    {
+      "label": "Backend Architecture",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L45",
+      "id": "research_agent_implementation_plan_backend_architecture",
+      "community": 4,
+      "norm_label": "backend architecture"
+    },
+    {
+      "label": "`utils/llm.py` \u2014 LLM Fallback Wrapper",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L47",
+      "id": "research_agent_implementation_plan_utils_llm_py_llm_fallback_wrapper",
+      "community": 4,
+      "norm_label": "`utils/llm.py` \u2014 llm fallback wrapper"
+    },
+    {
+      "label": "`agents/planner.py` \u2014 Planner Agent",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L52",
+      "id": "research_agent_implementation_plan_agents_planner_py_planner_agent",
+      "community": 4,
+      "norm_label": "`agents/planner.py` \u2014 planner agent"
+    },
+    {
+      "label": "`agents/retriever.py` \u2014 Retriever Agent",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L57",
+      "id": "research_agent_implementation_plan_agents_retriever_py_retriever_agent",
+      "community": 4,
+      "norm_label": "`agents/retriever.py` \u2014 retriever agent"
+    },
+    {
+      "label": "`agents/writer.py` \u2014 Writer Agent",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L62",
+      "id": "research_agent_implementation_plan_agents_writer_py_writer_agent",
+      "community": 4,
+      "norm_label": "`agents/writer.py` \u2014 writer agent"
+    },
+    {
+      "label": "`agents/critic.py` \u2014 Critic Agent",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L67",
+      "id": "research_agent_implementation_plan_agents_critic_py_critic_agent",
+      "community": 4,
+      "norm_label": "`agents/critic.py` \u2014 critic agent"
+    },
+    {
+      "label": "`graph/workflow.py` \u2014 LangGraph Pipeline",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L72",
+      "id": "research_agent_implementation_plan_graph_workflow_py_langgraph_pipeline",
+      "community": 4,
+      "norm_label": "`graph/workflow.py` \u2014 langgraph pipeline"
+    },
+    {
+      "label": "code:python (StateGraph: planner \u2192 retriever \u2192 writer \u2192 critic)",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L73",
+      "id": "research_agent_implementation_plan_codeblock_2",
+      "community": 4,
+      "norm_label": "code:python (stategraph: planner \u2192 retriever \u2192 writer \u2192 critic)"
+    },
+    {
+      "label": "`api/main.py` \u2014 FastAPI with SSE",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L79",
+      "id": "research_agent_implementation_plan_api_main_py_fastapi_with_sse",
+      "community": 4,
+      "norm_label": "`api/main.py` \u2014 fastapi with sse"
+    },
+    {
+      "label": "Frontend Architecture",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L87",
+      "id": "research_agent_implementation_plan_frontend_architecture",
+      "community": 4,
+      "norm_label": "frontend architecture"
+    },
+    {
+      "label": "Design \u2014 Startup-Grade UI",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L89",
+      "id": "research_agent_implementation_plan_design_startup_grade_ui",
+      "community": 4,
+      "norm_label": "design \u2014 startup-grade ui"
+    },
+    {
+      "label": "Key Components",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L95",
+      "id": "research_agent_implementation_plan_key_components",
+      "community": 4,
+      "norm_label": "key components"
+    },
+    {
+      "label": "Download",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L103",
+      "id": "research_agent_implementation_plan_download",
+      "community": 4,
+      "norm_label": "download"
+    },
+    {
+      "label": "API Keys Required",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L109",
+      "id": "research_agent_implementation_plan_api_keys_required",
+      "community": 4,
+      "norm_label": "api keys required"
+    },
+    {
+      "label": "Bonus Features (Included)",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L122",
+      "id": "research_agent_implementation_plan_bonus_features_included",
+      "community": 4,
+      "norm_label": "bonus features (included)"
+    },
+    {
+      "label": "Verification Plan",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L129",
+      "id": "research_agent_implementation_plan_verification_plan",
+      "community": 4,
+      "norm_label": "verification plan"
+    },
+    {
+      "label": "Automated",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L131",
+      "id": "research_agent_implementation_plan_automated",
+      "community": 4,
+      "norm_label": "automated"
+    },
+    {
+      "label": "Manual",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L136",
+      "id": "research_agent_implementation_plan_manual",
+      "community": 4,
+      "norm_label": "manual"
+    },
+    {
+      "label": "Open Questions",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L144",
+      "id": "research_agent_implementation_plan_open_questions",
+      "community": 4,
+      "norm_label": "open questions"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "frontend/README.md",
+      "source_location": "L1",
+      "id": "frontend_readme_md",
+      "community": 15,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "Getting Started",
+      "file_type": "document",
+      "source_file": "frontend/README.md",
+      "source_location": "L3",
+      "id": "frontend_readme_getting_started",
+      "community": 15,
+      "norm_label": "getting started"
+    },
+    {
+      "label": "code:bash (npm run dev)",
+      "file_type": "document",
+      "source_file": "frontend/README.md",
+      "source_location": "L7",
+      "id": "frontend_readme_codeblock_1",
+      "community": 15,
+      "norm_label": "code:bash (npm run dev)"
+    },
+    {
+      "label": "Learn More",
+      "file_type": "document",
+      "source_file": "frontend/README.md",
+      "source_location": "L23",
+      "id": "frontend_readme_learn_more",
+      "community": 15,
+      "norm_label": "learn more"
+    },
+    {
+      "label": "Deploy on Vercel",
+      "file_type": "document",
+      "source_file": "frontend/README.md",
+      "source_location": "L32",
+      "id": "frontend_readme_deploy_on_vercel",
+      "community": 15,
+      "norm_label": "deploy on vercel"
+    },
+    {
+      "label": "getAgentIcon()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L11",
+      "community": 18,
+      "norm_label": "getagenticon()",
+      "id": "dashboard_stageresearching_getagenticon"
+    },
+    {
+      "label": "Custom embeddings class for OpenRouter.",
+      "file_type": "rationale",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L54",
+      "community": 2,
+      "norm_label": "custom embeddings class for openrouter.",
+      "id": "utils_llm_rationale_54"
+    },
+    {
+      "label": "4. UI Components (Modern Subtle)",
+      "file_type": "document",
+      "source_file": "design.md",
+      "source_location": "L19",
+      "community": 10,
+      "norm_label": "4. ui components (modern subtle)",
+      "id": "research_agent_design_4_ui_components_modern_subtle"
+    },
+    {
+      "label": "inter",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L5",
+      "community": 11,
+      "norm_label": "inter",
+      "id": "app_layout_inter"
+    },
+    {
+      "label": "playfair",
+      "file_type": "code",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L10",
+      "community": 11,
+      "norm_label": "playfair",
+      "id": "app_layout_playfair"
+    },
+    {
+      "label": "CheckCircle()",
+      "file_type": "code",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L222",
+      "community": 3,
+      "norm_label": "checkcircle()",
+      "id": "app_page_checkcircle"
+    },
+    {
+      "label": "getAgentIcon()",
+      "file_type": "code",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L663",
+      "community": 0,
+      "norm_label": "getagenticon()",
+      "id": "components_dashboard_getagenticon"
+    },
+    {
+      "label": "Home()",
+      "file_type": "code",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L5",
+      "community": 3,
+      "norm_label": "home()",
+      "id": "app_page_home"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/postcss.config.mjs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_postcss_config_mjs",
+      "target": "frontend_postcss_config_config"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/next.config.mjs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_next_config_mjs",
+      "target": "frontend_next_config_nextconfig"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/tailwind.config.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_tailwind_config_ts",
+      "target": "frontend_tailwind_config_config"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_spacegrotesk"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_ibmplexmono"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_metadata"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_rootlayout"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_inter"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/layout.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_layout_tsx",
+      "target": "app_layout_playfair"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_landing_navbar_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_landing_valueprop_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_landing_features_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_landing_cta_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_landing_footer_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "app_page_landingpage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L222",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "app_page_checkcircle"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "frontend_src_components_dashboard_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_page_tsx",
+      "target": "app_page_home"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/dashboard/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_dashboard_page_tsx",
+      "target": "frontend_src_components_dashboard_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/app/dashboard/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_app_dashboard_page_tsx",
+      "target": "dashboard_page_dashboardpage"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_lib_api_ts"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "lib_api_startresearch"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "lib_api_resumeresearch"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "lib_api_chatwithdata"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_sidebar_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_agentlogspanel_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_librarypanel_tsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stageidle_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stageclarification_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stageplanning_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stageresearching_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stagereview_tsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "frontend_src_components_dashboard_stagecompleted_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "components_dashboard_stage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "components_dashboard_researchmode"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "components_dashboard_dashboard"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L663",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_tsx",
+      "target": "components_dashboard_getagenticon"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/Dashboard.tsx",
+      "source_location": "L372",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "components_dashboard_dashboard",
+      "target": "components_dashboard_getagenticon"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/QueryForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_queryform_tsx",
+      "target": "components_queryform_queryformprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/QueryForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_queryform_tsx",
+      "target": "components_queryform_queryform"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_reportviewer_tsx",
+      "target": "frontend_src_components_sourcecard_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_reportviewer_tsx",
+      "target": "components_reportviewer_reportviewerprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ReportViewer.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_reportviewer_tsx",
+      "target": "components_reportviewer_reportviewer"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_progressstepper_tsx",
+      "target": "components_progressstepper_progressstepperprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_progressstepper_tsx",
+      "target": "components_progressstepper_steps"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/ProgressStepper.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_progressstepper_tsx",
+      "target": "components_progressstepper_progressstepper"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_agentlogsviewer_tsx",
+      "target": "frontend_src_components_sourcecard_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_agentlogsviewer_tsx",
+      "target": "components_agentlogsviewer_agentlogsviewerprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/AgentLogsViewer.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_agentlogsviewer_tsx",
+      "target": "components_agentlogsviewer_agentlogsviewer"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/SourceCard.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_sourcecard_tsx",
+      "target": "components_sourcecard_sourcecardprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/SourceCard.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_sourcecard_tsx",
+      "target": "components_sourcecard_sourcecard"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Hero.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_hero_tsx",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Hero.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_hero_tsx",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Hero.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_hero_tsx",
+      "target": "landing_hero_hero",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_navbar_tsx",
+      "target": "frontend_src_components_landing_authmodal_tsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_navbar_tsx",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_navbar_tsx",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Navbar.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_landing_navbar_tsx",
+      "target": "landing_navbar_navbar"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Features.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_landing_features_tsx",
+      "target": "landing_features_features"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_authmodal_tsx",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_authmodal_tsx",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_authmodal_tsx",
+      "target": "landing_authmodal_authmodalprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/AuthModal.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_authmodal_tsx",
+      "target": "landing_authmodal_authmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/ValueProp.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_landing_valueprop_tsx",
+      "target": "landing_valueprop_valueprop"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/Footer.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_landing_footer_tsx",
+      "target": "landing_footer_footer"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/CTA.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_cta_tsx",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/CTA.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_components_landing_cta_tsx",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/landing/CTA.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_landing_cta_tsx",
+      "target": "landing_cta_cta"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageReview.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stagereview_tsx",
+      "target": "dashboard_stagereview_stagereviewprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageReview.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stagereview_tsx",
+      "target": "dashboard_stagereview_stagereview"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageidle_tsx",
+      "target": "dashboard_stageidle_stageidleprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_stageidle_tsx",
+      "target": "dashboard_stageidle_tab",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageIdle.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageidle_tsx",
+      "target": "dashboard_stageidle_stageidle"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StagePlanning.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageplanning_tsx",
+      "target": "dashboard_stageplanning_stageplanningprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StagePlanning.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageplanning_tsx",
+      "target": "dashboard_stageplanning_stageplanning"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageresearching_tsx",
+      "target": "dashboard_stageresearching_stageresearchingprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageresearching_tsx",
+      "target": "dashboard_stageresearching_stageresearching"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageresearching_tsx",
+      "target": "dashboard_stageresearching_getagenticon"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageResearching.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "dashboard_stageresearching_stageresearching",
+      "target": "dashboard_stageresearching_getagenticon"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageCompleted.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stagecompleted_tsx",
+      "target": "dashboard_stagecompleted_stagecompletedprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageCompleted.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stagecompleted_tsx",
+      "target": "dashboard_stagecompleted_stagecompleted"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_agentlogspanel_tsx",
+      "target": "dashboard_agentlogspanel_agentlogspanelprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_agentlogspanel_tsx",
+      "target": "dashboard_agentlogspanel_getagenticon"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_agentlogspanel_tsx",
+      "target": "dashboard_agentlogspanel_agentlogspanel"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/AgentLogsPanel.tsx",
+      "source_location": "L62",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "dashboard_agentlogspanel_agentlogspanel",
+      "target": "dashboard_agentlogspanel_getagenticon"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_librarypanel_tsx",
+      "target": "frontend_src_lib_api_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_librarypanel_tsx",
+      "target": "lib_api_uploaddocument",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_librarypanel_tsx",
+      "target": "lib_api_getlibrary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_librarypanel_tsx",
+      "target": "dashboard_librarypanel_librarypanelprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/LibraryPanel.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_librarypanel_tsx",
+      "target": "dashboard_librarypanel_librarypanel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageClarification.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageclarification_tsx",
+      "target": "dashboard_stageclarification_stageclarificationprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/StageClarification.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_stageclarification_tsx",
+      "target": "dashboard_stageclarification_stageclarification"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_sidebar_tsx",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_components_dashboard_sidebar_tsx",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_sidebar_tsx",
+      "target": "dashboard_sidebar_sidebarprops"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/components/dashboard/Sidebar.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_components_dashboard_sidebar_tsx",
+      "target": "dashboard_sidebar_sidebar"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/supabaseClient.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_lib_supabaseclient_ts",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "frontend_src_lib_supabaseclient_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_supabaseclient_supabase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_eventcallbacks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_handlesseresponse"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_startresearch"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_resumeresearch"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L91",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_chatwithdata"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_uploaddocument",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_getlibrary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "frontend_src_lib_api_ts",
+      "target": "lib_api_brainstormresearch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "lib_api_startresearch",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "lib_api_resumeresearch",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "lib_api_chatwithdata",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "lib_api_getlibrary",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "lib_api_brainstormresearch",
+      "target": "lib_api_getauthheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_api_startresearch",
+      "target": "lib_api_handlesseresponse"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/src/lib/api.ts",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_api_resumeresearch",
+      "target": "lib_api_handlesseresponse"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_graph_workflow_py",
+      "target": "graph_workflow_agentstate"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_graph_workflow_py",
+      "target": "graph_workflow_build_graph"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/graph/workflow.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "graph_workflow_agentstate",
+      "target": "typeddict"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "api_main_lifespan",
+      "target": "graph_workflow_build_graph"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/planner.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_planner_py",
+      "target": "agents_planner_planner_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/planner.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "agents_planner_planner_node",
+      "target": "utils_llm_invoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "backend_agents_brainstorm_py",
+      "target": "agents_brainstorm_brainstorm_chat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "agents_brainstorm_rationale_19",
+      "target": "agents_brainstorm_brainstorm_chat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/brainstorm.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "agents_brainstorm_brainstorm_chat",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L258",
+      "weight": 1.0,
+      "source": "api_main_brainstorm_research",
+      "target": "agents_brainstorm_brainstorm_chat"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "backend_agents_retriever_py",
+      "target": "agents_retriever_search_private_library",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_retriever_py",
+      "target": "agents_retriever_search_core"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_retriever_py",
+      "target": "agents_retriever_search_openalex"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_retriever_py",
+      "target": "agents_retriever_search_arxiv"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_retriever_py",
+      "target": "agents_retriever_retriever_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "agents_retriever_search_private_library",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/retriever.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "agents_retriever_retriever_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/assistance.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_assistance_py",
+      "target": "agents_assistance_assistance_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/assistance.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "agents_assistance_assistance_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/refinement.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_refinement_py",
+      "target": "agents_refinement_refinement_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/refinement.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "agents_refinement_refinement_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/clarification.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_clarification_py",
+      "target": "agents_clarification_clarification_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/clarification.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "agents_clarification_clarification_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/indexer.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_indexer_py",
+      "target": "agents_indexer_indexer_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/indexer.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "agents_indexer_indexer_node",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/indexer.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "agents_indexer_indexer_node",
+      "target": "utils_scraper_process_sources_with_full_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/planning.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_planning_py",
+      "target": "agents_planning_planning_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/planning.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "agents_planning_planning_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/writer.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_writer_py",
+      "target": "agents_writer_writer_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/writer.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "agents_writer_writer_node",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/writer.py",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "agents_writer_writer_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/auditor.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_auditor_py",
+      "target": "agents_auditor_citation_auditor_node"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/critic.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_critic_py",
+      "target": "agents_critic_critic_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/critic.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "agents_critic_critic_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/agents/synthesis.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_agents_synthesis_py",
+      "target": "agents_synthesis_synthesis_node"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/synthesis.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "agents_synthesis_synthesis_node",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/agents/synthesis.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "agents_synthesis_synthesis_node",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "backend_utils_auth_py",
+      "target": "utils_auth_get_current_user",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "backend_utils_auth_py",
+      "target": "utils_auth_get_supabase_client",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/auth.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "utils_auth_rationale_19",
+      "target": "utils_auth_get_current_user",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "api_main_verify_session",
+      "target": "utils_auth_get_supabase_client"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "api_main_start_research",
+      "target": "utils_auth_get_supabase_client"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "api_main_upload_document",
+      "target": "utils_auth_get_supabase_client"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L251",
+      "weight": 1.0,
+      "source": "api_main_list_library",
+      "target": "utils_auth_get_supabase_client"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "backend_utils_ingestion_py",
+      "target": "utils_ingestion_process_pdf_ingestion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "utils_ingestion_rationale_10",
+      "target": "utils_ingestion_process_pdf_ingestion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/utils/ingestion.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "utils_ingestion_process_pdf_ingestion",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "api_main_upload_document",
+      "target": "utils_ingestion_process_pdf_ingestion"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_scraper_py",
+      "target": "utils_scraper_fetch_full_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_scraper_py",
+      "target": "utils_scraper_process_sources_with_full_text"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_scraper_process_sources_with_full_text",
+      "target": "utils_scraper_fetch_full_text"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_scraper_rationale_7",
+      "target": "utils_scraper_fetch_full_text"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/scraper.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_scraper_rationale_40",
+      "target": "utils_scraper_process_sources_with_full_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_llm_py",
+      "target": "utils_llm_get_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_llm_py",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_llm_py",
+      "target": "utils_llm_invoke_llm"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_utils_llm_py",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_ainvoke_llm",
+      "target": "utils_llm_get_llm"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_invoke_llm",
+      "target": "utils_llm_get_llm"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_rationale_10",
+      "target": "utils_llm_get_llm"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L195",
+      "weight": 1.0,
+      "source": "api_main_chat_with_data",
+      "target": "utils_llm_ainvoke_llm"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_openrouterembeddings",
+      "target": "embeddings"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_openrouterembeddings",
+      "target": "utils_llm_openrouterembeddings_init"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_openrouterembeddings",
+      "target": "utils_llm_openrouterembeddings_embed_documents"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_openrouterembeddings",
+      "target": "utils_llm_openrouterembeddings_embed_query"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "utils_llm_rationale_55",
+      "target": "utils_llm_openrouterembeddings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L15",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "api_main_researchstartrequest",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L15",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "api_main_researchresumerequest",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L15",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "api_main_chatrequest",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L20",
+      "weight": 0.8,
+      "source": "api_main_brainstormrequest",
+      "target": "utils_llm_openrouterembeddings",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/api/main.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "api_main_chat_with_data",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_rationale_54",
+      "target": "utils_llm_openrouterembeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/utils/llm.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_llm_openrouterembeddings_embed_query",
+      "target": "utils_llm_openrouterembeddings_embed_documents"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_lifespan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_researchstartrequest"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_researchresumerequest"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_chatrequest"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_brainstormrequest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_verify_session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_home"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_start_research"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_resume_research"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L224",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_upload_document",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L250",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_list_library",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L256",
+      "weight": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_brainstorm_research",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backend_api_main_py",
+      "target": "api_main_chat_with_data"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "api_main_researchstartrequest",
+      "target": "basemodel"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "api_main_researchresumerequest",
+      "target": "basemodel"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "api_main_chatrequest",
+      "target": "basemodel"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "api_main_brainstormrequest",
+      "target": "basemodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "api_main_resume_research",
+      "target": "api_main_verify_session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/api/main.py",
+      "source_location": "L267",
+      "weight": 1.0,
+      "source": "api_main_chat_with_data",
+      "target": "api_main_verify_session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_objective"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_tech_stack"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L29",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_agents_definition"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_workflow_langgraph"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L101",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_api_handling"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L109",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_frontend_requirements"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L121",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_constraints"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_bonus_optional_if_time_permits"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L136",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "details_md",
+      "target": "research_agent_details_output"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_details_agents_definition",
+      "target": "research_agent_details_1_planner_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_details_agents_definition",
+      "target": "research_agent_details_2_retriever_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L54",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_details_agents_definition",
+      "target": "research_agent_details_3_writer_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "details.md",
+      "source_location": "L77",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_details_agents_definition",
+      "target": "research_agent_details_4_critic_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "todo_md",
+      "target": "research_agent_todo_lume_ai_development_status_next_steps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "research_agent_todo_lume_ai_development_status_next_steps",
+      "target": "research_agent_todo_completed_tasks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "research_agent_todo_lume_ai_development_status_next_steps",
+      "target": "research_agent_todo_immediate_next_steps_pending",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "research_agent_todo_lume_ai_development_status_next_steps",
+      "target": "research_agent_todo_environment_variables_required",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "research_agent_todo_environment_variables_required",
+      "target": "research_agent_todo_frontend_env_local",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "research_agent_todo_environment_variables_required",
+      "target": "research_agent_todo_backend_env",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "readme_md",
+      "target": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_version_2_0_highlights"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_performance_tech_stack"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_architecture"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_setup_deployment"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L105",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_research_workflow_v2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_research_agent_v2_0_multi_agent_discovery_system",
+      "target": "research_agent_readme_license"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_performance_tech_stack",
+      "target": "research_agent_readme_intelligence_orchestration"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_performance_tech_stack",
+      "target": "research_agent_readme_frontend_live_lab"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L35",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_architecture",
+      "target": "research_agent_readme_directory_structure"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_architecture",
+      "target": "research_agent_readme_agent_workflow_diagram"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L36",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_directory_structure",
+      "target": "research_agent_readme_codeblock_1"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L51",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_agent_workflow_diagram",
+      "target": "research_agent_readme_codeblock_2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_setup_deployment",
+      "target": "research_agent_readme_1_prerequisites"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_setup_deployment",
+      "target": "research_agent_readme_2_backend_initialization"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L98",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_setup_deployment",
+      "target": "research_agent_readme_3_frontend_initialization"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L75",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_2_backend_initialization",
+      "target": "research_agent_readme_codeblock_3"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_2_backend_initialization",
+      "target": "research_agent_readme_codeblock_4"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L99",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_readme_3_frontend_initialization",
+      "target": "research_agent_readme_codeblock_5"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gemini_md",
+      "target": "research_agent_gemini_graphify"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "gemini_md",
+      "target": "research_agent_gemini_gemini_md",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "research_agent_gemini_gemini_md",
+      "target": "research_agent_gemini_1_think_before_coding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "research_agent_gemini_gemini_md",
+      "target": "research_agent_gemini_2_simplicity_first",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "research_agent_gemini_gemini_md",
+      "target": "research_agent_gemini_3_surgical_changes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "research_agent_gemini_gemini_md",
+      "target": "research_agent_gemini_4_goal_driven_execution",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "research_agent_gemini_4_goal_driven_execution",
+      "target": "research_agent_gemini_codeblock_1",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "strategy_v2_md",
+      "target": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_the_current_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_competitor_analysis_the_missing_link",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_phase_1_deepening_the_data_moat_the_private_corpus_feature",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_phase_2_solving_architectural_bottlenecks_graphify_insights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_phase_3_the_ux_aha_moment_visual_knowledge_graphs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_phase_4_professional_output_portability",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "STRATEGY_V2.md",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "research_agent_strategy_v2_lume_ai_post_v1_strategic_roadmap",
+      "target": "research_agent_strategy_v2_summary_gtm_go_to_market_strategy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "design_md",
+      "target": "research_agent_design_lume_ai_design_system"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_1_vision"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_2_color_palette"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_3_typography"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_4_ui_components_sharp_professional",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_5_dashboard_principles"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "design.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_design_lume_ai_design_system",
+      "target": "research_agent_design_4_ui_components_modern_subtle"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "implementation_plan_md",
+      "target": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_project_structure"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_backend_architecture"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L87",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_frontend_architecture"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L109",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_api_keys_required"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L122",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_bonus_features_included"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_verification_plan"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L144",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_multi_agent_research_paper_assistant_implementation_plan",
+      "target": "research_agent_implementation_plan_open_questions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_project_structure",
+      "target": "research_agent_implementation_plan_codeblock_1"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_utils_llm_py_llm_fallback_wrapper"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_agents_planner_py_planner_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_agents_retriever_py_retriever_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_agents_writer_py_writer_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_agents_critic_py_critic_agent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_graph_workflow_py_langgraph_pipeline"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L79",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_backend_architecture",
+      "target": "research_agent_implementation_plan_api_main_py_fastapi_with_sse"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_graph_workflow_py_langgraph_pipeline",
+      "target": "research_agent_implementation_plan_codeblock_2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L89",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_frontend_architecture",
+      "target": "research_agent_implementation_plan_design_startup_grade_ui"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L95",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_frontend_architecture",
+      "target": "research_agent_implementation_plan_key_components"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L103",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_frontend_architecture",
+      "target": "research_agent_implementation_plan_download"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L131",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_verification_plan",
+      "target": "research_agent_implementation_plan_automated"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L136",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "research_agent_implementation_plan_verification_plan",
+      "target": "research_agent_implementation_plan_manual"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/README.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_readme_md",
+      "target": "frontend_readme_getting_started"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/README.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_readme_md",
+      "target": "frontend_readme_learn_more"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/README.md",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_readme_md",
+      "target": "frontend_readme_deploy_on_vercel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "frontend_readme_getting_started",
+      "target": "frontend_readme_codeblock_1"
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "58c9b6795cf28dd99c613bdf3229d22812e3578d"
+}
