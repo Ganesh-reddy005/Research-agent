@@ -1,60 +1,67 @@
-# Research Agent v2.0 - Multi-Agent Discovery System
+# Lume.ai - Autonomous Research Production System
 
-A professional-grade AI Research Production System built with **LangGraph**, **FastAPI**, and **Next.js**. Research Agent v2.0 is designed for high-fidelity academic synthesis, deep-source retrieval, and real-time "Live Lab" analysis.
+**Lume.ai** is a professional-grade, multi-agent AI research platform designed for high-fidelity scholarly discovery. Built with **LangGraph**, **FastAPI**, and **Next.js**, it transforms complex research inquiries into structured, academic-quality manuscripts through a coordinated swarm of specialized agents.
 
-![Research Agent v2.0 Banner](https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070&auto=format&fit=crop)
+![Lume.ai Banner](https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070&auto=format&fit=crop)
 
-##  Version 2.0 Highlights
+## ✨ The Vision
+To provide a distraction-free scholarly workbench that combines the aggressive technical edge of modern AI with the clarity and precision of traditional academic research. Lume.ai follows the **Mistral-inspired "Sharp & Professional"** design language.
 
-- **Perplexity-Style "Live Lab"**: A real-time dynamic workspace that streams "thinking" tokens and drafted sections as they are generated.
-- **Light vs. Deep Research**: 
-    - **Light Mode**: Quick scans of 10-15 sources for rapid insight.
-    - **Deep Research**: Exhaustive investigation across 50+ academic and web sources.
-- **High-Velocity Parallel Retrieval**: Flattened search architecture that queries Tavily, OpenAlex, and arXiv simultaneously.
-- **Academic Precision (IEEE)**: Specialized agents for writing, critiquing, and refining manuscripts with strict adherence to academic standards and citation styles.
-- **Persistent Knowledge Base**: Integrated **Qdrant Vector Store** for indexing retrieved literature, allowing for semantic cross-referencing during drafting.
-- **ArXiv & OpenAlex Native**: Robust handling of academic APIs with rate-limit resilience, retry logic, and API key support.
+## 🚀 Key Features
 
-## 🛠️ Performance Tech Stack
+- **Multi-Agent Orchestration**: A persistent state-machine powered by LangGraph that manages a workflow of Planner, Retriever, Indexer, Synthesis, Writer, and Critic agents.
+- **Deep Research Mode**: Exhaustive investigation across 50+ sources including **ArXiv**, **OpenAlex**, and the web (via Tavily).
+- **Private Library (Sovereign Data)**: Upload PDFs to your personal library. Lume.ai indexes them into a private Qdrant collection for semantic Q&A and research context.
+- **"Live Lab" Experience**: Real-time Server-Sent Events (SSE) stream "thinking" tokens and drafted sections as they are generated.
+- **Persistent Memory**: Full session persistence using Postgres checkpointing, allowing you to resume research threads at any time.
+- **Academic Precision**: Specialized agents for writing and refining manuscripts with strict adherence to academic standards and citation styles.
 
-### Intelligence & Orchestration
-- **Framework**: LangGraph (Async Node Execution)
-- **API Engine**: FastAPI + Server-Sent Events (SSE) for per-token streaming
-- **Vector Intelligence**: Qdrant (Local or Cloud)
-- **Primary LLM**: OpenRouter (Gemini 2.0 Pro / Llama-3-70B)
-- **Fallback LLM**: Groq (High-speed Llama-3 nodes)
+## 🎨 Lume.ai Design System
 
-### Frontend "Live Lab"
-- **Framework**: Next.js 14+ (App Router, TypeScript)
-- **Motion**: Framer Motion (Agent status animations)
-- **Aesthetics**: Premium Glassmorphism & Parchment Theme
-- **PDF Export**: html2pdf.js for automated IEEE manuscript generation
+Lume.ai features a unique visual identity:
+- **Palette**: Mistral Beige (`#F5F2ED`), Midnight Black (`#000000`), and Mistral Orange (`#FF511C`).
+- **Typography**: Authority meets clarity with `EB Garamond` (Serif) for headlines and `Inter` (Sans) for interface.
+- **Aesthetics**: Sharp boundaries, zero-radius corners, and high-density layouts for a "scholarly workbench" feel.
+
+## 🛠️ Tech Stack
+
+### Backend (Intelligence)
+- **Framework**: FastAPI (Async)
+- **Orchestration**: LangGraph (Stateful Multi-Agent Workflows)
+- **Persistence**: Postgres (Checkpointing) & Supabase (Auth/Session management)
+- **Vector DB**: Qdrant (Semantic Search & Library Indexing)
+- **Providers**: OpenRouter (Gemini 2.0 Pro / Llama 3), Groq (High-speed inference)
+
+### Frontend (Interface)
+- **Framework**: Next.js 14 (App Router, TypeScript)
+- **State Management**: React Hooks + SSE
+- **Styling**: Tailwind CSS (Lume Design Tokens)
+- **Animations**: Framer Motion
 
 ## 📂 Architecture
 
-### Directory Structure
 ```text
 ├── backend/
-│   ├── agents/          # Async Agent Nodes (Planner, Retriever, Indexer, Synthesis, Writer, Critic, Refinement)
-│   ├── api/             # SSE Event Generators and FastAPI Endpoints
-│   ├── graph/           # Persistent LangGraph State Workflow
-│   ├── utils/           # LLM Providers & Custom Embeddings (Mistral/OpenRouter)
+│   ├── agents/          # Planner, Retriever, Indexer, Synthesis, Writer, Critic, etc.
+│   ├── api/             # FastAPI Endpoints & SSE Event Generators
+│   ├── graph/           # LangGraph State Workflow Definitions
+│   ├── utils/           # LLM Providers, Auth, and Ingestion Logic
 │   └── requirements.txt
 ├── frontend/
-│   ├── src/components/  # Dashboard, Live Workspace, and Report Viewer
-│   ├── src/lib/         # SSE Event Callbacks and API Client
+│   ├── src/app/         # Dashboard & Landing Page
+│   ├── src/components/  # Modular UI (AgentLogs, ReportViewer, Library)
+│   ├── src/lib/         # Supabase Client & API Service
 │   └── tailwind.config.ts
-└── README.md
 ```
 
-### Agent Workflow Diagram
+### Agent Workflow
 ```mermaid
 graph TD
-    START((START)) --> Clarification[Clarification Node<br><i>Human-in-the-loop</i>]
-    Clarification --> Planning[Planning Node<br><i>Human-in-the-loop</i>]
+    START((START)) --> Clarification[Clarification Node]
+    Clarification --> Planning[Planning Node]
     Planning --> Retriever[Retriever Node]
     Retriever --> Indexer[Indexer Node]
-    Indexer --> Assistance[Assistance Node<br><i>Human-in-the-loop</i>]
+    Indexer --> Assistance[Assistance Node]
     Assistance --> Synthesis[Synthesis Node]
     Synthesis --> Writer[Writer Node]
     Writer --> Critic[Critic Node]
@@ -62,16 +69,15 @@ graph TD
     Refinement --> END((END))
 ```
 
-## ⚙️ Setup & Deployment
+## ⚙️ Setup & Installation
 
 ### 1. Prerequisites
-- Python 3.10+
-- Node.js 18+
-- [Tavily API Key](https://tavily.com/)
-- [OpenAlex API Key](https://openalex.org/) (Recommended for higher rate limits)
-- [OpenRouter API Key](https://openrouter.ai/) (Primary provider)
+- Python 3.10+ & Node.js 18+
+- [Supabase Project](https://supabase.com/) (Auth & Postgres)
+- [Qdrant Instance](https://qdrant.tech/) (Local or Cloud)
+- API Keys: OpenRouter, Tavily, OpenAlex
 
-### 2. Backend Initialization
+### 2. Backend Setup
 ```bash
 cd backend
 python -m venv venv
@@ -86,32 +92,32 @@ OPENROUTER_API_KEY=your_key
 TAVILY_API_KEY=your_key
 OPENALEX_API_KEY=your_key
 
-# Vector Database
-QDRANT_URL=http://localhost:6333
-# QDRANT_API_KEY=if_using_cloud
+# Database & Auth
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
+SUPABASE_URL=https://[PROJECT].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_key
 
-# Model Config
-EMBEDDING_MODEL=mistralai/mistral-embed-2312
-WRITING_MODEL=google/gemini-2.0-pro-exp-02-05:free
+# Vector DB
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your_optional_key
 ```
 
-### 3. Frontend Initialization
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
+```
+
+Create a `.env.local` in `frontend/`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://[PROJECT].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+```
+
+Run the development server:
+```bash
 npm run dev
 ```
 
-## 🤖 Research Workflow (v2)
-
-1. **Clarification**: Agent aligns with your intent through 2-3 scoping questions.
-2. **Strategy**: A detailed research brief and 5-7 section blueprint are generated.
-3. **Retrieval**: Parallel extraction from Web, ArXiv, and OpenAlex.
-4. **Indexing**: Semantic chunks are stored in Qdrant.
-5. **Synthesis**: The "Live Lab" begins streaming the core findings.
-6. **Drafting**: The Writer streams a full IEEE manuscript section-by-section.
-7. **Critique & Polish**: A specialized agent reviews and refines for academic perfection.
-
-## 📝 License
-
-Developed for high-impact research automation. Distributed under the MIT License.
+## 📜 License
+MIT License. Developed for high-impact autonomous research.

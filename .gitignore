@@ -2,6 +2,7 @@
 # Dependencies
 node_modules/
 venv/
+backend/.env
 .venv/
 env/
 .env
@@ -52,3 +53,21 @@ Thumbs.db
 #md files
 details.md
 implementation_plan.md
+GEMINI.md
+STRATERGY.md
+TODO.md
+design.md
+research.md
+version2.md
+STRATEGY_V2.md
+
+# Tools and Local Config
+graphify-out/
+.agents/
+.gemini/
+for_gemini/
+
+#skills
+skills-lock.json
+
+supabase_schema.sql
