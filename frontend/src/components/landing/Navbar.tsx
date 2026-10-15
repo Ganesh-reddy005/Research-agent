@@ -32,7 +32,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1 text-mistral-black font-mono text-xl font-black uppercase tracking-tighter">
           <img src="/logo.png" alt="Lume Logo" className="w-20 h-20 object-contain" />
-          <span>Lume.ai</span>
+          <span>Lume AI</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 font-mono text-[10px] font-bold uppercase tracking-widest text-mistral-black/60">
           <a href="#how-it-works" className="hover:text-mistral-orange transition-colors">How it works</a>

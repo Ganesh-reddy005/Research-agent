@@ -1,41 +1,27 @@
 import os
+import asyncio
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import requests
 import json
 from tavily import TavilyClient
-import concurrent.futures
 from langchain_core.messages import SystemMessage, HumanMessage
-from utils.llm import ainvoke_llm, OpenRouterEmbeddings
-from qdrant_client import QdrantClient
-from langchain_qdrant import QdrantVectorStore
-
-import time
+from utils.llm import ainvoke_llm
+from utils.vectorstore import qdrant_configured, library_collection, collection_exists, get_vector_store
 
 def search_private_library(query, user_id, max_results=5):
     sources = []
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    if not qdrant_url or not user_id:
+    if not qdrant_configured() or not user_id:
         return sources
         
-    embeddings = OpenRouterEmbeddings()
-    collection_name = f"user_{str(user_id).replace('-', '_')}_library"
+    collection_name = library_collection(user_id)
     
     try:
-        client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
-        # Check if collection exists
-        collections = client.get_collections().collections
-        if not any(c.name == collection_name for c in collections):
+        if not collection_exists(collection_name):
             return sources
 
-        vector_store = QdrantVectorStore(
-            client=client,
-            collection_name=collection_name,
-            embedding=embeddings,
-        )
-        docs = vector_store.similarity_search(query, k=max_results)
+        docs = get_vector_store(collection_name).similarity_search(query, k=max_results)
         for d in docs:
             sources.append({
                 "title": d.metadata.get("source", "Private Document"),
@@ -81,7 +67,7 @@ def search_openalex(query, max_results=3):
             
         url = f"https://api.openalex.org/works?search={urllib.parse.quote(query)}&per_page={max_results}"
         
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             data = response.json()
             for work in data.get("results", []):
@@ -140,36 +126,33 @@ async def retriever_node(state):
     all_sources = []
     normalized_queries = [str(q.get("query", q)) if isinstance(q, dict) else str(q) for q in search_queries]
 
-    # FLATTENED PARALLEL SEARCH: One large pool for all (query, source) pairs
-    # This is much faster than nested pools and avoids overhead
+    # PARALLEL SEARCH: every (query, source) pair runs in a worker thread so the
+    # blocking HTTP clients never stall the event loop (and other users' streams).
+    # gather() keeps submission order, so raw_sources order is deterministic.
     user_id = state.get("user_id")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        future_to_query = []
-        
-        for q in normalized_queries:
-            # 1. Tavily
-            if tavily:
-                future_to_query.append(executor.submit(tavily.search, query=q, search_depth="basic", max_results=results_per_query))
-            # 2. OpenAlex
-            future_to_query.append(executor.submit(search_openalex, q, max_results=results_per_query))
-            # 3. arXiv
-            future_to_query.append(executor.submit(search_arxiv, q, max_results=results_per_query))
-            # 4. CORE
-            future_to_query.append(executor.submit(search_core, q, max_results=results_per_query))
-            # 5. Private Library
-            if user_id:
-                future_to_query.append(executor.submit(search_private_library, q, user_id, max_results=results_per_query))
-            
-        for future in concurrent.futures.as_completed(future_to_query):
-            try:
-                res = future.result()
-                if isinstance(res, dict) and "results" in res: # Tavily response
-                    web_results = [{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"} for r in res.get("results", [])]
-                    all_sources.extend(web_results)
-                elif isinstance(res, list): # OpenAlex or arXiv result list
-                    all_sources.extend(res)
-            except Exception as e:
-                print(f"Search task failed: {e}")
+    tasks = []
+    for q in normalized_queries:
+        # 1. Tavily
+        if tavily:
+            tasks.append(asyncio.to_thread(tavily.search, query=q, search_depth="basic", max_results=results_per_query))
+        # 2. OpenAlex
+        tasks.append(asyncio.to_thread(search_openalex, q, max_results=results_per_query))
+        # 3. arXiv
+        tasks.append(asyncio.to_thread(search_arxiv, q, max_results=results_per_query))
+        # 4. CORE
+        tasks.append(asyncio.to_thread(search_core, q, max_results=results_per_query))
+        # 5. Private Library
+        if user_id:
+            tasks.append(asyncio.to_thread(search_private_library, q, user_id, max_results=results_per_query))
+
+    for res in await asyncio.gather(*tasks, return_exceptions=True):
+        if isinstance(res, Exception):
+            print(f"Search task failed: {res}")
+        elif isinstance(res, dict) and "results" in res: # Tavily response
+            web_results = [{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"} for r in res.get("results", [])]
+            all_sources.extend(web_results)
+        elif isinstance(res, list): # OpenAlex, arXiv, CORE or private library result list
+            all_sources.extend(res)
         
     seen_urls = set()
     unique_sources = []

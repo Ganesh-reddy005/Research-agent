@@ -64,6 +64,7 @@ export default function Dashboard() {
       if (state.research_brief) setBrief(state.research_brief);
       if (state.assistance_summary) setAssistanceSummary(state.assistance_summary);
       if (state.final_report) setReport(state.final_report);
+      else if (state.draft_report) setReport(state.draft_report);
       if (state.raw_sources) setAllSources(state.raw_sources);
       if (state.citation_audit_log) setAuditLog(state.citation_audit_log);
       setActiveThought(null);
@@ -72,11 +73,13 @@ export default function Dashboard() {
     onThought: (agent: string, token: string) => {
       if (agent === 'brainstorm') {
         setBrainstormHistory(prev => {
+          if (prev.length === 0) return prev;
           const last = prev[prev.length - 1];
           if (last?.role === 'assistant') {
             return [...prev.slice(0, -1), { ...last, content: last.content + token }];
           }
-          return prev;
+          // Fallback if the assistant message hasn't been added to the array yet
+          return [...prev, { role: 'assistant', content: token }];
         });
         return;
       }
@@ -101,9 +104,10 @@ export default function Dashboard() {
       if (next.includes('synthesis')) setStage('assistance_review');
     },
     onDone: (tid: string) => {
-      if (stage !== 'brainstorming') {
-        setStage('completed');
-      }
+      setStage(prev => {
+        if (prev === 'brainstorming') return prev;
+        return 'completed';
+      });
       setIsProcessing(false);
     },
     onError: (err: string) => {
@@ -137,6 +141,10 @@ export default function Dashboard() {
     setStage('brainstorming');
     setIsProcessing(true);
     setError(null);
+    setActiveThought(null);
+    setReport(''); // Clear previous report to prevent StageCompleted from mounting
+    setAuditLog(null);
+    setAllSources([]);
     
     const initialMessage = { role: 'user', content: topic };
     setBrainstormHistory([initialMessage, { role: 'assistant', content: '' }]);
@@ -154,6 +162,7 @@ export default function Dashboard() {
     setBrainstormHistory([...newHistory, { role: 'assistant', content: '' }]);
     setBrainstormQuery('');
     setIsProcessing(true);
+    setActiveThought(null);
     
     await brainstormResearch(newHistory, callbacks);
   };
@@ -301,7 +310,7 @@ export default function Dashboard() {
                     isProcessing={isProcessing}
                   />
                 )}
-                {stage === 'researching' && isProcessing && (
+                {stage === 'researching' && isProcessing && !report && (
                   <StageResearching 
                     key="researching"
                     activeThought={activeThought}
@@ -319,7 +328,7 @@ export default function Dashboard() {
                     isProcessing={isProcessing}
                   />
                 )}
-                {(stage === 'completed' || (stage === 'reviewing' && report)) && (
+                {(stage === 'completed' || (stage !== 'idle' && stage !== 'brainstorming' && report)) && (
                   <StageCompleted 
                     key="completed"
                     report={report}

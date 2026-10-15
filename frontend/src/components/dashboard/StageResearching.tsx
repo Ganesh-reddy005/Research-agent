@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, CheckCircle, Activity, Zap } from 'lucide-react';
+import { Loader2, CheckCircle, Zap } from 'lucide-react';
+import AgentIcon from './AgentIcon';
 
 interface StageResearchingProps {
   activeThought: { agent: string; text: string } | null;
@@ -49,7 +50,7 @@ export default function StageResearching({ activeThought }: StageResearchingProp
         <div className="p-10 min-h-[35vh] bg-[#F5F2ED]/30 border border-mistral-black/5 relative overflow-hidden group">
           <div className="font-sans">
             <div className="text-[9px] font-bold font-mono text-mistral-black/10 uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
-              <Activity className="w-3.5 h-3.5" />
+              <AgentIcon name={activeThought?.agent || 'system'} className="w-3.5 h-3.5" />
               Intelligence Stream
             </div>
             
