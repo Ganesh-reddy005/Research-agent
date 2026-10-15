@@ -1,4 +1,5 @@
 import asyncio
+from utils.events import report_progress
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from utils.vectorstore import qdrant_configured, research_collection, ensure_collection, get_vector_store
@@ -26,6 +27,7 @@ async def indexer_node(state):
     await asyncio.to_thread(ensure_collection, collection_name)
     
     print(f"Scraping deep full-text for top 15 sources...")
+    await report_progress(f"Reading the top {min(15, len(sources))} sources in full")
     deep_sources = await process_sources_with_full_text(sources, max_sources=15)
     
     # Prepare chunker
@@ -54,7 +56,17 @@ async def indexer_node(state):
                 }
             ))
             
+    # Sources beyond the ones read in full: index their abstract/snippet so they stay searchable
+    for src in sources[len(deep_sources):]:
+        if src.get("summary"):
+            docs.append(Document(
+                page_content=f"Title: {src.get('title')}\nSource: {src.get('source')}\n\n{src['summary']}",
+                metadata={"topic": topic, "url": src.get("url"), "title": src.get("title"),
+                          "source": src.get("source"), "thread_id": thread_id}
+            ))
+
     print(f"Created {len(docs)} text chunks. Indexing into Qdrant...")
+    await report_progress(f"Indexing {len(docs)} passages for retrieval")
         
     # Store in Qdrant
     await get_vector_store(collection_name).aadd_documents(docs)

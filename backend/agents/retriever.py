@@ -1,11 +1,14 @@
 import os
+import re
 import asyncio
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import requests
 import json
+from itertools import zip_longest
 from tavily import TavilyClient
+from utils.events import report_progress
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
 from utils.vectorstore import qdrant_configured, library_collection, collection_exists, get_vector_store
@@ -44,17 +47,25 @@ def search_core(query, max_results=3):
         headers = {"Authorization": f"Bearer {api_key}"}
         params = {"q": query, "limit": max_results}
         
-        response = requests.get(url, headers=headers, params=params, timeout=5)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
             for work in data.get("results", []):
                 title = work.get("title", "No Title")
-                url = work.get("downloadUrl") or work.get("sourceFulltextUrls", [None])[0] or "https://core.ac.uk/"
+                # sourceFulltextUrls can be an empty list
+                url = work.get("downloadUrl") or (work.get("sourceFulltextUrls") or [None])[0] or "https://core.ac.uk/"
                 summary = work.get("abstract") or "Detailed academic paper from CORE."
                 sources.append({"title": title, "url": url, "summary": summary, "source": "CORE"})
     except Exception as e:
         print(f"CORE search failed for '{query}': {e}")
     return sources
+
+def _openalex_abstract(inverted_index):
+    """OpenAlex ships abstracts as {word: [positions]}; rebuild the text."""
+    if not inverted_index:
+        return ""
+    positions = [(pos, word) for word, places in inverted_index.items() for pos in places]
+    return " ".join(word for _, word in sorted(positions))
 
 def search_openalex(query, max_results=3):
     sources = []
@@ -71,20 +82,42 @@ def search_openalex(query, max_results=3):
         if response.status_code == 200:
             data = response.json()
             for work in data.get("results", []):
-                title = work.get("title", "No Title")
+                title = work.get("title") or "No Title"
                 url = work.get("doi") or work.get("id")
-                summary = "Detailed academic paper."
-                sources.append({"title": title, "url": url, "summary": summary, "source": "OpenAlex"})
+                summary = _openalex_abstract(work.get("abstract_inverted_index")) or "No abstract available."
+                authors = [a.get("author", {}).get("display_name") for a in work.get("authorships", [])]
+                sources.append({"title": title, "url": url, "summary": summary, "source": "OpenAlex",
+                                "year": work.get("publication_year"), "authors": [a for a in authors if a][:6]})
     except Exception as e:
         print(f"OpenAlex search failed: {e}")
     return sources
 
-def search_arxiv(query, max_results=3):
-    url = f'http://export.arxiv.org/api/query?search_query=all:{urllib.parse.quote(query)}&start=0&max_results={max_results}'
+_ARXIV_STOPWORDS = {"a", "an", "and", "or", "the", "of", "for", "in", "on", "with", "to", "via", "using", "latest", "recent", "new", "papers"}
+
+def _arxiv_all_terms(query):
+    """'sparse attention for long-context LLMs 2026' -> all:sparse AND all:attention AND all:long AND ...
+    arXiv ORs bare words, which is noise once results are sorted by date instead of relevance."""
+    words = [re.sub(r"[^\w]", "", w) for w in re.split(r"[\s\-]+", query)]
+    terms = [w for w in words if w and w.lower() not in _ARXIV_STOPWORDS and not re.fullmatch(r"(19|20)\d\d", w)]
+    return " AND ".join(f"all:{t}" for t in terms)
+
+def search_arxiv(query, max_results=3, newest_first=False):
+    if newest_first:
+        terms = _arxiv_all_terms(query)
+        if terms:
+            url = (f'https://export.arxiv.org/api/query?search_query={urllib.parse.quote(terms, safe=":")}'
+                   f'&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending')
+            found = _fetch_arxiv(url, query)
+            if found:
+                return found
+        # Nothing matched every term: fall back to relevance ranking
+    url = f'https://export.arxiv.org/api/query?search_query=all:{urllib.parse.quote(query)}&start=0&max_results={max_results}'
+    return _fetch_arxiv(url, query)
+
+def _fetch_arxiv(url, query):
     sources = []
     try:
-        # Reduced timeout to 3s for maximum responsiveness
-        response = urllib.request.urlopen(url, timeout=3)
+        response = urllib.request.urlopen(url, timeout=8)
         xml_data = response.read()
         root = ET.fromstring(xml_data)
         namespace = {'atom': 'http://www.w3.org/2005/Atom'}
@@ -92,7 +125,11 @@ def search_arxiv(query, max_results=3):
             title = entry.find('atom:title', namespace).text.replace('\n', ' ').strip()
             summary = entry.find('atom:summary', namespace).text.replace('\n', ' ').strip()
             link = entry.find('atom:id', namespace).text
-            sources.append({"title": title, "url": link, "summary": summary, "source": "arXiv"})
+            published = entry.find('atom:published', namespace)
+            year = int(published.text[:4]) if published is not None and published.text else None
+            authors = [a.findtext('atom:name', default='', namespaces=namespace) for a in entry.findall('atom:author', namespace)]
+            sources.append({"title": title, "url": link, "summary": summary, "source": "arXiv", "year": year,
+                            "authors": [a for a in authors if a][:6]})
     except Exception as e:
         print(f"arXiv skipped for '{query}': {e}")
     return sources
@@ -120,10 +157,11 @@ async def retriever_node(state):
     except:
         search_queries = [topic]
 
+    await report_progress(f"Searching {len(search_queries)} queries across arXiv, OpenAlex, CORE and the web")
+
     tavily_key = os.getenv("TAVILY_API_KEY")
     tavily = TavilyClient(api_key=tavily_key) if tavily_key else None
     
-    all_sources = []
     normalized_queries = [str(q.get("query", q)) if isinstance(q, dict) else str(q) for q in search_queries]
 
     # PARALLEL SEARCH: every (query, source) pair runs in a worker thread so the
@@ -145,14 +183,18 @@ async def retriever_node(state):
         if user_id:
             tasks.append(asyncio.to_thread(search_private_library, q, user_id, max_results=results_per_query))
 
+    result_lists = []
     for res in await asyncio.gather(*tasks, return_exceptions=True):
         if isinstance(res, Exception):
             print(f"Search task failed: {res}")
         elif isinstance(res, dict) and "results" in res: # Tavily response
-            web_results = [{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"} for r in res.get("results", [])]
-            all_sources.extend(web_results)
+            result_lists.append([{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"} for r in res.get("results", [])])
         elif isinstance(res, list): # OpenAlex, arXiv, CORE or private library result list
-            all_sources.extend(res)
+            result_lists.append(res)
+
+    # Interleave: each query/provider's best hit first, then second-best, ... so the sources read
+    # in full (the first 15) span every query instead of all coming from the first one
+    all_sources = [s for rank in zip_longest(*result_lists) for s in rank if s]
         
     seen_urls = set()
     unique_sources = []
@@ -162,4 +204,5 @@ async def retriever_node(state):
             seen_urls.add(url)
             unique_sources.append(source)
             
+    await report_progress(f"Found {len(unique_sources)} unique sources")
     return {"raw_sources": unique_sources, "current_step": "retriever"}

@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import type {
-  ChatMessage, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SessionSnapshot, SessionSummary,
+  ChatMessage, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
 } from './types';
 
 export type EventCallbacks = {
@@ -9,11 +9,18 @@ export type EventCallbacks = {
   onInterrupt: (threadId: string, next: string[]) => void;
   onDone: (threadId: string) => void;
   onError: (error: string) => void;
+  onAgentStart?: (agent: string, threadId: string) => void;
+  onProgress?: (agent: string, message: string) => void;
+  onSearchStart?: (search: { id: string; tool: string; query: string }) => void;
+  onSearchEnd?: (search: { id: string; tool: string; query: string; sources: SearchSource[] }) => void;
 };
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+// The user pressed Stop: not an error worth showing
+const isAbort = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
 
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -66,6 +73,14 @@ async function handleSSEResponse(
             callbacks.onStep(data.step, data.state, data.thread_id);
           } else if (currentEvent === 'thought') {
             callbacks.onThought(data.agent, data.token);
+          } else if (currentEvent === 'agent_start') {
+            callbacks.onAgentStart?.(data.agent, data.thread_id);
+          } else if (currentEvent === 'progress') {
+            callbacks.onProgress?.(data.agent, data.message);
+          } else if (currentEvent === 'search_start') {
+            callbacks.onSearchStart?.(data);
+          } else if (currentEvent === 'search_end') {
+            callbacks.onSearchEnd?.(data);
           }
         } catch (e) {
           console.error('Failed to parse SSE data', e);
@@ -78,19 +93,21 @@ async function handleSSEResponse(
 export async function startResearch(
   topic: string,
   callbacks: EventCallbacks,
-  mode: ResearchDepth = 'deep'
+  mode: ResearchDepth = 'deep',
+  signal?: AbortSignal
 ) {
   try {
     const headers = await getAuthHeaders();
     const response = await fetch(`${BASE_URL}/api/research/start`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ topic, mode })
+      body: JSON.stringify({ topic, mode }),
+      signal
     });
     if (!response.ok) throw new Error(await errorDetail(response, "Failed to start research"));
     await handleSSEResponse(response, callbacks);
   } catch (error) {
-    callbacks.onError(message(error));
+    if (!isAbort(error)) callbacks.onError(message(error));
   }
 }
 
@@ -103,19 +120,21 @@ export async function resumeResearch(
   threadId: string,
   action: 'answer' | 'approve' | 'continue',
   data: ResumeData,
-  callbacks: EventCallbacks
+  callbacks: EventCallbacks,
+  signal?: AbortSignal
 ) {
   try {
     const headers = await getAuthHeaders();
     const response = await fetch(`${BASE_URL}/api/research/resume`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ thread_id: threadId, action, data })
+      body: JSON.stringify({ thread_id: threadId, action, data }),
+      signal
     });
     if (!response.ok) throw new Error(await errorDetail(response, "Failed to resume research"));
     await handleSSEResponse(response, callbacks);
   } catch (error) {
-    callbacks.onError(message(error));
+    if (!isAbort(error)) callbacks.onError(message(error));
   }
 }
 
@@ -133,15 +152,17 @@ export async function getBrainstorm(chatId: string): Promise<{ chat_id: string; 
   return response.json();
 }
 
+/** Ask about a session's sources. `history` is the earlier conversation, oldest first. */
 export async function chatWithData(
   threadId: string,
-  query: string
-): Promise<{ answer: string; sources: string[] }> {
+  query: string,
+  history: { role: string; content: string }[] = []
+): Promise<{ answer: string; sources: SearchSource[]; search_query: string }> {
   const headers = await getAuthHeaders();
   const response = await fetch(`${BASE_URL}/api/research/chat`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ thread_id: threadId, query })
+    body: JSON.stringify({ thread_id: threadId, query, history })
   });
   if (!response.ok) throw new Error(await errorDetail(response, 'Failed to fetch chat response'));
   return response.json();
@@ -182,18 +203,20 @@ export async function getSessions(): Promise<SessionSummary[]> {
 export async function brainstormResearch(
   text: string,
   chatId: string | null,
-  callbacks: EventCallbacks
+  callbacks: EventCallbacks,
+  signal?: AbortSignal
 ) {
   try {
     const headers = await getAuthHeaders();
     const response = await fetch(`${BASE_URL}/api/research/brainstorm`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ message: text, chat_id: chatId })
+      body: JSON.stringify({ message: text, chat_id: chatId }),
+      signal
     });
     if (!response.ok) throw new Error(await errorDetail(response, 'Brainstorming failed'));
     await handleSSEResponse(response, callbacks);
   } catch (error) {
-    callbacks.onError(message(error));
+    if (!isAbort(error)) callbacks.onError(message(error));
   }
 }

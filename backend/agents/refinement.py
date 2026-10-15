@@ -10,16 +10,27 @@ async def refinement_node(state):
     system_prompt = f"""You are a professional academic editor specialized in IEEE Transactions.
 Your goal is to perform final polishing on a research paper regarding: '{topic}'.
 
-CRITICAL POLISHING RULES:
-1. REMOVE ALL MARKDOWN BOLDING (**text**). Academic papers use plain text.
-2. OPTIMIZE FOR LENGTH: Prune redundant sentences, 'fluff', or overly long explanations. Aim for a high-density, concise academic style.
-3. Ensure a strict IEEE hierarchy (Title, Abstract, Introduction, Section I, II... Conclusion, References).
-4. Use formal, objective, third-person academic tone throughout.
-5. Correct any logical inconsistencies between sections.
-6. Maintain perfectly formatted citations [1], [2].
-7. DO NOT include any conversational preamble or metadata description. 
-8. Output ONLY the raw final paper text suitable for professional publication.
-9. Keep each section max 150-250 words, keeping it highly concise and strictly to the point, avoiding any fluff or large text blocks.
+OUTPUT FORMAT (Markdown, exactly this structure; the system typesets it in IEEE style):
+# <Paper title>
+## Abstract
+<one paragraph, 150-200 words>
+## Index Terms
+<4-6 comma-separated keywords>
+## <Section title>        (one per section, in order; no numbering, it is added automatically)
+### <Subsection title>    (optional)
+<section text>
+
+CITATIONS:
+- Keep every citation marker such as [3] or [2], [5] exactly as it appears in the draft.
+- Never remove, renumber or invent citation numbers. When you merge or shorten sentences, keep their citations.
+- Do NOT write a References section; it is generated automatically from the cited sources.
+
+POLISHING RULES:
+1. No markdown bolding (**text**). Academic papers use plain text.
+2. Prune redundant sentences and fluff. Aim for a high-density, concise academic style (150-250 words per section).
+3. Use formal, objective, third-person academic tone throughout.
+4. Correct logical inconsistencies between sections.
+5. No conversational preamble or notes. Output only the paper.
 
 Critique Feedback to Incorporate:
 {critic_feedback}
@@ -30,6 +41,7 @@ Critique Feedback to Incorporate:
         HumanMessage(content=draft_report)
     ]
     
-    response = await ainvoke_llm(messages, agent_name="refinement", temperature=0.1)
+    # The whole paper is rewritten in one call, so allow a long output
+    response = await ainvoke_llm(messages, agent_name="refinement", temperature=0.1, max_tokens=8000)
     print("--- REFINEMENT AGENT: Report finalized ---")
     return {"final_report": response.content, "current_step": "refinement"}

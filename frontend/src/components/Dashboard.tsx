@@ -8,7 +8,7 @@ import {
   startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions,
   type EventCallbacks, type ResumeData,
 } from '@/lib/api';
-import type { ActivityLog, ChatMessage, ResearchDepth, ResearchPlan, ResearchState, SessionSummary } from '@/lib/types';
+import type { ActivityLog, ChatMessage, LiveActivity, ResearchDepth, ResearchPlan, ResearchState, SessionSummary } from '@/lib/types';
 
 import Sidebar from './dashboard/Sidebar';
 import AgentLogsPanel from './dashboard/AgentLogsPanel';
@@ -48,13 +48,23 @@ export default function Dashboard({ user }: { user: User }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [activeThought, setActiveThought] = useState<{ agent: string; text: string } | null>(null);
+  const [live, setLive] = useState<LiveActivity | null>(null);
+  const [stalledReason, setStalledReason] = useState<'stopped' | 'interrupted'>('interrupted');
   const [sourceChat, setSourceChat] = useState<ChatMessage[]>([]);
   const [brainstorm, setBrainstorm] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [panel, setPanel] = useState<Panel>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // One cancellable stream at a time; Stop aborts it
+  const newSignal = () => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    return abortRef.current.signal;
+  };
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const refreshSessions = useCallback(() => {
     getSessions().then(setSessions).catch(err => console.error('Failed to fetch sessions', err));
@@ -62,22 +72,41 @@ export default function Dashboard({ user }: { user: User }) {
   useEffect(refreshSessions, [refreshSessions]);
 
   const clearProject = () => {
+    // Leaving a project mid-run: stop its stream so it can't update the next screen
+    abortRef.current?.abort();
+    setIsProcessing(false);
+    setStalledReason('interrupted');
     setThreadId(null);
     setResearch({});
     setLogs([]);
-    setActiveThought(null);
+    setLive(null);
     setSourceChat([]);
     setBrainstorm([]);
     setError(null);
   };
+
+  // Live brainstorm searches attach to the assistant message being written
+  const updateLastAssistant = (update: (m: ChatMessage) => ChatMessage) =>
+    setBrainstorm(prev => {
+      const last = prev[prev.length - 1];
+      return last?.role === 'assistant' ? [...prev.slice(0, -1), update(last)] : prev;
+    });
 
   const callbacks: EventCallbacks = {
     onStep: (step, state, tid) => {
       setThreadId(tid);
       setResearch(prev => ({ ...prev, ...state }));
       setLogs(prev => [...prev, { step, time: new Date().toLocaleTimeString(), data: state }]);
-      setActiveThought(null);
+      setLive(null);
     },
+    onAgentStart: (agent, tid) => {
+      if (tid) setThreadId(tid); // known from the first event, so even an early Stop can be resumed
+      const step = agentStep(agent);
+      if (step !== undefined) setWorkingStep(step);
+      setLive({ agent, startedAt: Date.now(), text: '' });
+    },
+    onProgress: (agent, message) =>
+      setLive(prev => (prev ? { ...prev, message } : { agent, startedAt: Date.now(), message, text: '' })),
     onThought: (agent, token) => {
       if (agent === 'brainstorm') {
         setBrainstorm(prev => {
@@ -87,14 +116,14 @@ export default function Dashboard({ user }: { user: User }) {
         });
         return;
       }
-      const step = agentStep(agent);
-      if (step !== undefined) setWorkingStep(step);
-      setActiveThought(prev => ({ agent, text: (prev?.agent === agent ? prev.text : '') + token }));
+      setLive(prev => (prev?.agent === agent
+        ? { ...prev, text: prev.text + token }
+        : { agent, startedAt: Date.now(), text: token }));
     },
     onInterrupt: (tid, next) => {
       setThreadId(tid);
       setIsProcessing(false);
-      setActiveThought(null);
+      setLive(null);
       // Interrupts always name the paused-before node, so the state isn't needed here
       setStage(stageFromNext(next, {}));
       refreshSessions();
@@ -102,10 +131,17 @@ export default function Dashboard({ user }: { user: User }) {
     onDone: (tid) => {
       if (tid) setThreadId(tid); // a new brainstorm learns its chat id here
       setIsProcessing(false);
-      setActiveThought(null);
+      setLive(null);
       setStage(prev => (prev === 'brainstorm' ? prev : 'completed'));
       refreshSessions();
     },
+    onSearchStart: (search) =>
+      updateLastAssistant(m => ({ ...m, searches: [...(m.searches ?? []), { ...search, status: 'searching', sources: [] }] })),
+    onSearchEnd: (search) =>
+      updateLastAssistant(m => ({
+        ...m,
+        searches: (m.searches ?? []).map(s => (s.id === search.id ? { ...s, status: 'done', sources: search.sources } : s)),
+      })),
     onError: (err) => {
       setError(err);
       setIsProcessing(false);
@@ -117,12 +153,34 @@ export default function Dashboard({ user }: { user: User }) {
     },
   };
 
-  const run = async (step: number, action: () => Promise<void>) => {
+  const run = async (step: number, action: (signal: AbortSignal) => Promise<void>) => {
     setError(null);
     setWorkingStep(step);
+    setLive(null);
     setStage('working');
     setIsProcessing(true);
-    await action();
+    await action(newSignal());
+  };
+
+  const handleStop = () => {
+    abortRef.current?.abort();
+    setIsProcessing(false);
+    setLive(null);
+    if (stage === 'brainstorm') {
+      // Keep what was written; close any search still spinning
+      setBrainstorm(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role !== 'assistant') return prev;
+        if (!last.content && !last.searches?.length) return prev.slice(0, -1);
+        const searches = last.searches?.map(s => ({ ...s, status: 'done' as const }));
+        return [...prev.slice(0, -1), { ...last, searches, content: last.content || '_Stopped._' }];
+      });
+    } else if (threadId) {
+      setStalledReason('stopped');
+      setStage('stalled');
+    } else {
+      setStage('idle');
+    }
   };
 
   // --- Actions -------------------------------------------------------------
@@ -131,32 +189,35 @@ export default function Dashboard({ user }: { user: User }) {
     clearProject();
     setDepth(chosenDepth);
     setResearch({ topic, research_mode: chosenDepth });
-    run(0, () => startResearch(topic, callbacks, chosenDepth));
+    run(0, signal => startResearch(topic, callbacks, chosenDepth, signal));
   };
 
   const handleAnswers = (answers: Record<string, string>) => {
     setResearch(prev => ({ ...prev, user_answers: answers }));
-    run(1, () => resumeResearch(threadId!, 'answer', { answers }, callbacks));
+    run(1, signal => resumeResearch(threadId!, 'answer', { answers }, callbacks, signal));
   };
 
   const handleApprovePlan = (plan: ResearchPlan) => {
     setResearch(prev => ({ ...prev, research_plan: plan }));
     const data: ResumeData = { mode: research.research_mode ?? depth, plan };
-    run(2, () => resumeResearch(threadId!, 'approve', data, callbacks));
+    run(2, signal => resumeResearch(threadId!, 'approve', data, callbacks, signal));
   };
 
-  const handleWritePaper = () => run(4, () => resumeResearch(threadId!, 'continue', {}, callbacks));
+  const handleWritePaper = () => run(4, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
 
   const handleContinue = () =>
-    run(STAGE_STEP.stalled!, () => resumeResearch(threadId!, 'continue', {}, callbacks));
+    run(STAGE_STEP.stalled!, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
 
   const handleSourceQuestion = async (query: string) => {
     if (!threadId) return;
+    const history = sourceChat.map(({ role, content }) => ({ role, content }));
     setSourceChat(prev => [...prev, { role: 'user', content: query }]);
     setIsProcessing(true);
     try {
-      const response = await chatWithData(threadId, query);
-      setSourceChat(prev => [...prev, { role: 'assistant', content: response.answer }]);
+      const response = await chatWithData(threadId, query, history);
+      setSourceChat(prev => [...prev, {
+        role: 'assistant', content: response.answer, sources: response.sources, searchQuery: response.search_query,
+      }]);
     } catch {
       setSourceChat(prev => [...prev, { role: 'assistant', content: 'Sorry, I could not search the sources just now. Please try again.' }]);
     } finally {
@@ -168,7 +229,7 @@ export default function Dashboard({ user }: { user: User }) {
     setError(null);
     setBrainstorm(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '' }]);
     setIsProcessing(true);
-    brainstormResearch(text, chatId, callbacks).finally(() => setIsProcessing(false));
+    brainstormResearch(text, chatId, callbacks, newSignal()).finally(() => setIsProcessing(false));
   };
 
   const handleStartBrainstorm = (idea: string) => {
@@ -315,11 +376,12 @@ export default function Dashboard({ user }: { user: User }) {
                     messages={brainstorm}
                     onSend={handleBrainstormMessage}
                     onBack={handleNewResearch}
+                    onStop={handleStop}
                     isProcessing={isProcessing}
                   />
                 )}
                 {stage === 'loading' && <p className="text-base text-mistral-black/60">Loading this research session…</p>}
-                {stage === 'working' && <StageResearching step={workingStep} activeThought={activeThought} logs={logs} />}
+                {stage === 'working' && <StageResearching step={workingStep} live={live} logs={logs} onStop={handleStop} />}
                 {stage === 'clarification' && (
                   <StageClarification
                     questions={research.clarification_questions ?? []}
@@ -357,7 +419,7 @@ export default function Dashboard({ user }: { user: User }) {
                   />
                 )}
                 {stage === 'stalled' && threadId && !error && (
-                  <StageStalled onContinue={handleContinue} isProcessing={isProcessing} />
+                  <StageStalled reason={stalledReason} onContinue={handleContinue} isProcessing={isProcessing} />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -376,7 +438,7 @@ export default function Dashboard({ user }: { user: User }) {
             className="fixed right-0 top-0 h-full w-full sm:w-[360px] z-40 shadow-2xl"
           >
             {panel === 'activity' ? (
-              <AgentLogsPanel logs={logs} activeThought={activeThought} isProcessing={isProcessing} onClose={() => setPanel(null)} />
+              <AgentLogsPanel logs={logs} live={live} isProcessing={isProcessing} onClose={() => setPanel(null)} />
             ) : (
               <LibraryPanel onClose={() => setPanel(null)} />
             )}

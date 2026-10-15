@@ -42,7 +42,7 @@ PLAN = {
     },
 }
 
-async def fake_llm(messages, agent_name=None, temperature=0.2):
+async def fake_llm(messages, agent_name=None, temperature=0.2, **kwargs):
     canned = {
         "clarification": json.dumps([{"id": "1", "question": "Scope?"}]),
         "planning": json.dumps(PLAN),

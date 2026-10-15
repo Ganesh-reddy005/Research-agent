@@ -42,14 +42,21 @@ async def brainstorm_research(request: BrainstormRequest, req: Request, user=Dep
         return {"event": "thought", "data": json.dumps({"agent": "brainstorm", "token": token, "thread_id": chat_id})}
 
     async def event_generator():
-        streamed = False
+        streamed, model_run = False, None
         try:
             async for event in graph.astream_events({"messages": [HumanMessage(content=message)]}, config=config, version="v2"):
-                if event["event"] == "on_chat_model_stream":
+                kind = event["event"]
+                if kind == "on_chat_model_stream" and event["metadata"].get("langgraph_node") == "agent":
                     token = event["data"]["chunk"].content
-                    if token:
+                    if isinstance(token, str) and token:
+                        if streamed and event["run_id"] != model_run:
+                            yield thought("\n\n")  # text from a new model call starts a new paragraph
+                        model_run = event["run_id"]
                         streamed = True
                         yield thought(token)
+                elif kind == "on_custom_event" and event["name"] in ("search_start", "search_end"):
+                    # Live "Searching arXiv for ..." progress and the sources found
+                    yield {"event": event["name"], "data": json.dumps(event["data"])}
             if not streamed:
                 # Provider didn't stream tokens; send the saved reply in one piece
                 snapshot = await graph.aget_state(config)
@@ -66,8 +73,22 @@ async def get_brainstorm(chat_id: str, req: Request, user=Depends(get_current_us
     """Saved messages of a brainstorm conversation."""
     await verify_session(chat_id, user.id)
     snapshot = await req.app.state.brainstorm_graph.aget_state({"configurable": {"thread_id": chat_id}})
-    messages = (snapshot.values or {}).get("messages", [])
-    return {
-        "chat_id": chat_id,
-        "messages": [{"role": "user" if m.type == "human" else "assistant", "content": m.content} for m in messages],
-    }
+    return {"chat_id": chat_id, "messages": to_chat_messages((snapshot.values or {}).get("messages", []))}
+
+def to_chat_messages(messages):
+    """One assistant message per user turn, carrying the searches that turn ran."""
+    out, parts, searches = [], [], []
+    for m in messages:
+        if m.type == "human":
+            out.append({"role": "user", "content": m.content})
+            parts, searches = [], []
+        elif m.type == "tool":
+            artifact = m.artifact or {}
+            searches.append({"id": m.tool_call_id, "tool": artifact.get("tool", m.name), "query": artifact.get("query", ""),
+                             "status": "done", "sources": artifact.get("sources", [])})
+        elif m.type == "ai":
+            if isinstance(m.content, str) and m.content:
+                parts.append(m.content)
+            if not m.tool_calls:  # the turn's final answer
+                out.append({"role": "assistant", "content": "\n\n".join(parts), "searches": searches})
+    return out

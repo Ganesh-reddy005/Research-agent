@@ -8,10 +8,12 @@ import { Button, inputClass } from './ui';
 type Mode = 'research' | 'brainstorm';
 
 const EXAMPLES = [
-  'Does retrieval-augmented generation reduce hallucinations in code-generation models?',
-  'How do learned index structures compare with B-trees on real-world workloads?',
-  'What are the trade-offs between sparse and dense attention for long-context transformers?',
-  'How effective are LLM-based fuzzers at finding memory-safety bugs compared with AFL++?',
+  'Can I build a text-to-speech model that fits under 1 GB and still sounds natural?',
+  'How small can an image classifier get on CIFAR-10 before accuracy drops? Compare pruning and quantisation.',
+  'Can a fine-tuned 1B-parameter model fix Python bugs as well as much larger models?',
+  'Can a compact model detect pneumonia from chest X-rays, trained on a public dataset?',
+  'Which efficient attention method works best for long documents on a single GPU?',
+  'How much energy does fine-tuning a small LLM use, and which techniques reduce it the most?',
 ];
 
 const DEPTHS: { id: ResearchDepth; label: string; description: string }[] = [

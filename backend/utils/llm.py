@@ -1,11 +1,13 @@
 import os
+import asyncio
+import openai
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = True):
+def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = True, max_tokens: int = None):
     """
     Returns an LLM instance based on the agent name or a default.
     """
@@ -33,7 +35,7 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
             model=model_id.removeprefix("groq:"),
             temperature=temperature,
             api_key=groq_api_key,
-            max_tokens=5000,
+            max_tokens=max_tokens or 5000,
             streaming=streaming
         )
 
@@ -43,7 +45,7 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
             api_key=openrouter_api_key,
             model=model_id,
             temperature=temperature,
-            max_tokens=4000,
+            max_tokens=max_tokens or 4000,
             streaming=streaming
         )
     
@@ -51,13 +53,34 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         model=model_id,
         temperature=temperature,
         api_key=groq_api_key,
-        max_tokens=5000,
+        max_tokens=max_tokens or 5000,
         streaming=streaming
     )
 
-async def ainvoke_llm(messages, agent_name: str = None, temperature: float = 0.2):
-    llm = get_llm(agent_name=agent_name, temperature=temperature)
-    return await llm.ainvoke(messages)
+LLM_RETRIES = 2
+
+# Requests that will fail the same way every time; everything else (dropped streams,
+# 5xx, rate limits, timeouts) is worth retrying.
+_PERMANENT_ERRORS = (
+    openai.BadRequestError, openai.AuthenticationError, openai.PermissionDeniedError,
+    openai.NotFoundError, openai.UnprocessableEntityError,
+)
+
+async def ainvoke_with_retry(llm, messages, label: str = "llm"):
+    for attempt in range(LLM_RETRIES + 1):
+        try:
+            return await llm.ainvoke(messages)
+        except _PERMANENT_ERRORS:
+            raise
+        except Exception as e:
+            if attempt == LLM_RETRIES:
+                raise
+            print(f"[LLM] {label} failed (attempt {attempt + 1}): {e}. Retrying...")
+            await asyncio.sleep(2 * (attempt + 1))
+
+async def ainvoke_llm(messages, agent_name: str = None, temperature: float = 0.2, max_tokens: int = None):
+    llm = get_llm(agent_name=agent_name, temperature=temperature, max_tokens=max_tokens)
+    return await ainvoke_with_retry(llm, messages, label=agent_name or "default")
 
 def invoke_llm(messages, agent_name: str = None, temperature: float = 0.2):
     llm = get_llm(agent_name=agent_name, temperature=temperature, streaming=False)

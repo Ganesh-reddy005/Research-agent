@@ -13,6 +13,7 @@ class ResearchResumeRequest(BaseModel):
 class ChatRequest(BaseModel):
     thread_id: str
     query: str
+    history: List[Dict[str, str]] = []  # earlier turns of the source chat, oldest first
 
 class BrainstormRequest(BaseModel):
     message: str
