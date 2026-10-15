@@ -1,9 +1,37 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ArrowRight, Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { ArrowRight, Search, Send } from 'lucide-react';
 import type { ChatMessage, Source } from '@/lib/types';
 import { Button, SectionLabel, StageHeader, inputClass } from './ui';
+import { SourceLink } from './SearchActivity';
+
+/** A source-chat answer: the query searched, the answer with linked [n] citations, and its sources. */
+function Answer({ message }: { message: ChatMessage }) {
+  const urls = new Map((message.sources ?? []).map(s => [s.n, s.url]));
+  const linked = message.content.replace(/\[(\d+)\](?!\()/g, (match, n) =>
+    urls.has(Number(n)) ? `[[${n}]](${urls.get(Number(n))})` : match);
+  return (
+    <div className="space-y-3">
+      {message.searchQuery && (
+        <p className="flex items-center gap-2 text-xs text-mistral-black/60">
+          <Search className="w-3.5 h-3.5 shrink-0" aria-hidden /> Searched for “{message.searchQuery}”
+        </p>
+      )}
+      <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-p:text-mistral-black/85 prose-a:text-mistral-orange prose-a:no-underline hover:prose-a:underline">
+        <ReactMarkdown components={{ a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>
+          {linked}
+        </ReactMarkdown>
+      </div>
+      {message.sources && message.sources.length > 0 && (
+        <ul className="space-y-2 pt-3 border-t border-mistral-black/10">
+          {message.sources.map(s => <li key={s.n}><SourceLink s={s} /></li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function countBySource(sources: Source[]) {
   const counts = new Map<string, number>();
@@ -59,11 +87,15 @@ export default function StageReview({ summary, sources, chat, onAsk, onWritePape
           <ul className="space-y-4 max-h-[28rem] overflow-y-auto custom-scrollbar pr-1" aria-live="polite">
             {chat.map((m, i) => (
               <li key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
-                <div className={`max-w-[85%] px-4 py-3 text-[15px] leading-relaxed whitespace-pre-line ${
-                  m.role === 'user' ? 'bg-mistral-black text-white' : 'bg-mistral-beige/60 text-mistral-black border border-mistral-black/10'
-                }`}>
-                  {m.content}
-                </div>
+                {m.role === 'user' ? (
+                  <div className="max-w-[85%] px-4 py-3 text-[15px] leading-relaxed whitespace-pre-line bg-mistral-black text-white">
+                    {m.content}
+                  </div>
+                ) : (
+                  <div className="px-4 py-4 bg-mistral-beige/60 border border-mistral-black/10">
+                    <Answer message={m} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

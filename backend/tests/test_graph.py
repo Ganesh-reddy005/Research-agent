@@ -55,3 +55,55 @@ def test_retriever_does_not_block_event_loop(offline_graph, monkeypatch):
 
     # Other requests (heartbeat) must keep running while searches are in flight.
     assert asyncio.run(scenario()) >= 5
+
+def test_writer_cites_with_reference_numbers(monkeypatch):
+    from agents import writer
+    from agents.writer import number_evidence
+    sources = [{"url": "u1", "title": "Paper A"}, {"url": "u2", "title": "Paper B"}]
+    # Passages are labelled by their position in raw_sources; unknown sources are dropped
+    text = number_evidence([("b text", "u2", "Paper B"), ("? text", "elsewhere", "X"), ("a text", "u1", "Paper A")], sources)
+    assert text == "[2] Paper B\nb text\n\n[1] Paper A\na text"
+
+    prompts = []
+    async def capture(messages, **kwargs):
+        prompts.append(messages[0].content)
+        from langchain_core.messages import AIMessage
+        return AIMessage(content="Body [1].")
+    monkeypatch.setattr(writer, "ainvoke_llm", capture)
+    state = {"topic": "t", "research_plan": PLAN["research_plan"], "raw_sources": [
+        {"url": "u1", "title": "Paper A", "summary": "about A"}]}
+    out = asyncio.run(writer.writer_node(state))
+    assert "[1] Paper A\nabout A" in prompts[0]  # evidence carries citation numbers
+    assert out["draft_report"].strip() == "## Introduction\n\nBody [1]."
+
+def test_sources_are_interleaved_across_queries(offline_graph):
+    state = {"topic": "x", "research_mode": "light", "research_plan": PLAN["research_plan"], "user_id": "u"}
+    sources = asyncio.run(agents.retriever.retriever_node(state))["raw_sources"]
+    # The first few sources (the ones read in full) cover both queries, not just the first
+    first = [s["title"] for s in sources[:6]]
+    assert any("query one" in t for t in first) and any("query two" in t for t in first)
+
+def test_llm_retries_transient_errors_only(monkeypatch):
+    import httpx, openai
+    from utils import llm as llm_mod
+    real_sleep = asyncio.sleep
+    async def no_wait(*_):
+        await real_sleep(0)
+    monkeypatch.setattr(llm_mod.asyncio, "sleep", no_wait)
+
+    class Flaky:
+        def __init__(self, errors): self.errors, self.calls = list(errors), 0
+        async def ainvoke(self, messages):
+            self.calls += 1
+            if self.errors:
+                raise self.errors.pop(0)
+            return "ok"
+
+    flaky = Flaky([RuntimeError("Stream ended before a terminal response event")])
+    assert asyncio.run(llm_mod.ainvoke_with_retry(flaky, [])) == "ok" and flaky.calls == 2
+
+    response = httpx.Response(400, request=httpx.Request("POST", "https://x"))
+    bad = Flaky([openai.BadRequestError("bad", response=response, body=None)])
+    with pytest.raises(openai.BadRequestError):
+        asyncio.run(llm_mod.ainvoke_with_retry(bad, []))
+    assert bad.calls == 1  # not retried

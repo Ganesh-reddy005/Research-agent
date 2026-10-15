@@ -2,14 +2,43 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowLeft, ArrowUp } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Square } from 'lucide-react';
 import type { ChatMessage } from '@/lib/types';
 import { Button, inputClass } from './ui';
+import SearchActivity, { uniqueSources } from './SearchActivity';
 
-export default function StageBrainstorm({ messages, onSend, onBack, isProcessing }: {
+// [3] -> link to source 3 of this answer (unknown numbers stay plain text)
+function linkCitations(text: string, message: ChatMessage) {
+  const urls = new Map(uniqueSources(message.searches).map(s => [s.n, s.url]));
+  return text.replace(/\[(\d+)\](?!\()/g, (match, n) => (urls.has(Number(n)) ? `[[${n}]](${urls.get(Number(n))})` : match));
+}
+
+function AssistantMessage({ message }: { message: ChatMessage }) {
+  const searches = message.searches ?? [];
+  const stillSearching = searches.some(s => s.status === 'searching');
+  return (
+    <div>
+      {searches.length > 0 && <SearchActivity searches={searches} />}
+      <div className="prose prose-base max-w-none prose-p:leading-relaxed prose-p:text-mistral-black/85 prose-a:text-mistral-orange prose-a:no-underline hover:prose-a:underline">
+        {message.content ? (
+          <ReactMarkdown
+            components={{ a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}
+          >
+            {linkCitations(message.content, message)}
+          </ReactMarkdown>
+        ) : !stillSearching && (
+          <span className="text-sm text-mistral-black/60">{searches.length ? 'Writing the answer…' : 'Thinking…'}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function StageBrainstorm({ messages, onSend, onBack, onStop, isProcessing }: {
   messages: ChatMessage[];
   onSend: (text: string) => void;
   onBack: () => void;
+  onStop: () => void;
   isProcessing: boolean;
 }) {
   const [text, setText] = useState('');
@@ -47,11 +76,7 @@ export default function StageBrainstorm({ messages, onSend, onBack, isProcessing
                 {m.content}
               </div>
             ) : (
-              <div className="prose prose-base max-w-none prose-p:leading-relaxed prose-p:text-mistral-black/85">
-                {m.content
-                  ? <ReactMarkdown>{m.content}</ReactMarkdown>
-                  : <span className="text-sm text-mistral-black/60">Thinking…</span>}
-              </div>
+              <AssistantMessage message={m} />
             )}
           </div>
         ))}
@@ -76,9 +101,15 @@ export default function StageBrainstorm({ messages, onSend, onBack, isProcessing
             aria-label="Message"
             className={`${inputClass} resize-none`}
           />
-          <Button onClick={send} disabled={!text.trim()} loading={isProcessing} aria-label="Send" className="!px-3.5 !py-3.5">
-            {!isProcessing && <ArrowUp className="w-4 h-4" aria-hidden />}
-          </Button>
+          {isProcessing ? (
+            <Button variant="secondary" onClick={onStop} aria-label="Stop" title="Stop" className="!px-3.5 !py-3.5">
+              <Square className="w-4 h-4 fill-current" aria-hidden />
+            </Button>
+          ) : (
+            <Button onClick={send} disabled={!text.trim()} aria-label="Send" className="!px-3.5 !py-3.5">
+              <ArrowUp className="w-4 h-4" aria-hidden />
+            </Button>
+          )}
         </div>
       </div>
     </div>

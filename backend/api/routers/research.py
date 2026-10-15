@@ -15,6 +15,43 @@ SESSION_FIELDS = [
     "citation_audit_log", "current_step",
 ]
 
+# Agents whose LLM output is prose worth showing live; the rest emit JSON
+STREAMED_AGENTS = {"assistance", "synthesis", "writer", "critic", "refinement"}
+
+async def stream_graph(graph, graph_input, config, thread_id, on_complete=None):
+    """SSE events for one graph run: agent starts, progress, live prose, finished steps,
+    then where it paused (interrupt) or that it finished (done)."""
+    def event(name, **data):
+        return {"event": name, "data": json.dumps({"thread_id": thread_id, **data})}
+
+    try:
+        async for ev in graph.astream_events(graph_input, config=config, version="v2"):
+            kind, node = ev["event"], ev["metadata"].get("langgraph_node")
+
+            if kind == "on_chain_start" and node and ev["name"] == node:
+                yield event("agent_start", agent=node)
+            elif kind == "on_custom_event" and ev["name"] == "progress":
+                yield event("progress", agent=node, message=ev["data"].get("message", ""))
+            elif kind == "on_chat_model_stream" and node in STREAMED_AGENTS:
+                content = ev["data"]["chunk"].content
+                if isinstance(content, str) and content:
+                    yield event("thought", agent=node, token=content)
+            elif kind == "on_chain_end" and node and ev["name"] == node:
+                output = ev["data"].get("output")
+                if output and isinstance(output, dict):
+                    yield event("step", step=node, state=output)
+
+        snapshot = await graph.aget_state(config)
+        if snapshot.next:
+            yield event("interrupt", next=snapshot.next)
+        else:
+            if on_complete:
+                await on_complete()
+            yield event("done", status="completed")
+    except Exception as e:
+        print(f"SSE Error: {e}")
+        yield {"event": "error", "data": json.dumps({"error": str(e)})}
+
 @router.post("/start")
 async def start_research(request: ResearchStartRequest, req: Request, user=Depends(get_current_user)):
     graph = req.app.state.graph
@@ -36,52 +73,13 @@ async def start_research(request: ResearchStartRequest, req: Request, user=Depen
         print(f"Failed to record session: {e}")
         raise HTTPException(status_code=500, detail="Could not initialize research session in database")
 
-    async def event_generator():
-        state = {
-            "topic": request.topic, 
-            "research_mode": request.mode or "deep", 
-            "thread_id": thread_id,
-            "user_id": str(user.id)
-        }
-        try:
-            async for event in graph.astream_events(state, config=config, version="v2"):
-                kind = event["event"]
-                
-                if kind == "on_chat_model_stream":
-                    content = event["data"]["chunk"].content
-                    if content:
-                        yield {
-                            "event": "thought",
-                            "data": json.dumps({
-                                "thread_id": thread_id, 
-                                "agent": event["metadata"].get("langgraph_node", "agent"), 
-                                "token": content
-                            })
-                        }
-                
-                elif kind == "on_chain_end":
-                    if "langgraph_node" in event["metadata"]:
-                        output = event["data"].get("output")
-                        if output and isinstance(output, dict):
-                            yield {
-                                "event": "step",
-                                "data": json.dumps({
-                                    "thread_id": thread_id, 
-                                    "step": event["metadata"]["langgraph_node"], 
-                                    "state": output
-                                })
-                            }
-            
-            snapshot = await graph.aget_state(config)
-            if snapshot.next:
-                yield {
-                    "event": "interrupt",
-                    "data": json.dumps({"thread_id": thread_id, "next": snapshot.next})
-                }
-        except Exception as e:
-            yield {"event": "error", "data": json.dumps({"error": str(e)})}
-            
-    return EventSourceResponse(event_generator(), ping=20)
+    state = {
+        "topic": request.topic,
+        "research_mode": request.mode or "deep",
+        "thread_id": thread_id,
+        "user_id": str(user.id)
+    }
+    return EventSourceResponse(stream_graph(graph, state, config, thread_id), ping=20)
 
 @router.post("/resume")
 async def resume_research(request: ResearchResumeRequest, req: Request, user=Depends(get_current_user)):
@@ -111,52 +109,11 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
-    async def event_generator():
-        try:
-            async for event in graph.astream_events(None, config=config, version="v2"):
-                kind = event["event"]
-                
-                if kind == "on_chat_model_stream":
-                    content = event["data"]["chunk"].content
-                    if content:
-                        yield {
-                            "event": "thought",
-                            "data": json.dumps({
-                                "thread_id": request.thread_id, 
-                                "agent": event["metadata"].get("langgraph_node", "agent"), 
-                                "token": content
-                            })
-                        }
-                
-                elif kind == "on_chain_end":
-                    if "langgraph_node" in event["metadata"]:
-                        output = event["data"].get("output")
-                        if output and isinstance(output, dict):
-                            yield {
-                                "event": "step",
-                                "data": json.dumps({
-                                    "thread_id": request.thread_id, 
-                                    "step": event["metadata"]["langgraph_node"], 
-                                    "state": output
-                                })
-                            }
-                    
-            snapshot = await graph.aget_state(config)
-            if snapshot.next:
-                yield {
-                    "event": "interrupt",
-                    "data": json.dumps({"thread_id": request.thread_id, "next": snapshot.next})
-                }
-            else:
-                supabase = get_supabase_client()
-                await asyncio.to_thread(supabase.table("sessions").update({"status": "completed"}).eq("thread_id", request.thread_id).execute)
-                
-                yield {"event": "done", "data": json.dumps({"thread_id": request.thread_id, "status": "completed"})}
-        except Exception as e:
-            print(f"SSE Error: {e}")
-            yield {"event": "error", "data": json.dumps({"error": str(e)})}
-            
-    return EventSourceResponse(event_generator(), ping=20)
+    async def mark_completed():
+        supabase = get_supabase_client()
+        await asyncio.to_thread(supabase.table("sessions").update({"status": "completed"}).eq("thread_id", request.thread_id).execute)
+
+    return EventSourceResponse(stream_graph(graph, None, config, request.thread_id, on_complete=mark_completed), ping=20)
 
 @router.get("/{thread_id}")
 async def get_research_session(thread_id: str, req: Request, user=Depends(get_current_user)):

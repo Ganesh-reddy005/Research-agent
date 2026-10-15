@@ -2,16 +2,44 @@
 
 import React, { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AlertTriangle, CircleCheck, Download, FileText } from 'lucide-react';
+import { AlertTriangle, ChevronDown, CircleCheck, Download, FileCode2, FileText } from 'lucide-react';
 import type { CitationAudit, Source } from '@/lib/types';
+import {
+  IEEE_CSS, formatReference, parsePaper, printPaper, renumberCitations, sectionLabels, toLatex,
+} from '@/lib/ieee';
 import { Button } from './ui';
 
-// [3] -> link to the matching reference (skips real markdown links like [text](url))
+// [3] -> link to reference 3 ([?] and real markdown links are left alone)
 const linkCitations = (md: string) => md.replace(/\[(\d+)\](?!\()/g, '[[$1]](#ref-$1)');
 
-const citedNumbers = (md: string) => new Set(Array.from(md.matchAll(/\[(\d+)\]/g), m => Number(m[1])));
+const link = ({ href, children }: { href?: string; children?: React.ReactNode }) =>
+  href?.startsWith('#ref-')
+    ? <a href={href}>{children}</a>
+    : <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
 
-const sourceHref = (url: string) => (url.startsWith('http') ? url : undefined);
+/** Paragraph-level Markdown inside the IEEE layout. */
+function Body({ text }: { text: string }) {
+  return <ReactMarkdown components={{ a: link }}>{linkCitations(text)}</ReactMarkdown>;
+}
+
+/** Markdown inside an existing paragraph (abstract): no extra <p>. */
+function Inline({ text }: { text: string }) {
+  return (
+    <ReactMarkdown components={{ a: link, p: ({ children }) => <>{children}</> }}>
+      {linkCitations(text)}
+    </ReactMarkdown>
+  );
+}
+
+function Reference({ source }: { source: Source }) {
+  const [text, url] = formatReference(source).split(' [Online]. Available: ');
+  return (
+    <>
+      {text}
+      {url && <> [Online]. Available: <a href={url} target="_blank" rel="noopener noreferrer">{url}</a></>}
+    </>
+  );
+}
 
 function CitationCheck({ audit, sourceCount }: { audit: CitationAudit; sourceCount: number }) {
   const invalid = audit.invalid_citations ?? [];
@@ -27,7 +55,7 @@ function CitationCheck({ audit, sourceCount }: { audit: CitationAudit; sourceCou
           ? 'This draft contains no numbered citations.'
           : `${audit.total_citations_found} citations referring to ${audit.unique_sources_cited} different sources. `}
         {invalid.length > 0
-          ? `Citation${invalid.length > 1 ? 's' : ''} ${invalid.map(n => `[${n}]`).join(', ')} ${invalid.length > 1 ? "don't" : "doesn't"} match any of the ${sourceCount} retrieved sources. Treat ${invalid.length > 1 ? 'them' : 'it'} as unverified.`
+          ? `${invalid.length} citation${invalid.length > 1 ? 's' : ''} ${invalid.length > 1 ? "don't" : "doesn't"} match any of the ${sourceCount} retrieved sources and ${invalid.length > 1 ? 'are' : 'is'} shown as [?] in the paper. Treat ${invalid.length > 1 ? 'them' : 'it'} as unverified.`
           : audit.total_citations_found > 0 && 'Every citation points to a source Lume actually retrieved.'}
       </p>
       <p className="text-xs text-mistral-black/60 leading-relaxed">
@@ -38,6 +66,13 @@ function CitationCheck({ audit, sourceCount }: { audit: CitationAudit; sourceCou
   );
 }
 
+function download(content: string, filename: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function StageCompleted({ topic, report, sources, audit, reportRef, threadId }: {
   topic: string;
   report: string;
@@ -46,51 +81,36 @@ export default function StageCompleted({ topic, report, sources, audit, reportRe
   reportRef: React.RefObject<HTMLDivElement>;
   threadId: string | null;
 }) {
-  const [showAll, setShowAll] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const cited = useMemo(() => citedNumbers(report), [report]);
-  const markdown = useMemo(() => linkCitations(report), [report]);
-
-  // Numbering must match the citations: [n] is raw_sources[n - 1]
-  const numbered = sources.map((s, i) => ({ ...s, n: i + 1 }));
-  const visible = showAll ? numbered : numbered.filter(s => cited.has(s.n));
-  const fileBase = `Lume_${(threadId ?? 'report').slice(0, 8)}`;
-
-  const downloadPdf = async () => {
-    if (!reportRef.current) return;
-    setExporting(true);
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      await html2pdf().set({
-        margin: [0.6, 0.6, 0.6, 0.6],
-        filename: `${fileBase}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      }).from(reportRef.current).save();
-    } finally {
-      setExporting(false);
-    }
-  };
+  const [showRetrieved, setShowRetrieved] = useState(false);
+  // IEEE: references numbered by first citation, cited works only
+  const { paper, references } = useMemo(() => renumberCitations(parsePaper(report, topic), sources), [report, topic, sources]);
+  const labels = sectionLabels(paper.sections);
+  const fileBase = `Lume_${(threadId ?? 'paper').slice(0, 8)}`;
+  const date = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
   const downloadMarkdown = () => {
-    const refs = numbered.filter(s => cited.has(s.n)).map(s => `[${s.n}] ${s.title}. ${s.url}`).join('\n');
-    const blob = new Blob([`# ${topic}\n\n${report}\n\n## References\n\n${refs}\n`], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = Object.assign(document.createElement('a'), { href: url, download: `${fileBase}.md` });
-    a.click();
-    URL.revokeObjectURL(url);
+    const body = [
+      `# ${paper.title}`,
+      paper.abstract && `**Abstract—** ${paper.abstract}`,
+      paper.keywords && `**Index Terms—** ${paper.keywords}`,
+      ...paper.sections.map((s, i) => `${s.level === 2 ? '##' : '###'} ${labels[i]} ${s.title}\n\n${s.body.trim()}`),
+      `## References\n\n${references.map((r, i) => `[${i + 1}] ${formatReference(r)}`).join('\n\n')}`,
+    ].filter(Boolean).join('\n\n');
+    download(body + '\n', `${fileBase}.md`, 'text/markdown');
   };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-        <p className="text-sm text-mistral-black/65">Your draft is ready. Review it, then download.</p>
-        <div className="flex gap-2">
+        <p className="text-sm text-mistral-black/65">Your draft is ready, typeset in IEEE style.</p>
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={downloadMarkdown}>
             <FileText className="w-4 h-4" aria-hidden /> Markdown
           </Button>
-          <Button onClick={downloadPdf} loading={exporting}>
+          <Button variant="secondary" onClick={() => download(toLatex(paper, references), `${fileBase}.tex`, 'application/x-tex')}>
+            <FileCode2 className="w-4 h-4" aria-hidden /> LaTeX (IEEE)
+          </Button>
+          <Button onClick={() => reportRef.current && printPaper(reportRef.current, paper.title)}>
             <Download className="w-4 h-4" aria-hidden /> PDF
           </Button>
         </div>
@@ -98,47 +118,65 @@ export default function StageCompleted({ topic, report, sources, audit, reportRe
 
       {audit && <CitationCheck audit={audit} sourceCount={sources.length} />}
 
-      <div ref={reportRef} className="bg-white border border-mistral-black/10 px-6 py-10 sm:px-14 sm:py-14">
-        <h1 className="font-serif text-3xl sm:text-4xl text-mistral-black tracking-tight leading-tight mb-10">{topic}</h1>
-        <article className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:font-semibold prose-headings:tracking-tight prose-p:text-mistral-black/85 prose-p:leading-relaxed prose-a:text-mistral-orange prose-a:no-underline hover:prose-a:underline">
-          <ReactMarkdown
-            components={{
-              a: ({ href, children }) =>
-                href?.startsWith('#ref-')
-                  ? <a href={href} className="font-semibold text-mistral-orange">{children}</a>
-                  : <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>,
-            }}
-          >
-            {markdown}
-          </ReactMarkdown>
-        </article>
+      <style>{IEEE_CSS}</style>
+      <div className="bg-white border border-mistral-black/10 px-6 py-10 sm:px-12 sm:py-14 shadow-sm">
+        <div ref={reportRef} className="ieee-paper">
+          <h1 className="ieee-title">{paper.title}</h1>
+          <p className="ieee-byline">Draft generated with Lume · {date}</p>
+          <div className="ieee-body">
+            {paper.abstract && (
+              <p className="ieee-abstract"><em>Abstract</em>—<Inline text={paper.abstract} /></p>
+            )}
+            {paper.keywords && (
+              <p className="ieee-keywords"><em>Index Terms</em>—{paper.keywords}.</p>
+            )}
+            {paper.sections.map((s, i) => (
+              <section key={i}>
+                {s.level === 2 ? <h2>{labels[i]} {s.title}</h2> : <h3>{labels[i]} {s.title}</h3>}
+                <Body text={s.body} />
+              </section>
+            ))}
+            {references.length > 0 && (
+              <section>
+                <h2>References</h2>
+                <ol className="ieee-refs">
+                  {references.map((r, i) => (
+                    <li key={i} id={`ref-${i + 1}`}>
+                      <span>[{i + 1}]</span>
+                      <span><Reference source={r} /></span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
 
-        {numbered.length > 0 && (
-          <section className="mt-14 pt-8 border-t border-mistral-black/15 space-y-5">
-            <h2 className="font-serif text-2xl font-semibold text-mistral-black">References</h2>
-            <ol className="space-y-3">
-              {visible.map(s => (
-                <li key={s.n} id={`ref-${s.n}`} className="flex gap-3 text-sm leading-relaxed scroll-mt-24">
-                  <span className="font-semibold text-mistral-orange tabular-nums shrink-0">[{s.n}]</span>
-                  <span className="space-y-0.5">
-                    {sourceHref(s.url)
-                      ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-mistral-black hover:text-mistral-orange underline decoration-mistral-black/20 underline-offset-2">{s.title}</a>
-                      : <span className="text-mistral-black">{s.title}</span>}
-                    <span className="block text-mistral-black/60">
-                      {s.url.startsWith('local://') ? 'Your library' : s.source}
-                    </span>
-                  </span>
+      {sources.length > 0 && (
+        <section className="space-y-3">
+          <button
+            onClick={() => setShowRetrieved(!showRetrieved)}
+            aria-expanded={showRetrieved}
+            className="flex items-center gap-2 text-sm font-semibold text-mistral-black/70 hover:text-mistral-black"
+          >
+            All {sources.length} sources Lume retrieved ({references.length} cited)
+            <ChevronDown className={`w-4 h-4 transition-transform ${showRetrieved ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+          {showRetrieved && (
+            <ul className="space-y-2">
+              {sources.map((s, i) => (
+                <li key={i} className="text-sm leading-relaxed">
+                  {s.url.startsWith('http')
+                    ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-mistral-black hover:text-mistral-orange underline decoration-mistral-black/20 underline-offset-2">{s.title}</a>
+                    : <span className="text-mistral-black">{s.title}</span>}
+                  <span className="text-mistral-black/60"> · {s.url.startsWith('local://') ? 'Your library' : s.source}{s.year ? `, ${s.year}` : ''}</span>
                 </li>
               ))}
-            </ol>
-            {numbered.length > visible.length || showAll ? (
-              <Button variant="ghost" onClick={() => setShowAll(!showAll)} className="!px-0" data-html2canvas-ignore>
-                {showAll ? 'Show only cited sources' : `Show all ${numbered.length} retrieved sources`}
-              </Button>
-            ) : null}
-          </section>
-        )}
-      </div>
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

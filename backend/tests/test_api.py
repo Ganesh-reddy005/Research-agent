@@ -1,10 +1,12 @@
 import asyncio
+import json
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from api.routers import research
 from utils.auth import get_current_user
+from conftest import PLAN
 
 THREAD = "thread-api"
 CONFIG = {"configurable": {"thread_id": THREAD}}
@@ -69,3 +71,21 @@ def test_resume_without_data_does_not_crash(client):
     start(graph)
     with http.stream("POST", "/api/research/resume", json={"thread_id": THREAD, "action": "answer"}) as res:
         assert res.status_code == 200
+
+def test_stream_announces_agents_and_progress_without_json_tokens(client):
+    http, graph = client
+    start(graph, pauses=2)  # paused after planning
+    with http.stream("POST", "/api/research/resume",
+                     json={"thread_id": THREAD, "action": "approve", "data": {"mode": "light", "plan": PLAN["research_plan"]}}) as res:
+        raw = "".join(res.iter_text())
+    events = [(l[6:].strip(), json.loads(nxt[5:])) for l, nxt in zip(raw.splitlines(), raw.splitlines()[1:])
+              if l.startswith("event:") and nxt.startswith("data:")]
+    names = [e for e, _ in events]
+
+    started = [d["agent"] for e, d in events if e == "agent_start"]
+    assert started == ["retriever", "indexer", "assistance"]  # each announced as it begins
+    progress = [d["message"] for e, d in events if e == "progress"]
+    assert any(m.startswith("Searching 2 queries") for m in progress) and any(m.startswith("Found") for m in progress)
+    assert names.index("agent_start") < names.index("progress") < names.index("step")
+    # The retriever's LLM output is a JSON list of queries: never streamed to the UI
+    assert not any(d.get("agent") == "retriever" for e, d in events if e == "thought")
