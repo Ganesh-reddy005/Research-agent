@@ -1,7 +1,7 @@
-import os
+import asyncio
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_qdrant import QdrantVectorStore
-from utils.llm import ainvoke_llm, OpenRouterEmbeddings
+from utils.llm import ainvoke_llm
+from utils.vectorstore import qdrant_configured, research_collection, collection_exists, get_vector_store
 
 async def writer_node(state):
     print("--- WRITER AGENT: Commencing academic draft ---")
@@ -9,21 +9,12 @@ async def writer_node(state):
     plan = state.get("research_plan", {})
     synthesis = state.get("synthesis_report")
     
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    
     thread_id = state.get("thread_id", "default_thread")
-    collection_name = f"research_{thread_id.replace('-', '_')}"
+    collection_name = research_collection(thread_id)
     
-    embeddings = OpenRouterEmbeddings()
     vectorstore = None
-    if qdrant_url:
-        vectorstore = QdrantVectorStore.from_existing_collection(
-            embedding=embeddings,
-            collection_name=collection_name,
-            url=qdrant_url,
-            api_key=qdrant_api_key
-        )
+    if qdrant_configured() and await asyncio.to_thread(collection_exists, collection_name):
+        vectorstore = get_vector_store(collection_name)
     
     # Generate content section by section
     full_report = ""
@@ -46,7 +37,7 @@ async def writer_node(state):
         # Query Qdrant for this specific section
         context = ""
         if vectorstore:
-            results = vectorstore.similarity_search(f"{title}: {description}", k=5)
+            results = await vectorstore.asimilarity_search(f"{title}: {description}", k=5)
             context = "\n".join([r.page_content for r in results])
             
         system_prompt = f"""You are an elite academic writer specialized in IEEE Transactions.

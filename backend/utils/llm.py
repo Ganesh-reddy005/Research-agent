@@ -1,7 +1,6 @@
 import os
 from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
-from langchain_core.embeddings import Embeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,12 +17,25 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "writer": "WRITING_MODEL",
         "critic": "CRITIC_MODEL",
         "refinement": "REFINEMENT_MODEL",
-        "brainstorm": "BRAINSTORM_MODEL"
+        "brainstorm": "BRAINSTORM_MODEL",
+        "assistance": "ASSISTANCE_MODEL",
+        "chat": "CHAT_MODEL"
     }
-    
-    model_id = os.getenv(env_map.get(agent_name, "DEFAULT_MODEL"), "llama-3.3-70b-versatile")
+
+    # Per-agent model -> DEFAULT_MODEL -> built-in default
+    model_id = os.getenv(env_map.get(agent_name, ""), "") or os.getenv("DEFAULT_MODEL", "") or "openai/gpt-5.4-mini"
     openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
     groq_api_key = os.getenv("GROQ_API_KEY")
+
+    # "groq:<model>" forces Groq, even for ids containing "/" (e.g. groq:openai/gpt-oss-120b)
+    if model_id.startswith("groq:"):
+        return ChatGroq(
+            model=model_id.removeprefix("groq:"),
+            temperature=temperature,
+            api_key=groq_api_key,
+            max_tokens=5000,
+            streaming=streaming
+        )
 
     if "/" in model_id or (openrouter_api_key and not groq_api_key):
         return ChatOpenAI(
@@ -51,32 +63,15 @@ def invoke_llm(messages, agent_name: str = None, temperature: float = 0.2):
     llm = get_llm(agent_name=agent_name, temperature=temperature, streaming=False)
     return llm.invoke(messages)
 
-class OpenRouterEmbeddings(Embeddings):
+class OpenRouterEmbeddings(OpenAIEmbeddings):
     """
-    Custom embeddings class for OpenRouter.
+    Custom embeddings class for OpenRouter leveraging OpenAIEmbeddings.
     """
     def __init__(self, model: str = None):
-        self.model = model or os.getenv("EMBEDDING_MODEL", "mistralai/mistral-embed-2312")
-        self.client = ChatOpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_API_KEY"),
-            model=self.model
+        model_name = model or os.getenv("EMBEDDING_MODEL", "mistralai/mistral-embed-2312")
+        super().__init__(
+            model=model_name,
+            openai_api_base="https://openrouter.ai/api/v1",
+            openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+            check_embedding_ctx_length=False
         )
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        # OpenRouter's embedding endpoint
-        import requests
-        headers = {
-            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-            "Content-Type": "application/json"
-        }
-        url = "https://openrouter.ai/api/v1/embeddings"
-        response = requests.post(url, headers=headers, json={"model": self.model, "input": texts})
-        data = response.json()
-        if "data" not in data:
-            print(f"Embedding failed: {data}")
-            return [[0.0] * 1024 for _ in texts]
-        return [item["embedding"] for item in data["data"]]
-
-    def embed_query(self, text: str) -> list[float]:
-        return self.embed_documents([text])[0]

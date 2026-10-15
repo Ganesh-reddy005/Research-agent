@@ -1,4 +1,5 @@
 import os
+import asyncio
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client, Client
@@ -58,7 +59,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
     try:
         # Get user from Supabase using the provided JWT
-        res = supabase.auth.get_user(token)
+        res = await asyncio.to_thread(supabase.auth.get_user, token)
         if not res.user:
             print(f"Auth Error: Supabase could not find user for token. Response: {res}")
             raise HTTPException(status_code=401, detail="Invalid session")
@@ -76,3 +77,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 def get_supabase_client():
     return supabase
+
+async def verify_session(thread_id: str, user_id: str):
+    """
+    Verifies that a session belongs to a specific user.
+    """
+    client = get_supabase_client()
+    try:
+        res = await asyncio.to_thread(client.table("sessions").select("user_id").eq("thread_id", thread_id).execute)
+        if not res.data or res.data[0]["user_id"] != str(user_id):
+            raise HTTPException(status_code=403, detail="Not authorized to access this session")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

@@ -28,19 +28,28 @@ export default function StageCompleted({ report, allSources, auditLog, reportRef
              </motion.div>
            ) : (
              <div className="flex items-center gap-2 px-4 py-1.5 border border-mistral-black/5 bg-mistral-beige text-mistral-black/30 text-[8px] font-bold font-mono uppercase tracking-widest">
-               <Loader2 className="w-3 h-3 animate-spin" />
-               Auditing Metadata...
+               {report ? (
+                 <>
+                   <ShieldCheck className="w-3 h-3 text-mistral-orange" />
+                   Audit Finalized
+                 </>
+               ) : (
+                 <>
+                   <Loader2 className="w-3 h-3 animate-spin" />
+                   Auditing Metadata...
+                 </>
+               )}
              </div>
            )}
         </div>
 
         <div className="mb-20 space-y-4">
-          <div className="text-[9px] font-bold font-mono uppercase tracking-[0.4em] text-mistral-black/20">Technical Publication / 0x4f2a</div>
+          <div className="text-[9px] font-bold font-mono uppercase tracking-[0.4em] text-mistral-black/20">Research Manuscript</div>
           <div className="h-[1px] w-12 bg-mistral-orange" />
         </div>
         
         <article className="max-w-2xl mx-auto">
-          {report.split('\n').map((line, i) => {
+          {report?.split('\n').map((line, i) => {
             if (line.startsWith('## ')) return <h2 key={i} className="text-3xl text-mistral-black mt-20 mb-8 font-serif font-bold tracking-tight border-b border-mistral-black/5 pb-6">{line.replace('## ', '')}</h2>;
             if (line.startsWith('### ')) return <h3 key={i} className="text-xl text-mistral-black mt-12 mb-6 font-serif font-bold tracking-tight">{line.replace('### ', '')}</h3>;
             if (!line.trim()) return <div key={i} className="h-4" />;

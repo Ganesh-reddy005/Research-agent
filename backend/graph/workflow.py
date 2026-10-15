@@ -22,6 +22,7 @@ class AgentState(TypedDict, total=False):
     topic: str
     research_mode: str 
     thread_id: str
+    user_id: str
     clarification_questions: List[Dict[str, str]]
     user_answers: Dict[str, str]
     research_brief: str
@@ -30,6 +31,7 @@ class AgentState(TypedDict, total=False):
     plan_edits: str
     search_queries: List[str]
     raw_sources: List[Dict[str, Any]]
+    indexed_count: int
     assistance_summary: str
     synthesis_report: str
     draft_report: str

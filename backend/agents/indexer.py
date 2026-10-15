@@ -1,10 +1,7 @@
-import os
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
-from langchain_qdrant import QdrantVectorStore
+import asyncio
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from utils.llm import OpenRouterEmbeddings
+from utils.vectorstore import qdrant_configured, research_collection, ensure_collection, get_vector_store
 from utils.scraper import process_sources_with_full_text
 
 async def indexer_node(state):
@@ -15,34 +12,18 @@ async def indexer_node(state):
     if not sources:
         return {"current_step": "indexer"}
         
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    
-    if not qdrant_url:
+    if not qdrant_configured():
         print("QDRANT_URL not found. Skipping indexing.")
         return {"current_step": "indexer"}
         
-    # Initialize embeddings
-    embeddings = OpenRouterEmbeddings()
-    
-    # Initialize Qdrant client
-    client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
-    
     thread_id = state.get("thread_id", "default_thread")
     if not thread_id and getattr(state, "configurable", None):
         thread_id = state.configurable.get("thread_id", "default_thread")
         
-    collection_name = f"research_{thread_id.replace('-', '_')}"
+    collection_name = research_collection(thread_id)
     
-    # Create collection if it doesn't exist
-    # 1024 is the dimensionality for mistralai/mistral-embed-2312
-    try:
-        client.get_collection(collection_name)
-    except:
-        client.create_collection(
-            collection_name=collection_name,
-            vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
-        )
+    # Create collection sized for the configured embedding model
+    await asyncio.to_thread(ensure_collection, collection_name)
     
     print(f"Scraping deep full-text for top 15 sources...")
     deep_sources = await process_sources_with_full_text(sources, max_sources=15)
@@ -76,12 +57,6 @@ async def indexer_node(state):
     print(f"Created {len(docs)} text chunks. Indexing into Qdrant...")
         
     # Store in Qdrant
-    QdrantVectorStore.from_documents(
-        docs,
-        embeddings,
-        url=qdrant_url,
-        api_key=qdrant_api_key,
-        collection_name=collection_name
-    )
+    await get_vector_store(collection_name).aadd_documents(docs)
     
     return {"current_step": "indexer", "indexed_count": len(docs)}

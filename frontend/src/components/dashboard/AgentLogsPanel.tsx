@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Activity, ChevronDown, ChevronUp, FileSearch, Layers, Search, Database, Cpu, Book, CheckCircle, Sparkles, ShieldCheck, Zap } from 'lucide-react';
+import { Activity, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AgentIcon from './AgentIcon';
 
 interface AgentLogsPanelProps {
   logs: any[];
@@ -12,21 +13,6 @@ interface AgentLogsPanelProps {
   setExpandedLog: (index: number | null) => void;
   onClose?: () => void;
 }
-
-const getAgentIcon = (name: string) => {
-  switch (name.toLowerCase()) {
-    case 'clarification': return <FileSearch className="w-4 h-4" />;
-    case 'planning': return <Layers className="w-4 h-4" />;
-    case 'retriever': return <Search className="w-4 h-4" />;
-    case 'indexer': return <Database className="w-4 h-4" />;
-    case 'synthesis': return <Cpu className="w-4 h-4" />;
-    case 'writer': return <Book className="w-4 h-4" />;
-    case 'critic': return <CheckCircle className="w-4 h-4" />;
-    case 'refinement': return <Sparkles className="w-4 h-4" />;
-    case 'auditor': return <ShieldCheck className="w-4 h-4" />;
-    default: return <Activity className="w-4 h-4" />;
-  }
-};
 
 export default function AgentLogsPanel({ logs, activeThought, isProcessing, expandedLog, setExpandedLog, onClose }: AgentLogsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -67,7 +53,7 @@ export default function AgentLogsPanel({ logs, activeThought, isProcessing, expa
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-mistral-orange" />
             <div className="flex items-center gap-2 mb-3">
-              <div className="text-mistral-orange">{getAgentIcon(activeThought.agent)}</div>
+              <div className="text-mistral-orange"><AgentIcon name={activeThought.agent} /></div>
               <div className="text-[9px] font-bold font-mono uppercase tracking-[0.2em] text-mistral-black/40">{activeThought.agent} working...</div>
             </div>
             <div className="text-[11px] font-mono leading-relaxed text-mistral-black/80 break-words">
@@ -85,7 +71,7 @@ export default function AgentLogsPanel({ logs, activeThought, isProcessing, expa
             >
               <div className="flex items-center gap-3">
                 <div className={`text-mistral-black/40 group-hover:text-mistral-orange transition-colors`}>
-                  {getAgentIcon(log.step)}
+                  <AgentIcon name={log.step} />
                 </div>
                 <div>
                   <div className="text-[8px] font-bold font-mono text-mistral-black/30 uppercase tracking-widest mb-0.5">{log.timestamp}</div>

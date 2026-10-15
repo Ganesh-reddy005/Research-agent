@@ -1,31 +1,21 @@
-import os
-from langchain_qdrant import QdrantVectorStore
+import asyncio
 from langchain_core.messages import SystemMessage, HumanMessage
-from utils.llm import ainvoke_llm, OpenRouterEmbeddings
+from utils.llm import ainvoke_llm
+from utils.vectorstore import qdrant_configured, research_collection, collection_exists, get_vector_store
 
 async def synthesis_node(state):
     print("--- SYNTHESIS AGENT ---")
     topic = state.get("topic")
     brief = state.get("research_brief")
     
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    
     thread_id = state.get("thread_id", "default_thread")
-    collection_name = f"research_{thread_id.replace('-', '_')}"
+    collection_name = research_collection(thread_id)
     
     findings = ""
-    if qdrant_url:
-        embeddings = OpenRouterEmbeddings()
-        vectorstore = QdrantVectorStore.from_existing_collection(
-            embedding=embeddings,
-            collection_name=collection_name,
-            url=qdrant_url,
-            api_key=qdrant_api_key
-        )
-        
+    # The collection is missing when retrieval found nothing to index
+    if qdrant_configured() and await asyncio.to_thread(collection_exists, collection_name):
         # Search for key themes
-        results = vectorstore.similarity_search(topic, k=10)
+        results = await get_vector_store(collection_name).asimilarity_search(topic, k=10)
         findings = "\n".join([r.page_content for r in results])
     
     system_prompt = """You are a senior research analyst.
