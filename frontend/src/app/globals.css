@@ -6,6 +6,7 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   }
 }
 

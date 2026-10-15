@@ -4,9 +4,16 @@ import asyncio
 from fastapi import APIRouter, Request, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 from api.models import ResearchStartRequest, ResearchResumeRequest
-from utils.auth import get_current_user, get_supabase_client, verify_session
+from utils.auth import get_current_user, get_supabase_client, verify_session, ensure_profile
 
 router = APIRouter(prefix="/api/research", tags=["research"])
+
+# State fields the dashboard needs to restore a session
+SESSION_FIELDS = [
+    "topic", "research_mode", "clarification_questions", "user_answers", "research_brief",
+    "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
+    "citation_audit_log", "current_step",
+]
 
 @router.post("/start")
 async def start_research(request: ResearchStartRequest, req: Request, user=Depends(get_current_user)):
@@ -17,6 +24,7 @@ async def start_research(request: ResearchStartRequest, req: Request, user=Depen
     # Record session in Supabase
     supabase = get_supabase_client()
     try:
+        await ensure_profile(user)
         await asyncio.to_thread(supabase.table("sessions").insert({
             "thread_id": thread_id,
             "user_id": user.id,
@@ -81,15 +89,23 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
     await verify_session(request.thread_id, user.id)
     
     config = {"configurable": {"thread_id": request.thread_id}}
+    data = request.data or {}
     
     if request.action == "answer":
-        await graph.aupdate_state(config, {"user_answers": request.data.get("answers", {})})
+        await graph.aupdate_state(config, {"user_answers": data.get("answers", {})})
     elif request.action == "approve":
-        await graph.aupdate_state(config, {
+        updates = {
             "plan_approved": True, 
-            "plan_edits": request.data.get("edits", ""),
-            "research_mode": request.data.get("mode", "deep")
-        })
+            "plan_edits": data.get("edits", ""),
+            "research_mode": data.get("mode", "deep")
+        }
+        # The user may edit the plan before approving; downstream agents read research_plan
+        edited_plan = data.get("plan")
+        if edited_plan is not None:
+            if not isinstance(edited_plan, dict) or not isinstance(edited_plan.get("sections"), list) or not edited_plan["sections"]:
+                raise HTTPException(status_code=400, detail="Edited plan must contain at least one section")
+            updates["research_plan"] = edited_plan
+        await graph.aupdate_state(config, updates)
     elif request.action == "continue":
         await graph.aupdate_state(config, {})
     else:
@@ -141,3 +157,15 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
             yield {"event": "error", "data": json.dumps({"error": str(e)})}
             
     return EventSourceResponse(event_generator(), ping=20)
+
+@router.get("/{thread_id}")
+async def get_research_session(thread_id: str, req: Request, user=Depends(get_current_user)):
+    """Saved state of a research session, so the dashboard can reopen it from history."""
+    await verify_session(thread_id, user.id)
+    snapshot = await req.app.state.graph.aget_state({"configurable": {"thread_id": thread_id}})
+    values = snapshot.values or {}
+    return {
+        "thread_id": thread_id,
+        "next": list(snapshot.next),
+        "state": {k: values[k] for k in SESSION_FIELDS if k in values},
+    }

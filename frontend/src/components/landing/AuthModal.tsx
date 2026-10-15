@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Sparkles, Mail } from 'lucide-react';
+import { X, Loader2, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 interface AuthModalProps {
@@ -29,8 +29,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       });
       if (error) throw error;
       setSent(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -38,14 +38,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleOAuth = async () => {
     try {
-      await supabase.auth.signInWithOAuth({
+      // signInWithOAuth returns its error rather than throwing
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + '/dashboard',
         },
       });
-    } catch (err: any) {
-      setError(err.message);
+      if (error) throw error;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 

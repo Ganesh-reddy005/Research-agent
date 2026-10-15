@@ -1,14 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Download, AlertCircle, Activity } from 'lucide-react';
-import { startResearch, resumeResearch, chatWithData, brainstormResearch } from '@/lib/api';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { AlertCircle, Menu, Activity } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions,
+  type EventCallbacks, type ResumeData,
+} from '@/lib/api';
+import type { ActivityLog, ChatMessage, ResearchDepth, ResearchPlan, ResearchState, SessionSummary } from '@/lib/types';
 
-// Modular Components
 import Sidebar from './dashboard/Sidebar';
 import AgentLogsPanel from './dashboard/AgentLogsPanel';
 import LibraryPanel from './dashboard/LibraryPanel';
+import ProgressSteps from './dashboard/ProgressSteps';
 import StageIdle from './dashboard/StageIdle';
 import StageClarification from './dashboard/StageClarification';
 import StagePlanning from './dashboard/StagePlanning';
@@ -16,374 +21,368 @@ import StageResearching from './dashboard/StageResearching';
 import StageReview from './dashboard/StageReview';
 import StageCompleted from './dashboard/StageCompleted';
 import StageBrainstorm from './dashboard/StageBrainstorm';
+import StageStalled from './dashboard/StageStalled';
+import { Button } from './dashboard/ui';
+import { agentStep } from './dashboard/agents';
 
-// --- Types ---
-type Stage = 'idle' | 'clarification' | 'planning' | 'researching' | 'assistance_review' | 'reviewing' | 'completed' | 'brainstorming';
-type ResearchMode = 'light' | 'deep';
+type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'completed' | 'stalled';
+type Panel = 'activity' | 'library' | null;
 
-export default function Dashboard() {
-  const [topic, setTopic] = useState('');
+// Where the graph paused (its next node) decides what the user sees.
+function stageFromNext(next: string[], state: ResearchState): Stage {
+  if (next.includes('planning')) return 'clarification';
+  if (next.includes('retriever')) return 'planning';
+  if (next.includes('synthesis')) return 'review';
+  if (next.length === 0) return state.final_report || state.draft_report ? 'completed' : 'stalled';
+  return 'stalled'; // stopped mid-run (e.g. connection dropped); can be continued
+}
+
+const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, completed: 4, stalled: 2 };
+
+export default function Dashboard({ user }: { user: User }) {
   const [stage, setStage] = useState<Stage>('idle');
-  const [researchMode, setResearchMode] = useState<ResearchMode>('chat');
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [research, setResearch] = useState<ResearchState>({});
+  const [depth, setDepth] = useState<ResearchDepth>('light');
+  const [workingStep, setWorkingStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLogsOpen, setIsLogsOpen] = useState(false);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  
-  // State from backend
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [plan, setPlan] = useState<any>(null);
-  const [brief, setBrief] = useState('');
-  const [logs, setLogs] = useState<any[]>([]);
-  const [report, setReport] = useState('');
-  const [allSources, setAllSources] = useState<any[]>([]);
-  const [auditLog, setAuditLog] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expandedLog, setExpandedLog] = useState<number | null>(null);
-  
-  // Assistance specific state
-  const [assistanceSummary, setAssistanceSummary] = useState('');
-  const [chatQuery, setChatQuery] = useState('');
-  const [chatHistory, setChatHistory] = useState<{role: 'user'|'assistant', text: string}[]>([]);
-  
-  // Brainstorm specific state
-  const [brainstormHistory, setBrainstormHistory] = useState<{role: 'user'|'assistant', content: string}[]>([]);
-  const [brainstormQuery, setBrainstormQuery] = useState('');
-
-  // Streaming Thought
-  const [activeThought, setActiveThought] = useState<{agent: string, text: string} | null>(null);
-  
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [activeThought, setActiveThought] = useState<{ agent: string; text: string } | null>(null);
+  const [sourceChat, setSourceChat] = useState<ChatMessage[]>([]);
+  const [brainstorm, setBrainstorm] = useState<ChatMessage[]>([]);
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [panel, setPanel] = useState<Panel>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  const callbacks = {
-    onStep: (step: string, state: any, tid: string) => {
+  const refreshSessions = useCallback(() => {
+    getSessions().then(setSessions).catch(err => console.error('Failed to fetch sessions', err));
+  }, []);
+  useEffect(refreshSessions, [refreshSessions]);
+
+  const clearProject = () => {
+    setThreadId(null);
+    setResearch({});
+    setLogs([]);
+    setActiveThought(null);
+    setSourceChat([]);
+    setBrainstorm([]);
+    setError(null);
+  };
+
+  const callbacks: EventCallbacks = {
+    onStep: (step, state, tid) => {
       setThreadId(tid);
-      if (state.clarification_questions) setQuestions(state.clarification_questions);
-      if (state.research_plan) setPlan(state.research_plan);
-      if (state.research_brief) setBrief(state.research_brief);
-      if (state.assistance_summary) setAssistanceSummary(state.assistance_summary);
-      if (state.final_report) setReport(state.final_report);
-      else if (state.draft_report) setReport(state.draft_report);
-      if (state.raw_sources) setAllSources(state.raw_sources);
-      if (state.citation_audit_log) setAuditLog(state.citation_audit_log);
+      setResearch(prev => ({ ...prev, ...state }));
+      setLogs(prev => [...prev, { step, time: new Date().toLocaleTimeString(), data: state }]);
       setActiveThought(null);
-      setLogs(prev => [...prev, { step, timestamp: new Date().toLocaleTimeString(), data: state }]);
     },
-    onThought: (agent: string, token: string) => {
+    onThought: (agent, token) => {
       if (agent === 'brainstorm') {
-        setBrainstormHistory(prev => {
-          if (prev.length === 0) return prev;
+        setBrainstorm(prev => {
           const last = prev[prev.length - 1];
-          if (last?.role === 'assistant') {
-            return [...prev.slice(0, -1), { ...last, content: last.content + token }];
-          }
-          // Fallback if the assistant message hasn't been added to the array yet
+          if (last?.role === 'assistant') return [...prev.slice(0, -1), { ...last, content: last.content + token }];
           return [...prev, { role: 'assistant', content: token }];
         });
         return;
       }
-
-      if (['clarification', 'planning'].includes(agent.toLowerCase())) {
-        setActiveThought(prev => ({
-          agent: agent,
-          text: (prev?.agent === agent && prev.text.includes('Organizing')) ? prev.text : 'Organizing research parameters...'
-        }));
-        return;
-      }
-      setActiveThought(prev => ({
-        agent: agent,
-        text: (prev?.agent === agent ? prev.text : '') + token
-      }));
+      const step = agentStep(agent);
+      if (step !== undefined) setWorkingStep(step);
+      setActiveThought(prev => ({ agent, text: (prev?.agent === agent ? prev.text : '') + token }));
     },
-    onInterrupt: (tid: string, next: string[]) => {
+    onInterrupt: (tid, next) => {
       setThreadId(tid);
       setIsProcessing(false);
-      if (next.includes('planning')) setStage('clarification');
-      if (next.includes('retriever')) setStage('planning');
-      if (next.includes('synthesis')) setStage('assistance_review');
+      setActiveThought(null);
+      // Interrupts always name the paused-before node, so the state isn't needed here
+      setStage(stageFromNext(next, {}));
+      refreshSessions();
     },
-    onDone: (tid: string) => {
-      setStage(prev => {
-        if (prev === 'brainstorming') return prev;
-        return 'completed';
-      });
+    onDone: (tid) => {
+      if (tid) setThreadId(tid); // a new brainstorm learns its chat id here
       setIsProcessing(false);
+      setActiveThought(null);
+      setStage(prev => (prev === 'brainstorm' ? prev : 'completed'));
+      refreshSessions();
     },
-    onError: (err: string) => {
+    onError: (err) => {
       setError(err);
       setIsProcessing(false);
-    }
+      // Drop the empty "Thinking…" placeholder of a failed brainstorm reply
+      setBrainstorm(prev => {
+        const last = prev[prev.length - 1];
+        return last?.role === 'assistant' && !last.content ? prev.slice(0, -1) : prev;
+      });
+    },
   };
 
-  const handleStart = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!topic.trim()) return;
-
-    // We check if the user is in brainstorming mode based on some state 
-    // or just handle it here if topic is passed.
-    // For now, let's assume if they click Run Discovery on the Research tab, it's startResearch.
-    
-    setStage('researching');
-    setIsProcessing(true);
+  const run = async (step: number, action: () => Promise<void>) => {
     setError(null);
-    setLogs([]);
-    setReport('');
-    setAllSources([]);
-    setAuditLog(null);
-    await startResearch(topic, callbacks, researchMode);
-  };
-
-  const handleStartBrainstorm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!topic.trim()) return;
-    
-    setStage('brainstorming');
+    setWorkingStep(step);
+    setStage('working');
     setIsProcessing(true);
-    setError(null);
-    setActiveThought(null);
-    setReport(''); // Clear previous report to prevent StageCompleted from mounting
-    setAuditLog(null);
-    setAllSources([]);
-    
-    const initialMessage = { role: 'user', content: topic };
-    setBrainstormHistory([initialMessage, { role: 'assistant', content: '' }]);
-    setTopic(''); // Clear topic for the chat
-    
-    await brainstormResearch([initialMessage], callbacks);
+    await action();
   };
 
-  const handleBrainstormSubmit = async () => {
-    if (!brainstormQuery.trim()) return;
-    
-    const userMsg = { role: 'user', content: brainstormQuery };
-    const newHistory = [...brainstormHistory, userMsg];
-    
-    setBrainstormHistory([...newHistory, { role: 'assistant', content: '' }]);
-    setBrainstormQuery('');
+  // --- Actions -------------------------------------------------------------
+
+  const handleStart = (topic: string, chosenDepth: ResearchDepth) => {
+    clearProject();
+    setDepth(chosenDepth);
+    setResearch({ topic, research_mode: chosenDepth });
+    run(0, () => startResearch(topic, callbacks, chosenDepth));
+  };
+
+  const handleAnswers = (answers: Record<string, string>) => {
+    setResearch(prev => ({ ...prev, user_answers: answers }));
+    run(1, () => resumeResearch(threadId!, 'answer', { answers }, callbacks));
+  };
+
+  const handleApprovePlan = (plan: ResearchPlan) => {
+    setResearch(prev => ({ ...prev, research_plan: plan }));
+    const data: ResumeData = { mode: research.research_mode ?? depth, plan };
+    run(2, () => resumeResearch(threadId!, 'approve', data, callbacks));
+  };
+
+  const handleWritePaper = () => run(4, () => resumeResearch(threadId!, 'continue', {}, callbacks));
+
+  const handleContinue = () =>
+    run(STAGE_STEP.stalled!, () => resumeResearch(threadId!, 'continue', {}, callbacks));
+
+  const handleSourceQuestion = async (query: string) => {
+    if (!threadId) return;
+    setSourceChat(prev => [...prev, { role: 'user', content: query }]);
     setIsProcessing(true);
-    setActiveThought(null);
-    
-    await brainstormResearch(newHistory, callbacks);
-  };
-
-  const handleAnswerSubmit = async () => {
-    setIsProcessing(true);
-    await resumeResearch(threadId!, 'answer', { answers }, callbacks);
-  };
-
-  const handlePlanApprove = async () => {
-    setStage('researching');
-    setIsProcessing(true);
-    await resumeResearch(threadId!, 'approve', { approved: true, mode: researchMode }, callbacks);
-  };
-
-  const handleExport = () => {
-    if (!reportRef.current) return;
-    const html2pdf = (window as any).html2pdf;
-    if (!html2pdf) {
-      alert("PDF exporter loading...");
-      return;
-    }
-    const opt = {
-      margin: 0.5,
-      filename: `Lume_Report_${threadId?.slice(0, 8)}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(reportRef.current).save();
-  };
-
-  const handleChatSubmit = async () => {
-    if (!chatQuery.trim() || !threadId) return;
-    const queryText = chatQuery.trim();
-    setChatHistory(prev => [...prev, { role: 'user', text: queryText }]);
-    setIsProcessing(true);
-    setChatQuery('');
     try {
-      const response = await chatWithData(threadId, queryText);
-      setChatHistory(prev => [...prev, { role: 'assistant', text: response.answer }]);
-    } catch (err: any) {
-      setChatHistory(prev => [...prev, { role: 'assistant', text: 'Error connecting to data vector store...' }]);
+      const response = await chatWithData(threadId, query);
+      setSourceChat(prev => [...prev, { role: 'assistant', content: response.answer }]);
+    } catch {
+      setSourceChat(prev => [...prev, { role: 'assistant', content: 'Sorry, I could not search the sources just now. Please try again.' }]);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCreateFullPaper = async () => {
-    setStage('researching');
+  const sendBrainstorm = (text: string, chatId: string | null) => {
+    setError(null);
+    setBrainstorm(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '' }]);
     setIsProcessing(true);
-    await resumeResearch(threadId!, 'continue', {}, callbacks);
+    brainstormResearch(text, chatId, callbacks).finally(() => setIsProcessing(false));
   };
 
-  const resetResearch = () => {
-    setStage('idle');
-    setTopic('');
-    setLogs([]);
-    setReport('');
-    setAllSources([]);
-    setAuditLog(null);
-    setError(null);
+  const handleStartBrainstorm = (idea: string) => {
+    clearProject();
+    setStage('brainstorm');
+    sendBrainstorm(idea, null);
   };
+
+  const handleBrainstormMessage = (text: string) => sendBrainstorm(text, threadId);
+
+  const loadBrainstorm = useCallback(async (chatId: string) => {
+    setIsSidebarOpen(false);
+    clearProject();
+    setThreadId(chatId);
+    setStage('loading');
+    try {
+      const { messages } = await getBrainstorm(chatId);
+      setBrainstorm(messages);
+      setStage('brainstorm');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setStage('brainstorm');
+    }
+  }, []);
+
+  const handleSelectSession = (session: SessionSummary) =>
+    session.research_mode === 'brainstorm' ? loadBrainstorm(session.thread_id) : loadSession(session.thread_id);
+
+  const loadSession = useCallback(async (tid: string) => {
+    setIsSidebarOpen(false);
+    clearProject();
+    setThreadId(tid);
+    setStage('loading');
+    try {
+      const snapshot = await getResearchSession(tid);
+      setResearch(snapshot.state);
+      if (snapshot.state.research_mode) setDepth(snapshot.state.research_mode);
+      setStage(stageFromNext(snapshot.next, snapshot.state));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setStage('stalled');
+    }
+  }, []);
+
+  const handleNewResearch = () => {
+    clearProject();
+    setStage('idle');
+    setIsSidebarOpen(false);
+  };
+
+  const handleRetry = () => {
+    if (stage === 'brainstorm') {
+      if (threadId) loadBrainstorm(threadId);
+      else setError(null);
+    } else if (threadId) loadSession(threadId);
+    else if (research.topic) handleStart(research.topic, research.research_mode ?? depth);
+    else setError(null);
+  };
+
+  // --- Rendering -----------------------------------------------------------
+
+  const report = research.final_report || research.draft_report || '';
+  const showProgress = !['idle', 'brainstorm', 'loading'].includes(stage);
+  const progressStep = stage === 'working' ? workingStep : STAGE_STEP[stage] ?? 0;
+  const title = stage === 'brainstorm'
+    ? brainstorm[0]?.content ?? 'Brainstorm'
+    : research.topic || 'New research';
 
   return (
-    <div className="modern-subtle">
-      <div className="flex h-screen w-full bg-[#F5F2ED] overflow-hidden selection:bg-mistral-orange selection:text-white font-sans">
-        <Sidebar 
-          onNewResearch={resetResearch} 
-          onOpenLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-          isLibraryOpen={isLibraryOpen}
-        />
+    <div className="flex h-screen w-full bg-mistral-beige overflow-hidden selection:bg-mistral-orange selection:text-white font-sans text-mistral-black">
+      <Sidebar
+        user={user}
+        sessions={sessions}
+        activeThreadId={threadId}
+        onSelectSession={handleSelectSession}
+        onNewResearch={handleNewResearch}
+        onOpenLibrary={() => setPanel(panel === 'library' ? null : 'library')}
+        isLibraryOpen={panel === 'library'}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
-        <div className="flex-1 flex flex-col min-w-0 bg-white relative z-10 border-r border-mistral-black/5 shadow-sm">
-          <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-mistral-black/5 sticky top-0 z-30">
-            <div className="flex items-center gap-4">
-              <div className="text-[9px] font-bold text-mistral-black/30 uppercase tracking-[0.3em] font-mono">
-                {stage === 'idle' ? 'Protocol Idle' : `Session // ${threadId?.slice(0, 8)}`}
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <header className="h-14 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-mistral-black/10 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 text-mistral-black/70 hover:text-mistral-black"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="text-sm font-medium text-mistral-black truncate">{title}</span>
+            {isProcessing && (
+              <span className="flex items-center gap-1.5 text-xs font-medium text-mistral-orange shrink-0">
+                <span className="w-1.5 h-1.5 bg-mistral-orange animate-pulse" aria-hidden /> Working
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => setPanel(panel === 'activity' ? null : 'activity')}
+            aria-pressed={panel === 'activity'}
+            className={`!px-3 !py-1.5 ${panel === 'activity' ? 'text-mistral-orange' : ''}`}
+          >
+            <Activity className="w-4 h-4" aria-hidden /> Activity
+          </Button>
+        </header>
+
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className={`mx-auto w-full px-4 sm:px-8 py-8 sm:py-10 ${stage === 'completed' ? 'max-w-4xl' : 'max-w-3xl'}`}>
+            {showProgress && (
+              <div className="mb-10">
+                <ProgressSteps current={progressStep} done={stage === 'completed'} />
               </div>
-              {isProcessing && (
-                <div className="flex gap-2 items-center px-2 py-0.5 border border-mistral-orange/20 bg-mistral-orange/5">
-                  <span className="w-1 h-1 rounded-full bg-mistral-orange animate-pulse" />
-                  <span className="text-[8px] font-bold text-mistral-orange uppercase tracking-widest">Active</span>
+            )}
+
+            {error && (
+              <div role="alert" className="mb-8 p-4 border border-red-200 bg-red-50 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+                <div className="flex gap-3 items-start">
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" aria-hidden />
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-red-900">Something went wrong</p>
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {stage === 'completed' && (
-                <button 
-                  onClick={handleExport}
-                  className="bg-mistral-black text-white px-3 py-1 text-[9px] font-bold uppercase tracking-widest hover:bg-mistral-orange transition-all"
-                >
-                  Export
-                </button>
-              )}
-              <button 
-                onClick={() => setIsLogsOpen(!isLogsOpen)}
-                className={`p-1.5 transition-colors ${isLogsOpen ? 'text-mistral-orange' : 'text-mistral-black/30 hover:text-mistral-black'}`}
+                <Button variant="secondary" onClick={handleRetry} className="shrink-0">Try again</Button>
+              </div>
+            )}
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stage}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
               >
-                <Activity className="w-4 h-4" />
-              </button>
-            </div>
-          </header>
-
-          <main className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className={`mx-auto w-full transition-all duration-300 ${stage === 'idle' ? 'max-w-3xl' : 'max-w-4xl'} px-6 py-10`}>
-              <AnimatePresence mode="wait">
                 {stage === 'idle' && (
-                  <StageIdle 
-                    key="idle"
-                    topic={topic}
-                    setTopic={setTopic}
-                    researchMode={researchMode}
-                    setResearchMode={setResearchMode}
-                    onSubmit={handleStart}
-                    onBrainstorm={handleStartBrainstorm}
-                  />
+                  <StageIdle onStartResearch={handleStart} onStartBrainstorm={handleStartBrainstorm} />
                 )}
-                {stage === 'brainstorming' && (
-                  <StageBrainstorm 
-                    key="brainstorming"
-                    chatHistory={brainstormHistory}
-                    chatQuery={brainstormQuery}
-                    setChatQuery={setBrainstormQuery}
-                    onChatSubmit={handleBrainstormSubmit}
+                {stage === 'brainstorm' && (
+                  <StageBrainstorm
+                    messages={brainstorm}
+                    onSend={handleBrainstormMessage}
+                    onBack={handleNewResearch}
                     isProcessing={isProcessing}
                   />
                 )}
+                {stage === 'loading' && <p className="text-base text-mistral-black/60">Loading this research session…</p>}
+                {stage === 'working' && <StageResearching step={workingStep} activeThought={activeThought} logs={logs} />}
                 {stage === 'clarification' && (
-                  <StageClarification 
-                    key="clarification"
-                    questions={questions}
-                    answers={answers}
-                    setAnswers={setAnswers}
-                    onSubmit={handleAnswerSubmit}
+                  <StageClarification
+                    questions={research.clarification_questions ?? []}
+                    initialAnswers={research.user_answers ?? {}}
+                    onSubmit={handleAnswers}
                     isProcessing={isProcessing}
                   />
                 )}
-                {stage === 'planning' && (
-                  <StagePlanning 
-                    key="planning"
-                    brief={brief}
-                    plan={plan}
-                    onApprove={handlePlanApprove}
+                {stage === 'planning' && research.research_plan && (
+                  <StagePlanning
+                    brief={research.research_brief ?? ''}
+                    plan={research.research_plan}
+                    onApprove={handleApprovePlan}
                     isProcessing={isProcessing}
                   />
                 )}
-                {stage === 'researching' && isProcessing && !report && (
-                  <StageResearching 
-                    key="researching"
-                    activeThought={activeThought}
-                  />
-                )}
-                {stage === 'assistance_review' && (
-                  <StageReview 
-                    key="review"
-                    summary={assistanceSummary}
-                    chatHistory={chatHistory}
-                    chatQuery={chatQuery}
-                    setChatQuery={setChatQuery}
-                    onChatSubmit={handleChatSubmit}
-                    onGeneratePaper={handleCreateFullPaper}
+                {stage === 'review' && (
+                  <StageReview
+                    summary={research.assistance_summary ?? ''}
+                    sources={research.raw_sources ?? []}
+                    chat={sourceChat}
+                    onAsk={handleSourceQuestion}
+                    onWritePaper={handleWritePaper}
                     isProcessing={isProcessing}
                   />
                 )}
-                {(stage === 'completed' || (stage !== 'idle' && stage !== 'brainstorming' && report)) && (
-                  <StageCompleted 
-                    key="completed"
+                {stage === 'completed' && (
+                  <StageCompleted
+                    topic={research.topic ?? 'Research report'}
                     report={report}
-                    allSources={allSources}
-                    auditLog={auditLog}
+                    sources={research.raw_sources ?? []}
+                    audit={research.citation_audit_log}
                     reportRef={reportRef}
+                    threadId={threadId}
                   />
                 )}
-              </AnimatePresence>
-              
-              {error && (
-                <div className="my-8 p-4 border border-red-100 bg-red-50/50 flex gap-3 items-center">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  <div className="text-xs text-red-900 font-medium">{error}</div>
-                </div>
-              )}
-            </div>
-          </main>
-        </div>
-
-        <AnimatePresence>
-          {isLogsOpen && (
-            <motion.div
-              initial={{ x: 300 }}
-              animate={{ x: 0 }}
-              exit={{ x: 300 }}
-              transition={{ type: 'tween', duration: 0.2 }}
-              className="fixed right-0 top-0 h-full w-[300px] z-40 shadow-2xl"
-            >
-              <AgentLogsPanel 
-                logs={logs}
-                activeThought={activeThought}
-                isProcessing={isProcessing}
-                expandedLog={expandedLog}
-                setExpandedLog={setExpandedLog}
-                onClose={() => setIsLogsOpen(false)}
-              />
-            </motion.div>
-          )}
-
-          {isLibraryOpen && (
-            <motion.div
-              initial={{ x: 300 }}
-              animate={{ x: 0 }}
-              exit={{ x: 300 }}
-              transition={{ type: 'tween', duration: 0.2 }}
-              className="fixed right-0 top-0 h-full w-[300px] z-40 shadow-2xl"
-            >
-              <LibraryPanel 
-                onClose={() => setIsLibraryOpen(false)}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {stage === 'stalled' && threadId && !error && (
+                  <StageStalled onContinue={handleContinue} isProcessing={isProcessing} />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
       </div>
+
+      <AnimatePresence>
+        {panel && (
+          <motion.div
+            key={panel}
+            initial={{ x: 360 }}
+            animate={{ x: 0 }}
+            exit={{ x: 360 }}
+            transition={{ type: 'tween', duration: 0.2 }}
+            className="fixed right-0 top-0 h-full w-full sm:w-[360px] z-40 shadow-2xl"
+          >
+            {panel === 'activity' ? (
+              <AgentLogsPanel logs={logs} activeThought={activeThought} isProcessing={isProcessing} onClose={() => setPanel(null)} />
+            ) : (
+              <LibraryPanel onClose={() => setPanel(null)} />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
