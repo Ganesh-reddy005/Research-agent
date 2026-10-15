@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from graph.workflow import build_graph
+from graph.brainstorm import build_brainstorm_graph
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -21,10 +22,13 @@ async def lifespan(app: FastAPI):
         async with AsyncPostgresSaver.from_conn_string(db_url) as checkpointer:
             await checkpointer.setup()
             app.state.graph = build_graph(checkpointer=checkpointer)
+            app.state.brainstorm_graph = build_brainstorm_graph(checkpointer=checkpointer)
             yield
     else:
         print("WARNING: DATABASE_URL not found, falling back to MemorySaver")
-        app.state.graph = build_graph(checkpointer=MemorySaver())
+        checkpointer = MemorySaver()
+        app.state.graph = build_graph(checkpointer=checkpointer)
+        app.state.brainstorm_graph = build_brainstorm_graph(checkpointer=checkpointer)
         yield
 
 app = FastAPI(title="AI Research Production System API", lifespan=lifespan)

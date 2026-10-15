@@ -30,6 +30,7 @@ const config: Config = {
       fontFamily: {
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
         retro: ["var(--font-retro)", "serif"],
       },
     },

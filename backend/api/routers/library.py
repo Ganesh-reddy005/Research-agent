@@ -3,7 +3,7 @@ import asyncio
 import shutil
 import tempfile
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from utils.auth import get_current_user, get_supabase_client
+from utils.auth import get_current_user, get_supabase_client, ensure_profile
 from utils.ingestion import process_pdf_ingestion
 
 router = APIRouter(prefix="/api/library", tags=["library"])
@@ -23,6 +23,7 @@ async def upload_document(file: UploadFile = File(...), user=Depends(get_current
         collection_name = await process_pdf_ingestion(temp_path, user.id, filename)
 
         supabase = get_supabase_client()
+        await ensure_profile(user)
         await asyncio.to_thread(supabase.table("library").insert({
             "user_id": user.id,
             "filename": filename,

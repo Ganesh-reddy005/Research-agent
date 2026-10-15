@@ -78,6 +78,23 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 def get_supabase_client():
     return supabase
 
+_profiles_ensured = set()
+
+async def ensure_profile(user):
+    """
+    sessions/library rows reference profiles(id). The signup trigger normally creates the
+    profile, but accounts created before the trigger existed have none, so create it on demand.
+    """
+    if user.id in _profiles_ensured or not user.email:
+        return
+    metadata = getattr(user, "user_metadata", None) or {}
+    await asyncio.to_thread(supabase.table("profiles").upsert({
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": metadata.get("full_name"),
+    }, on_conflict="id", ignore_duplicates=True).execute)
+    _profiles_ensured.add(user.id)
+
 async def verify_session(thread_id: str, user_id: str):
     """
     Verifies that a session belongs to a specific user.

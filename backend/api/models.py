@@ -15,4 +15,5 @@ class ChatRequest(BaseModel):
     query: str
 
 class BrainstormRequest(BaseModel):
-    messages: List[Dict[str, str]]
+    message: str
+    chat_id: Optional[str] = None  # omit to start a new conversation

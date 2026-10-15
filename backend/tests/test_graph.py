@@ -1,55 +1,9 @@
 import asyncio
-import json
 import time
 import pytest
-from langchain_core.messages import AIMessage
-from langgraph.checkpoint.memory import MemorySaver
 
-import agents.clarification, agents.planning, agents.retriever, agents.assistance
-import agents.synthesis, agents.writer, agents.critic, agents.refinement
-from graph.workflow import build_graph
-
-LLM_MODULES = [agents.clarification, agents.planning, agents.retriever, agents.assistance,
-               agents.synthesis, agents.writer, agents.critic, agents.refinement]
-
-PLAN = {
-    "research_brief": "Brief.",
-    "research_plan": {
-        "objective": "Obj",
-        "sections": [{"title": "Introduction", "description": "Intro", "questions": ["Q?"]}],
-        "expected_outcome": "Out",
-    },
-}
-
-async def fake_llm(messages, agent_name=None, temperature=0.2):
-    canned = {
-        "clarification": json.dumps([{"id": "1", "question": "Scope?"}]),
-        "planning": json.dumps(PLAN),
-        "retrieval": json.dumps(["query one", "query two"]),
-        "refinement": "Final paper citing [1].",
-    }
-    return AIMessage(content=canned.get(agent_name, f"{agent_name} output"))
-
-@pytest.fixture
-def offline_graph(monkeypatch):
-    """The real graph with every LLM and search API replaced by fakes."""
-    for mod in LLM_MODULES:
-        monkeypatch.setattr(mod, "ainvoke_llm", fake_llm)
-    calls = {"private": []}
-
-    def fake_private(query, user_id, max_results=5):
-        calls["private"].append(user_id)
-        return [{"title": "My PDF", "url": "local://my.pdf", "summary": "s", "source": "Private Library"}]
-
-    def fake_public(name):
-        return lambda query, max_results=3: [
-            {"title": f"{name}:{query}", "url": f"https://{name}/{query}", "summary": "s", "source": name}]
-
-    monkeypatch.setattr(agents.retriever, "search_private_library", fake_private)
-    monkeypatch.setattr(agents.retriever, "search_openalex", fake_public("openalex"))
-    monkeypatch.setattr(agents.retriever, "search_arxiv", fake_public("arxiv"))
-    monkeypatch.setattr(agents.retriever, "search_core", lambda q, max_results=3: [])
-    return build_graph(checkpointer=MemorySaver()), calls
+import agents.retriever
+from conftest import PLAN
 
 async def run_to_end(graph, state, config):
     await graph.ainvoke(state, config)        # -> pauses after clarification

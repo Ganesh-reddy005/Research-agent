@@ -62,6 +62,10 @@ def test_upload_filename_cannot_escape_temp_dir(monkeypatch):
         def table(self, name): return FakeTable()
 
     monkeypatch.setattr(library, "process_pdf_ingestion", fake_ingest)
+
+    async def no_profile_check(user):
+        return None
+    monkeypatch.setattr(library, "ensure_profile", no_profile_check)
     monkeypatch.setattr(library, "get_supabase_client", lambda: FakeSupabase())
     app = FastAPI()
     app.include_router(library.router)
@@ -84,3 +88,23 @@ def test_upload_rejects_non_pdf(monkeypatch):
     app.dependency_overrides[get_current_user] = lambda: type("U", (), {"id": "u"})()
     res = TestClient(app).post("/api/library/upload", files={"file": ("notes.txt", b"hi", "text/plain")})
     assert res.status_code == 400
+
+def test_ensure_profile_creates_missing_profile_once(monkeypatch):
+    import asyncio
+    import utils.auth as auth
+
+    calls = []
+    class FakeQuery:
+        def __init__(self, row, kwargs): calls.append((row, kwargs))
+        def execute(self): return None
+    class FakeTable:
+        def upsert(self, row, **kwargs): return FakeQuery(row, kwargs)
+    monkeypatch.setattr(auth, "supabase", type("SB", (), {"table": lambda self, name: FakeTable()})())
+    monkeypatch.setattr(auth, "_profiles_ensured", set())
+
+    user = type("U", (), {"id": "u-1", "email": "a@b.co", "user_metadata": {"full_name": "Ada"}})()
+    asyncio.run(auth.ensure_profile(user))
+    asyncio.run(auth.ensure_profile(user))  # cached: no second round trip
+
+    assert calls == [({"id": "u-1", "email": "a@b.co", "full_name": "Ada"},
+                      {"on_conflict": "id", "ignore_duplicates": True})]  # never overwrites an existing profile
