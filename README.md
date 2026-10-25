@@ -20,7 +20,16 @@ A multi-agent pipeline with checkpoints where you stay in control:
    - A critic reviews the draft and an editor polishes it.
    - A citation check confirms every `[n]` maps to a retrieved source.
 
-You can **Quick** (15+ sources) or **Deep research** (50+ sources), **Stop** at any time and **resume** later from History.
+Choose the **length** (Auto, or 1–15 IEEE pages: Lume plans more sections and writes longer ones to fit), and **Quick** (15+ sources) or **Deep research** (50+ sources), **Stop** at any time and **resume** later from History.
+
+### Papers from your GitHub repository
+Paste a public GitHub link and Lume writes a paper about *your* project:
+
+1. **Read the repository:** Lume downloads it through the GitHub API (in memory; nothing from it is ever run), reads the README, dependency files, source and notebooks, and indexes the code.
+2. **Project summary:** you see what Lume understood (what the project does, its components, tech stack and any results in the repo) before anything is written.
+3. **Questions only you can answer:** the course or venue, your contribution, results measured outside the repo.
+4. **Related work:** the usual search, seeded with queries derived from the code.
+5. **Write:** the repository is reference [1]. Claims about the project cite its code, and claims about the field cite the literature. Lume never invents results; if the repo has none, the paper describes how the project would be evaluated.
 
 ### IEEE-style papers
 - The paper is typeset IEEE-style: two columns, an *Abstract*— block, *Index Terms*—, and sections numbered I, II, III with subsections A, B.
@@ -62,7 +71,9 @@ The landing page marks Experiments and claim-level Verification as **Early acces
 ### Research pipeline (LangGraph)
 ```mermaid
 graph TD
-    START((Start)) --> Clarification
+    START((Start)) -->|topic| Clarification
+    START -->|GitHub link| RepoIngest[Repo ingest]
+    RepoIngest --> Clarification
     Clarification -.->|you answer| Planning
     Planning -.->|you approve or edit the plan| Retriever
     Retriever --> Indexer
@@ -96,8 +107,11 @@ A small agent loop (`graph/brainstorm.py`): the model either answers or calls se
 
 ```text
 ├── backend/
-│   ├── agents/          # clarification, planning, retriever, indexer, assistance, synthesis,
-│   │                    # writer, critic, refinement, auditor, brainstorm prompt, search tools
+│   ├── agents/          # one module per graph node (clarification … auditor, repo_ingest),
+│   │                    # project_context, brainstorm prompt, search tools
+│   ├── repo/            # repository ingestion: github (provider), filetypes, scanner,
+│   │                    # profiler (LLM project profile), indexing (code chunks → Qdrant)
+│   ├── evidence/        # passages the writer cites: literature + project code (next: experiment runs)
 │   ├── api/
 │   │   ├── main.py      # app, lifespan (Postgres checkpointer), routers
 │   │   └── routers/     # research, chat (RAG), brainstorm, library, sessions
@@ -119,13 +133,14 @@ A small agent loop (`graph/brainstorm.py`): the model either answers or calls se
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| POST | `/api/research/start` | Start a research project (SSE) |
+| POST | `/api/research/start` | Start a research project from a `topic` or a `repo_url`, with optional `pages` (SSE) |
 | POST | `/api/research/resume` | Answer questions, approve or edit the plan, or continue (SSE) |
 | GET | `/api/research/{thread_id}` | Restore a saved session |
 | POST | `/api/research/chat` | Ask about a session's sources (hybrid RAG) |
 | POST | `/api/research/brainstorm` | Brainstorm message with live search (SSE) |
 | GET | `/api/research/brainstorm/{chat_id}` | Restore a brainstorm conversation |
 | GET | `/api/sessions` | Research and brainstorm history |
+| DELETE | `/api/sessions/{thread_id}` | Delete a project or brainstorm: its saved state, indexed sources and History entry |
 | POST / GET | `/api/library/upload`, `/api/library` | Private PDF library |
 
 All endpoints require a Supabase access token (`Authorization: Bearer …`).
@@ -162,11 +177,12 @@ Key variables in `backend/.env`:
 | `DATABASE_URL` | Supabase Postgres, used by the LangGraph checkpointer |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Auth checks, sessions and library tables |
 | `QDRANT_URL`, `QDRANT_API_KEY` | Vector store |
+| `GITHUB_TOKEN` | Optional: raises GitHub's API limit from 60 to 5,000 requests an hour for repository papers |
 | `DEFAULT_MODEL` and `*_MODEL` | Model per agent (see below) |
 | `EMBEDDING_MODEL` | Embedding model; the vector size is detected automatically |
 
 **Choosing models:**
-- Each agent reads its own variable: `CLARIFICATION_MODEL`, `PLANNING_MODEL`, `RETRIEVAL_MODEL` (also used for query rewriting and reranking), `ASSISTANCE_MODEL`, `SYNTHESIS_MODEL`, `WRITING_MODEL`, `CRITIC_MODEL`, `REFINEMENT_MODEL`, `BRAINSTORM_MODEL` (must support tool calling) and `CHAT_MODEL`.
+- Each agent reads its own variable: `CLARIFICATION_MODEL`, `PLANNING_MODEL`, `RETRIEVAL_MODEL` (also used for query rewriting and reranking), `ASSISTANCE_MODEL`, `SYNTHESIS_MODEL`, `WRITING_MODEL`, `CRITIC_MODEL`, `REFINEMENT_MODEL`, `BRAINSTORM_MODEL` (must support tool calling), `CHAT_MODEL` and `REPO_ANALYSIS_MODEL` (reads ~30K characters of code; use a strong model).
 - An agent with no variable set falls back to `DEFAULT_MODEL`.
 - IDs like `openai/gpt-5.4-mini` route to OpenRouter. Prefix with `groq:` (e.g. `groq:openai/gpt-oss-120b`) to use Groq.
 
@@ -200,6 +216,7 @@ The suite runs offline. LLMs, search APIs, Qdrant and Supabase are replaced with
   select id, email, raw_user_meta_data->>'full_name' from auth.users
   on conflict (id) do nothing;
   ```
+- **Repository analysis comes back generic:** the profile fell back to the repo's name and description because the model's JSON was cut off. Reasoning models spend part of their output budget on thinking, so set `REPO_ANALYSIS_MODEL` to a strong non-reasoning model.
 - **Changed `EMBEDDING_MODEL`:** existing Qdrant collections keep their old vector size. Delete them, or switch back to the original model.
 
 ## License

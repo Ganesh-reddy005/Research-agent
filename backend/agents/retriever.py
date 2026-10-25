@@ -12,6 +12,7 @@ from utils.events import report_progress
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
 from utils.vectorstore import qdrant_configured, library_collection, collection_exists, get_vector_store
+from agents.project_context import project_source
 
 def search_private_library(query, user_id, max_results=5):
     sources = []
@@ -147,7 +148,14 @@ async def retriever_node(state):
     section_texts = [f"{s.get('title')}: {s.get('description')}" for s in sections]
     
     system_prompt = f"Generate exactly {num_queries} distinct, highly technical search queries. Return strictly as a JSON array of strings."
-    messages = [SystemMessage(content=system_prompt), HumanMessage(content=f"Topic: {topic}\nPlan Sections:\n" + "\n".join(section_texts))]
+    human = f"Topic: {topic}\nPlan Sections:\n" + "\n".join(section_texts)
+    profile = state.get("project_profile")
+    if profile:
+        # A project paper searches for related work, not for the project itself
+        human += ("\n\nThis paper presents the authors' own project: " + profile.get("summary", "") +
+                  "\nFind related work on its problem and techniques. Suggested queries: " +
+                  "; ".join(profile.get("related_work_queries", [])))
+    messages = [SystemMessage(content=system_prompt), HumanMessage(content=human)]
     
     response = await ainvoke_llm(messages, agent_name="retrieval")
     try:
@@ -196,6 +204,10 @@ async def retriever_node(state):
     # in full (the first 15) span every query instead of all coming from the first one
     all_sources = [s for rank in zip_longest(*result_lists) for s in rank if s]
         
+    # A project paper cites its own repository first, as [1]
+    if profile and profile.get("url"):
+        all_sources.insert(0, project_source(profile))
+
     seen_urls = set()
     unique_sources = []
     for source in all_sources:

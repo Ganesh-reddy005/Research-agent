@@ -89,3 +89,63 @@ def test_stream_announces_agents_and_progress_without_json_tokens(client):
     assert names.index("agent_start") < names.index("progress") < names.index("step")
     # The retriever's LLM output is a JSON list of queries: never streamed to the UI
     assert not any(d.get("agent") == "retriever" for e, d in events if e == "thought")
+
+def test_start_rejects_a_bad_repository_link_before_streaming(client):
+    http, _ = client
+    res = http.post("/api/research/start", json={"repo_url": "https://gitlab.com/octo/x"})
+    assert res.status_code == 400 and "GitHub repository link" in res.json()["detail"]
+
+def test_start_needs_a_topic_or_a_repository(client):
+    http, _ = client
+    assert http.post("/api/research/start", json={"topic": "  "}).status_code == 400
+
+def test_repo_start_state_names_the_session_after_the_repository():
+    from api.models import ResearchStartRequest
+    state, title = research.initial_state(ResearchStartRequest(
+        repo_url=" https://github.com/octo/sparse ", topic="For my OS course"))
+    assert title == "octo/sparse"
+    assert state["repo_url"] == "https://github.com/octo/sparse" and state["project_notes"] == "For my OS course"
+    assert state["topic"] == ""
+
+def test_delete_session_removes_checkpoints_vectors_and_history_row(offline_graph, monkeypatch):
+    from api.routers import sessions
+    graph, _ = offline_graph
+    checkpointer = graph.checkpointer
+    start(graph)
+    assert asyncio.run(graph.aget_state(CONFIG)).values  # saved state exists
+
+    checked, collections, deleted_rows = [], [], []
+    async def owns(thread_id, user_id):
+        checked.append((thread_id, user_id))
+    class Table:
+        def delete(self): return self
+        def eq(self, column, value):
+            deleted_rows.append((column, value)); return self
+        def execute(self): return None
+    monkeypatch.setattr(sessions, "verify_session", owns)
+    monkeypatch.setattr(sessions, "get_supabase_client", lambda: type("S", (), {"table": lambda self, name: Table()})())
+    monkeypatch.setattr(sessions, "qdrant_configured", lambda: True)
+    monkeypatch.setattr(sessions, "_delete_collections", collections.append)
+
+    app = FastAPI()
+    app.include_router(sessions.router)
+    app.state.checkpointer = checkpointer
+    app.dependency_overrides[get_current_user] = lambda: type("U", (), {"id": "u"})()
+    res = TestClient(app).delete(f"/api/sessions/{THREAD}")
+
+    assert res.status_code == 204
+    assert checked == [(THREAD, "u")]  # ownership checked first
+    assert not asyncio.run(graph.aget_state(CONFIG)).values  # checkpoints gone
+    assert collections == [THREAD]
+    assert deleted_rows == [("thread_id", THREAD), ("user_id", "u")]
+
+def test_delete_someone_elses_session_is_refused(monkeypatch):
+    from fastapi import HTTPException
+    from api.routers import sessions
+    async def not_owner(thread_id, user_id):
+        raise HTTPException(status_code=403, detail="Not authorized to access this session")
+    monkeypatch.setattr(sessions, "verify_session", not_owner)
+    app = FastAPI()
+    app.include_router(sessions.router)
+    app.dependency_overrides[get_current_user] = lambda: type("U", (), {"id": "u"})()
+    assert TestClient(app).delete("/api/sessions/other").status_code == 403

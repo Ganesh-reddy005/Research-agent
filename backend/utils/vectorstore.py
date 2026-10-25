@@ -24,6 +24,10 @@ def embedding_dim() -> int:
 def research_collection(thread_id: str) -> str:
     return f"research_{thread_id.replace('-', '_')}"
 
+def repo_collection(thread_id: str) -> str:
+    """Code of the project a research session writes about (kept apart from the literature)."""
+    return f"repo_{thread_id.replace('-', '_')}"
+
 def library_collection(user_id) -> str:
     return f"user_{str(user_id).replace('-', '_')}_library"
 

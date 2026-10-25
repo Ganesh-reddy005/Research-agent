@@ -4,6 +4,7 @@ import type { ResearchState } from '@/lib/types';
 export const STEPS = ['Questions', 'Plan', 'Sources', 'Review', 'Paper'] as const;
 
 const AGENTS: Record<string, { label: string; step: number }> = {
+  repo_ingest: { label: 'Reading your repository', step: 0 },
   clarification: { label: 'Preparing questions', step: 0 },
   planning: { label: 'Drafting the research plan', step: 1 },
   retriever: { label: 'Searching for sources', step: 2 },
@@ -20,6 +21,7 @@ export const agentLabel = (agent: string) => AGENTS[agent.toLowerCase()]?.label 
 
 // Shown in rotation while an agent works without visible output
 const HINTS: Record<string, string[]> = {
+  repo_ingest: ['Downloading the repository…', 'Reading the README and source files…', 'Working out what the project does…'],
   clarification: ['Reading your topic…', 'Working out what is ambiguous…', 'Drafting clarifying questions…'],
   planning: ['Turning your answers into a brief…', 'Outlining the sections of the paper…', 'Choosing the questions each section must answer…'],
   retriever: ['Writing search queries…', 'Searching arXiv, OpenAlex, CORE and the web…', 'Collecting and de-duplicating results…'],
@@ -39,6 +41,10 @@ export const agentStep = (agent: string): number | undefined => AGENTS[agent.toL
 /** One-line, human-readable result of a finished step. */
 export function describeStep(step: string, data: ResearchState & { indexed_count?: number }): string {
   switch (step) {
+    case 'repo_ingest': {
+      const stats = data.project_profile?.stats;
+      return stats ? `Read ${stats.files} files (${stats.lines.toLocaleString()} lines of code)` : 'Repository read';
+    }
     case 'clarification':
       return `${data.clarification_questions?.length ?? 0} questions ready`;
     case 'planning':

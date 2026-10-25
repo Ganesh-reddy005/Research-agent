@@ -2,6 +2,16 @@ import json
 import re
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
+from agents.project_context import is_project_paper, project_context
+from agents.paper_length import planning_rule
+
+PROJECT_CONSTRAINTS = """
+THIS PAPER PRESENTS THE AUTHORS' OWN PROJECT (described below). Structure it as a project paper:
+Introduction, Related Work, then the project's design or methodology and its
+implementation, an Evaluation or Results section ONLY if the repository or the authors' answers
+contain results (otherwise a Discussion of how it would be evaluated), and Conclusion and Future Work.
+Base every section on what the project actually does.
+"""
 
 async def planning_node(state):
     print("--- PLANNING AGENT ---")
@@ -16,33 +26,36 @@ async def planning_node(state):
         answer = answers.get(q_id, "No answer provided.")
         qa_pairs += f"Q: {q.get('question')}\nA: {answer}\n\n"
 
-    system_prompt = """You are a senior research architect.
+    system_prompt = f"""You are a senior research architect.
 Create a comprehensive Research Brief and a detailed Research Plan based on the topic and user answers.
 
 STRICT JSON FORMAT REQUIRED:
-{
+{{
   "research_brief": "A 2-3 paragraph overview of the research goals and methodology.",
-  "research_plan": {
+  "research_plan": {{
     "objective": "Clear statement of what this research will achieve.",
     "sections": [
-      {
+      {{
         "title": "Section Title",
         "description": "What this section covers.",
         "questions": ["Specific question 1", "Specific question 2"]
-      }
+      }}
     ],
     "expected_outcome": "Description of the final value of this report."
-  }
-}
+  }}
+}}
 
 PLANNING CONSTRAINTS:
-1. Target exactly 5-6 sections for the paper (Introduction, 3-4 body sections, Conclusion).
+1. {planning_rule(state)}
 2. Avoid redundant or overlapping sections.
 3. Each section must have a distinct, non-trivial research focus.
 
 Return ONLY the JSON object. Do not include any other text."""
 
     input_text = f"Topic: {topic}\n\nUser Context:\n{qa_pairs}"
+    if is_project_paper(state):
+        system_prompt += PROJECT_CONSTRAINTS
+        input_text += f"\n\n{project_context(state)}"
     
     messages = [
         SystemMessage(content=system_prompt),

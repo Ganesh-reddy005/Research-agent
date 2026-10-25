@@ -28,10 +28,21 @@ from langgraph.checkpoint.memory import MemorySaver
 
 import agents.clarification, agents.planning, agents.retriever, agents.assistance
 import agents.synthesis, agents.writer, agents.critic, agents.refinement
+import repo.profiler
 from graph.workflow import build_graph
 
 LLM_MODULES = [agents.clarification, agents.planning, agents.retriever, agents.assistance,
-               agents.synthesis, agents.writer, agents.critic, agents.refinement]
+               agents.synthesis, agents.writer, agents.critic, agents.refinement, repo.profiler]
+
+PROFILE = {
+    "title": "Fast Sparse Attention for Long Documents",
+    "summary": "A PyTorch library implementing block-sparse attention.",
+    "problem": "Attention cost grows quadratically with length.",
+    "approach": "Block-sparse attention kernels.",
+    "architecture": [{"component": "Kernel", "role": "Sparse matmul", "files": ["src/kernel.py"]}],
+    "tech_stack": ["Python", "PyTorch"],
+    "related_work_queries": ["sparse attention", "long-context transformers"],
+}
 
 PLAN = {
     "research_brief": "Brief.",
@@ -48,6 +59,7 @@ async def fake_llm(messages, agent_name=None, temperature=0.2, **kwargs):
         "planning": json.dumps(PLAN),
         "retrieval": json.dumps(["query one", "query two"]),
         "refinement": "Final paper citing [1].",
+        "repo_analysis": json.dumps(PROFILE),
     }
     return AIMessage(content=canned.get(agent_name, f"{agent_name} output"))
 

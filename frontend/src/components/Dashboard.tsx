@@ -5,10 +5,12 @@ import type { User } from '@supabase/supabase-js';
 import { AlertCircle, Menu, Activity } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions,
+  startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions, deleteSession,
   type EventCallbacks, type ResumeData,
 } from '@/lib/api';
-import type { ActivityLog, ChatMessage, LiveActivity, ResearchDepth, ResearchPlan, ResearchState, SessionSummary } from '@/lib/types';
+import type {
+  ActivityLog, ChatMessage, LiveActivity, ResearchDepth, ResearchPlan, ResearchState, SessionSummary, StartResearchRequest,
+} from '@/lib/types';
 
 import Sidebar from './dashboard/Sidebar';
 import AgentLogsPanel from './dashboard/AgentLogsPanel';
@@ -57,6 +59,7 @@ export default function Dashboard({ user }: { user: User }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const startRef = useRef<StartResearchRequest | null>(null); // so Try again can restart a failed start
 
   // One cancellable stream at a time; Stop aborts it
   const newSignal = () => {
@@ -185,11 +188,15 @@ export default function Dashboard({ user }: { user: User }) {
 
   // --- Actions -------------------------------------------------------------
 
-  const handleStart = (topic: string, chosenDepth: ResearchDepth) => {
+  const handleStart = (request: StartResearchRequest) => {
     clearProject();
-    setDepth(chosenDepth);
-    setResearch({ topic, research_mode: chosenDepth });
-    run(0, signal => startResearch(topic, callbacks, chosenDepth, signal));
+    startRef.current = request;
+    setDepth(request.mode);
+    // A repository's topic is known only once Lume has read it
+    setResearch(request.repo_url
+      ? { topic: '', repo_url: request.repo_url, research_mode: request.mode }
+      : { topic: request.topic, research_mode: request.mode });
+    run(0, signal => startResearch(request, callbacks, signal));
   };
 
   const handleAnswers = (answers: Record<string, string>) => {
@@ -274,6 +281,17 @@ export default function Dashboard({ user }: { user: User }) {
     }
   }, []);
 
+  const handleDeleteSession = async (session: SessionSummary) => {
+    try {
+      await deleteSession(session.thread_id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    setSessions(prev => prev.filter(s => s.thread_id !== session.thread_id));
+    if (session.thread_id === threadId) handleNewResearch(); // it was open: leave it
+  };
+
   const handleNewResearch = () => {
     clearProject();
     setStage('idle');
@@ -285,7 +303,7 @@ export default function Dashboard({ user }: { user: User }) {
       if (threadId) loadBrainstorm(threadId);
       else setError(null);
     } else if (threadId) loadSession(threadId);
-    else if (research.topic) handleStart(research.topic, research.research_mode ?? depth);
+    else if (startRef.current) handleStart(startRef.current);
     else setError(null);
   };
 
@@ -296,7 +314,7 @@ export default function Dashboard({ user }: { user: User }) {
   const progressStep = stage === 'working' ? workingStep : STAGE_STEP[stage] ?? 0;
   const title = stage === 'brainstorm'
     ? brainstorm[0]?.content ?? 'Brainstorm'
-    : research.topic || 'New research';
+    : research.topic || research.repo_url || 'New research';
 
   return (
     <div className="flex h-screen w-full bg-mistral-beige overflow-hidden selection:bg-mistral-orange selection:text-white font-sans text-mistral-black">
@@ -305,6 +323,7 @@ export default function Dashboard({ user }: { user: User }) {
         sessions={sessions}
         activeThreadId={threadId}
         onSelectSession={handleSelectSession}
+        onDeleteSession={handleDeleteSession}
         onNewResearch={handleNewResearch}
         onOpenLibrary={() => setPanel(panel === 'library' ? null : 'library')}
         isLibraryOpen={panel === 'library'}
@@ -384,6 +403,7 @@ export default function Dashboard({ user }: { user: User }) {
                 {stage === 'working' && <StageResearching step={workingStep} live={live} logs={logs} onStop={handleStop} />}
                 {stage === 'clarification' && (
                   <StageClarification
+                    profile={research.project_profile}
                     questions={research.clarification_questions ?? []}
                     initialAnswers={research.user_answers ?? {}}
                     onSubmit={handleAnswers}
@@ -414,6 +434,7 @@ export default function Dashboard({ user }: { user: User }) {
                     report={report}
                     sources={research.raw_sources ?? []}
                     audit={research.citation_audit_log}
+                    targetPages={research.target_pages}
                     reportRef={reportRef}
                     threadId={threadId}
                   />

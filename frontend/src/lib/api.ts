@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import type {
   ChatMessage, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
+  StartResearchRequest,
 } from './types';
 
 export type EventCallbacks = {
@@ -91,9 +92,8 @@ async function handleSSEResponse(
 }
 
 export async function startResearch(
-  topic: string,
+  request: StartResearchRequest,
   callbacks: EventCallbacks,
-  mode: ResearchDepth = 'deep',
   signal?: AbortSignal
 ) {
   try {
@@ -101,7 +101,7 @@ export async function startResearch(
     const response = await fetch(`${BASE_URL}/api/research/start`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ topic, mode }),
+      body: JSON.stringify(request),
       signal
     });
     if (!response.ok) throw new Error(await errorDetail(response, "Failed to start research"));
@@ -197,6 +197,13 @@ export async function getSessions(): Promise<SessionSummary[]> {
   const response = await fetch(`${BASE_URL}/api/sessions`, { headers });
   if (!response.ok) throw new Error('Failed to fetch sessions');
   return response.json();
+}
+
+/** Delete a research project or brainstorm and everything stored for it. */
+export async function deleteSession(threadId: string) {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/api/sessions/${threadId}`, { method: 'DELETE', headers });
+  if (!response.ok) throw new Error(await errorDetail(response, 'Could not delete this item'));
 }
 
 /** Send one message; the server keeps the conversation. Omit chatId to start a new one. */

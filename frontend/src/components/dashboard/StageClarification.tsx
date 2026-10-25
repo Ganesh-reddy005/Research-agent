@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import type { ClarificationQuestion } from '@/lib/types';
+import type { ClarificationQuestion, ProjectProfile } from '@/lib/types';
 import { Button, StageHeader, inputClass } from './ui';
+import ProjectSummary from './ProjectSummary';
 
-export default function StageClarification({ questions, initialAnswers, onSubmit, isProcessing }: {
+export default function StageClarification({ profile, questions, initialAnswers, onSubmit, isProcessing }: {
+  profile?: ProjectProfile;  // set for a paper about the user's own repository
   questions: ClarificationQuestion[];
   initialAnswers: Record<string, string>;
   onSubmit: (answers: Record<string, string>) => void;
@@ -17,8 +19,12 @@ export default function StageClarification({ questions, initialAnswers, onSubmit
     <div className="space-y-10">
       <StageHeader
         title="A few questions first"
-        description="Your answers help Lume focus the search. Skip any you're unsure about."
+        description={profile
+          ? "Lume has read your repository. Answer what only you know; skip any you're unsure about."
+          : "Your answers help Lume focus the search. Skip any you're unsure about."}
       />
+
+      {profile && <ProjectSummary profile={profile} />}
 
       <ol className="space-y-8">
         {questions.map((q, i) => (

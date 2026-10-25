@@ -7,22 +7,16 @@ import type { User } from '@supabase/supabase-js';
 import { Plus, Library, LogOut, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import type { SessionSummary } from '@/lib/types';
-
-function formatDate(iso: string) {
-  const date = new Date(iso);
-  const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
-  if (days < 1 && new Date().getDate() === date.getDate()) return 'Today';
-  if (days < 2) return 'Yesterday';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
+import HistoryItem from './HistoryItem';
 
 export default function Sidebar({
-  user, sessions, activeThreadId, onSelectSession, onNewResearch, onOpenLibrary, isLibraryOpen, isOpen, onClose,
+  user, sessions, activeThreadId, onSelectSession, onDeleteSession, onNewResearch, onOpenLibrary, isLibraryOpen, isOpen, onClose,
 }: {
   user: User;
   sessions: SessionSummary[];
   activeThreadId: string | null;
   onSelectSession: (session: SessionSummary) => void;
+  onDeleteSession: (session: SessionSummary) => Promise<void>;
   onNewResearch: () => void;
   onOpenLibrary: () => void;
   isLibraryOpen: boolean;
@@ -79,26 +73,15 @@ export default function Sidebar({
             </p>
           ) : (
             <ul className="space-y-0.5">
-              {sessions.map(s => {
-                const active = s.thread_id === activeThreadId;
-                return (
-                  <li key={s.thread_id}>
-                    <button
-                      onClick={() => onSelectSession(s)}
-                      aria-current={active ? 'page' : undefined}
-                      className={`w-full text-left px-3 py-2.5 transition-colors ${active ? 'bg-white' : 'hover:bg-white/70'}`}
-                    >
-                      <span className={`block text-sm leading-snug line-clamp-2 ${active ? 'text-mistral-black font-medium' : 'text-mistral-black/80'}`}>
-                        {s.topic}
-                      </span>
-                      <span className="mt-1 flex items-center gap-1.5 text-xs text-mistral-black/60">
-                        <span className={`w-1.5 h-1.5 ${s.research_mode === 'brainstorm' ? 'border border-mistral-black/50' : s.status === 'completed' ? 'bg-mistral-black/50' : 'bg-mistral-orange'}`} aria-hidden />
-                        {s.research_mode === 'brainstorm' ? 'Brainstorm' : s.status === 'completed' ? 'Completed' : 'In progress'} · {formatDate(s.created_at)}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
+              {sessions.map(s => (
+                <HistoryItem
+                  key={s.thread_id}
+                  session={s}
+                  active={s.thread_id === activeThreadId}
+                  onSelect={() => onSelectSession(s)}
+                  onDelete={() => onDeleteSession(s)}
+                />
+              ))}
             </ul>
           )}
         </nav>

@@ -1,5 +1,16 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
+from agents.project_context import project_context
+
+def project_check(state) -> str:
+    project = project_context(state)
+    if not project:
+        return ""
+    return f"""5. Claims about the authors' project that the repository analysis below doesn't support,
+   especially results, metrics or features that may have been invented
+
+{project}
+"""
 
 async def critic_node(state):
     print("--- CRITIC AGENT: Appraising draft ---")
@@ -15,6 +26,7 @@ Your task is to identify:
 3. Areas where more technical depth or citations are needed
 4. Any inconsistencies with the research brief
 
+{project_check(state)}
 Output your critique as a series of actionable, bulleted points.
 Do not rewrite the paper yet; just provide the feedback."""
 

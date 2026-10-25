@@ -7,6 +7,14 @@ export type Paper = { title: string; abstract: string; keywords: string; section
 
 const NOT_SECTIONS = /^(references|bibliography|works cited|sources)$/i;
 
+// Paper length, matching backend/agents/paper_length.py: words of text on a two-column IEEE page
+export const WORDS_PER_PAGE = 800;
+export const MAX_PAGES = 15;
+
+/** Words in the abstract and sections (not the references). */
+export const paperWords = (paper: Paper) =>
+  [paper.abstract, ...paper.sections.map(s => s.body)].join(' ').split(/\s+/).filter(Boolean).length;
+
 /** "I. Introduction", "1. Introduction", "Section 2: X" -> plain heading text. */
 const cleanHeading = (text: string) =>
   text.replace(/\*\*/g, '').replace(/^(section\s+)?([IVXLC]+|\d+(\.\d+)*)[.):]?\s+/i, '').trim();

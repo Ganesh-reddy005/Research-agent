@@ -19,6 +19,33 @@ export type Source = {
   authors?: string[];
 };
 
+/** What Lume understood about the repository a project paper is about. */
+export type ProjectProfile = {
+  name: string;           // owner/repo
+  url: string;
+  branch?: string;
+  commit?: string;
+  title?: string;
+  summary?: string;
+  problem?: string;
+  approach?: string;
+  architecture?: { component: string; role: string; files?: string[] }[];
+  tech_stack?: string[];
+  key_algorithms?: string[];
+  data?: string[];
+  evaluation?: string;
+  limitations?: string[];
+  stats?: { files: number; lines: number; languages: Record<string, number> };
+};
+
+/** A new research session: a topic, or a repository whose project the paper writes up. */
+export type StartResearchRequest = {
+  topic: string;          // the question, or notes about the project when repo_url is set
+  mode: ResearchDepth;
+  repo_url?: string;
+  pages?: number;         // paper length in IEEE pages; omit to let Lume choose
+};
+
 export type CitationAudit = {
   total_citations_found: number;
   unique_sources_cited: number;
@@ -41,6 +68,9 @@ export type ResearchState = {
   citation_audit_log?: CitationAudit;
   current_step?: string;
   indexed_count?: number;
+  repo_url?: string;
+  project_profile?: ProjectProfile;
+  target_pages?: number;
 };
 
 export type ResearchDepth = 'light' | 'deep';

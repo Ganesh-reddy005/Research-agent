@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { AlertTriangle, ChevronDown, CircleCheck, Download, FileCode2, FileText } from 'lucide-react';
 import type { CitationAudit, Source } from '@/lib/types';
 import {
-  IEEE_CSS, formatReference, parsePaper, printPaper, renumberCitations, sectionLabels, toLatex,
+  IEEE_CSS, WORDS_PER_PAGE, formatReference, paperWords, parsePaper, printPaper, renumberCitations, sectionLabels, toLatex,
 } from '@/lib/ieee';
 import { Button } from './ui';
 
@@ -73,11 +73,12 @@ function download(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function StageCompleted({ topic, report, sources, audit, reportRef, threadId }: {
+export default function StageCompleted({ topic, report, sources, audit, targetPages, reportRef, threadId }: {
   topic: string;
   report: string;
   sources: Source[];
   audit?: CitationAudit;
+  targetPages?: number;
   reportRef: React.RefObject<HTMLDivElement>;
   threadId: string | null;
 }) {
@@ -85,6 +86,8 @@ export default function StageCompleted({ topic, report, sources, audit, reportRe
   // IEEE: references numbered by first citation, cited works only
   const { paper, references } = useMemo(() => renumberCitations(parsePaper(report, topic), sources), [report, topic, sources]);
   const labels = sectionLabels(paper.sections);
+  const words = paperWords(paper);
+  const pages = Math.max(1, Math.round(words / WORDS_PER_PAGE));
   const fileBase = `Lume_${(threadId ?? 'paper').slice(0, 8)}`;
   const date = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -102,7 +105,10 @@ export default function StageCompleted({ topic, report, sources, audit, reportRe
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-        <p className="text-sm text-mistral-black/65">Your draft is ready, typeset in IEEE style.</p>
+        <p className="text-sm text-mistral-black/65">
+          Your draft is ready, typeset in IEEE style: about {pages} page{pages === 1 ? '' : 's'} ({words.toLocaleString()} words)
+          {targetPages ? `, for a target of ${targetPages}` : ''}.
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={downloadMarkdown}>
             <FileText className="w-4 h-4" aria-hidden /> Markdown

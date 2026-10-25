@@ -3,6 +3,7 @@ uvicorn[standard]
 pydantic
 langgraph
 langgraph-checkpoint-postgres
+psycopg-pool
 langchain-core
 langchain-groq
 langchain-openai
@@ -12,6 +13,7 @@ arxiv
 sse-starlette
 python-dotenv
 requests
+httpx
 qdrant-client
 langchain-community
 supabase

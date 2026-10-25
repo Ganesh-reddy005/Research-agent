@@ -1,6 +1,7 @@
 import os
-from typing import TypedDict, List, Dict, Any, Optional
+from typing import TypedDict, List, Dict, Any, Optional, Literal
 from langgraph.graph import StateGraph, START, END
+from langgraph.types import RetryPolicy
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
 
@@ -17,10 +18,13 @@ from agents.writer import writer_node
 from agents.critic import critic_node
 from agents.refinement import refinement_node
 from agents.auditor import citation_auditor_node
+from agents.repo_ingest import repo_ingest_node
+from repo.github import is_transient
 
 class AgentState(TypedDict, total=False):
     topic: str
     research_mode: str 
+    target_pages: int  # requested paper length in IEEE pages; unset means the default short paper
     thread_id: str
     user_id: str
     clarification_questions: List[Dict[str, str]]
@@ -39,11 +43,21 @@ class AgentState(TypedDict, total=False):
     final_report: str
     citation_audit_log: Dict[str, Any]
     current_step: str
+    # Project paper: the repository the paper is about
+    repo_url: str
+    project_notes: str
+    project_profile: Dict[str, Any]
+
+def route_start(state) -> Literal["repo_ingest", "clarification"]:
+    """A project paper reads its repository before asking questions."""
+    return "repo_ingest" if state.get("repo_url") else "clarification"
 
 def build_graph(checkpointer=None):
     workflow = StateGraph(AgentState)
     
     # Add Nodes
+    workflow.add_node("repo_ingest", repo_ingest_node,
+                      retry_policy=RetryPolicy(max_attempts=3, retry_on=is_transient))
     workflow.add_node("clarification", clarification_node)
     workflow.add_node("planning", planning_node)
     workflow.add_node("retriever", retriever_node)
@@ -56,7 +70,8 @@ def build_graph(checkpointer=None):
     workflow.add_node("auditor", citation_auditor_node)
     
     # Define Edges
-    workflow.add_edge(START, "clarification")
+    workflow.add_conditional_edges(START, route_start, ["repo_ingest", "clarification"])
+    workflow.add_edge("repo_ingest", "clarification")
     workflow.add_edge("clarification", "planning")
     workflow.add_edge("planning", "retriever")
     workflow.add_edge("retriever", "indexer")

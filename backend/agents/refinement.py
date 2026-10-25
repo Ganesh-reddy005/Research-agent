@@ -1,5 +1,6 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
+from agents.paper_length import editing_rule, editing_max_tokens
 
 async def refinement_node(state):
     print("--- REFINEMENT AGENT: Polishing final report ---")
@@ -27,10 +28,11 @@ CITATIONS:
 
 POLISHING RULES:
 1. No markdown bolding (**text**). Academic papers use plain text.
-2. Prune redundant sentences and fluff. Aim for a high-density, concise academic style (150-250 words per section).
+2. {editing_rule(state)}
 3. Use formal, objective, third-person academic tone throughout.
 4. Correct logical inconsistencies between sections.
 5. No conversational preamble or notes. Output only the paper.
+6. Never add facts, features or results that aren't in the draft.
 
 Critique Feedback to Incorporate:
 {critic_feedback}
@@ -42,6 +44,6 @@ Critique Feedback to Incorporate:
     ]
     
     # The whole paper is rewritten in one call, so allow a long output
-    response = await ainvoke_llm(messages, agent_name="refinement", temperature=0.1, max_tokens=8000)
+    response = await ainvoke_llm(messages, agent_name="refinement", temperature=0.1, max_tokens=editing_max_tokens(state))
     print("--- REFINEMENT AGENT: Report finalized ---")
     return {"final_report": response.content, "current_step": "refinement"}

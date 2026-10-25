@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 from api.models import ResearchStartRequest, ResearchResumeRequest
 from utils.auth import get_current_user, get_supabase_client, verify_session, ensure_profile
+from repo.github import parse_github_url, RepoError
 
 router = APIRouter(prefix="/api/research", tags=["research"])
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/api/research", tags=["research"])
 SESSION_FIELDS = [
     "topic", "research_mode", "clarification_questions", "user_answers", "research_brief",
     "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
-    "citation_audit_log", "current_step",
+    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages",
 ]
 
 # Agents whose LLM output is prose worth showing live; the rest emit JSON
@@ -52,9 +53,28 @@ async def stream_graph(graph, graph_input, config, thread_id, on_complete=None):
         print(f"SSE Error: {e}")
         yield {"event": "error", "data": json.dumps({"error": str(e)})}
 
+def initial_state(request: ResearchStartRequest) -> tuple[dict, str]:
+    """Graph input for a new session and its title in History: a topic, or a repository
+    (whose analysed project becomes the topic)."""
+    state = {"research_mode": request.mode or "deep"}
+    if request.pages:
+        state["target_pages"] = request.pages
+    if not request.repo_url:
+        if not request.topic.strip():
+            raise HTTPException(status_code=400, detail="Enter a research topic or a GitHub repository link")
+        return {**state, "topic": request.topic}, request.topic
+    try:
+        repo = parse_github_url(request.repo_url)
+    except RepoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    # repo_ingest sets the topic from the project; History names the session after the repository
+    project = {"topic": "", "repo_url": request.repo_url.strip(), "project_notes": request.topic.strip()}
+    return {**state, **project}, repo.full_name
+
 @router.post("/start")
 async def start_research(request: ResearchStartRequest, req: Request, user=Depends(get_current_user)):
     graph = req.app.state.graph
+    state, session_title = initial_state(request)
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
     
@@ -65,20 +85,15 @@ async def start_research(request: ResearchStartRequest, req: Request, user=Depen
         await asyncio.to_thread(supabase.table("sessions").insert({
             "thread_id": thread_id,
             "user_id": user.id,
-            "topic": request.topic,
-            "research_mode": request.mode or "deep",
+            "topic": session_title,
+            "research_mode": state["research_mode"],
             "status": "active"
         }).execute)
     except Exception as e:
         print(f"Failed to record session: {e}")
         raise HTTPException(status_code=500, detail="Could not initialize research session in database")
 
-    state = {
-        "topic": request.topic,
-        "research_mode": request.mode or "deep",
-        "thread_id": thread_id,
-        "user_id": str(user.id)
-    }
+    state.update(thread_id=thread_id, user_id=str(user.id))
     return EventSourceResponse(stream_graph(graph, state, config, thread_id), ping=20)
 
 @router.post("/resume")

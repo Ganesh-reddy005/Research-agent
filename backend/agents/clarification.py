@@ -1,6 +1,18 @@
 import json
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
+from agents.project_context import is_project_paper, project_context
+
+PROJECT_PROMPT = """You are a research supervisor helping the authors of a software project write a research paper about it.
+You have already analysed their repository (below). Ask 3 to 5 questions that ONLY the authors can answer
+and that the repository does not already answer. Focus on:
+1. The paper's purpose and audience (course report, conference, journal) and any length or format requirements
+2. The authors' own contribution and what is novel compared with existing tools or work
+3. Results, measurements or user studies they have that are not in the repository
+4. What the paper should emphasise or leave out
+5. Anything the analysis got wrong or is missing
+
+Return the result STRICTLY as a JSON array of objects, where each object has 'id' (string) and 'question' (string)."""
 
 async def clarification_node(state):
     print("--- CLARIFICATION AGENT ---")
@@ -18,9 +30,14 @@ Focus on:
 
 Return the result STRICTLY as a JSON array of objects, where each object has 'id' (string) and 'question' (string)."""
 
+    human = f"Topic: {topic}"
+    if is_project_paper(state):
+        system_prompt = PROJECT_PROMPT
+        human = f"{human}\n\n{project_context(state)}"
+
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=f"Topic: {topic}")
+        HumanMessage(content=human)
     ]
     
     response = await ainvoke_llm(messages, agent_name="clarification")

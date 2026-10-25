@@ -71,3 +71,4 @@ for_gemini/
 skills-lock.json
 
 supabase_schema.sql
+.claude/skills/

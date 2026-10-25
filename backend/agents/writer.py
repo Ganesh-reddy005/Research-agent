@@ -1,8 +1,9 @@
-import asyncio
 from utils.events import report_progress
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
-from utils.vectorstore import qdrant_configured, research_collection, collection_exists, get_vector_store
+from evidence import section_evidence
+from agents.project_context import is_project_paper, project_context
+from agents.paper_length import writer_rule, evidence_size
 
 def number_evidence(passages, sources):
     """Label each passage with its source's citation number. [n] is raw_sources[n - 1],
@@ -15,19 +16,29 @@ def number_evidence(passages, sources):
             blocks.append(f"[{n}] {title}\n{text}")
     return "\n\n".join(blocks)
 
+def project_rules(state) -> str:
+    """Extra rules when the paper writes up the authors' own repository."""
+    if not is_project_paper(state):
+        return ""
+    return f"""
+THIS IS A PROJECT PAPER: it presents the authors' own project, described below.
+- Describe the project in first-person plural ("we designed", "our system").
+- Claims about the project's design and implementation must come from the project's code
+  passages, cited with the repository's number. Never invent features, experiments or results.
+- If a section needs results the repository doesn't contain, describe how the project would be
+  evaluated instead of reporting numbers.
+- Use the literature passages for background, related work and comparison.
+
+{project_context(state)}
+"""
+
 async def writer_node(state):
     print("--- WRITER AGENT: Commencing academic draft ---")
     topic = state.get("topic")
     plan = state.get("research_plan", {})
     synthesis = state.get("synthesis_report")
     sources = state.get("raw_sources", [])
-
-    thread_id = state.get("thread_id", "default_thread")
-    collection_name = research_collection(thread_id)
-
-    vectorstore = None
-    if qdrant_configured() and await asyncio.to_thread(collection_exists, collection_name):
-        vectorstore = get_vector_store(collection_name)
+    rules = project_rules(state)
 
     # Generate content section by section
     full_report = ""
@@ -47,12 +58,7 @@ async def writer_node(state):
         description = section.get("description")
         await report_progress(f"Writing section {i} of {len(sections)}: {title}")
 
-        # Evidence for this section: diverse passages (MMR) rather than several from one paper
-        if vectorstore:
-            results = await vectorstore.amax_marginal_relevance_search(f"{title}: {description}", k=8, fetch_k=30)
-            passages = [(r.page_content, r.metadata.get("url"), r.metadata.get("title")) for r in results]
-        else:
-            passages = [(s.get("summary", ""), s.get("url"), s.get("title")) for s in sources[:10]]
+        passages = await section_evidence(state, f"{title}: {description}", k=evidence_size(state, len(sections)))
         evidence = number_evidence(passages, sources)
 
         system_prompt = f"""You are an elite academic writer specialized in IEEE Transactions.
@@ -70,10 +76,10 @@ CITATIONS (most important):
 STRICT FORMATTING & LENGTH RULES:
 1. NO MARKDOWN BOLDING (**text**). Use plain text for emphasis.
 2. Use professional, third-person objective academic tone.
-3. OPTIMAL LENGTH: Be concise but rigorous. Target 150-250 words for this section. Never produce very large blocks of text.
+3. LENGTH: {writer_rule(state, len(sections))}
 4. TECHNICAL DEPTH: Focus on evidence and technical data over generic descriptions.
 5. Do not write the section heading; it is added automatically.
-
+{rules}
 Synthesis Context:
 {synthesis}
 

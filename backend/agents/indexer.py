@@ -4,10 +4,12 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from utils.vectorstore import qdrant_configured, research_collection, ensure_collection, get_vector_store
 from utils.scraper import process_sources_with_full_text
+from agents.project_context import is_project_source
 
 async def indexer_node(state):
     print("--- INDEXER AGENT ---")
-    sources = state.get("raw_sources", [])
+    # The project's own repository was indexed from its code by repo_ingest
+    sources = [s for s in state.get("raw_sources", []) if not is_project_source(s)]
     topic = state.get("topic")
     
     if not sources:
