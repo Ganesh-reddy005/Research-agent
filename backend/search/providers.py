@@ -3,14 +3,13 @@
 callers run them in worker threads. Searches are grouped by the kind of need they serve."""
 import os
 import re
-import time
-import threading
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import requests
 from tavily import TavilyClient
 from utils.vectorstore import qdrant_configured, library_collection, collection_exists, get_vector_store
+from search.semantic_scholar import search_semantic_scholar
 
 def search_private_library(query, user_id, max_results=5):
     sources = []
@@ -91,26 +90,37 @@ def search_openalex(query, max_results=3):
         print(f"OpenAlex search failed: {e}")
     return sources
 
-_ARXIV_STOPWORDS = {"a", "an", "and", "or", "the", "of", "for", "in", "on", "with", "to", "via", "using", "latest", "recent", "new", "papers"}
+# Words arXiv's index ignores: requiring one ("all:Is") matches nothing, so they're left out of AND queries
+_ARXIV_STOPWORDS = {
+    "a", "an", "and", "or", "the", "of", "for", "in", "on", "with", "to", "via", "using", "latest", "recent", "new",
+    "papers", "is", "are", "was", "were", "be", "been", "all", "any", "you", "your", "we", "our", "it", "its", "this",
+    "that", "these", "those", "how", "what", "when", "which", "who", "why", "can", "do", "does", "from", "by", "as",
+    "at", "into", "than", "then", "there", "their", "not", "no", "but", "if", "so", "about",
+}
 
-def _arxiv_all_terms(query):
+ARXIV_LEADING_TERMS = 4  # queries lead with names and title words, so these carry the meaning
+
+def _arxiv_all_terms(query, limit=None):
     """'sparse attention for long-context LLMs 2026' -> all:sparse AND all:attention AND all:long AND ...
-    arXiv ORs bare words, which is noise once results are sorted by date instead of relevance."""
+    arXiv ORs bare words, so "Attention Is All You Need" would match every paper mentioning attention.
+    limit keeps only the leading terms."""
     words = [re.sub(r"[^\w]", "", w) for w in re.split(r"[\s\-]+", query)]
     terms = [w for w in words if w and w.lower() not in _ARXIV_STOPWORDS and not re.fullmatch(r"(19|20)\d\d", w)]
-    return " AND ".join(f"all:{t}" for t in terms)
+    return " AND ".join(f"all:{t}" for t in terms[:limit])
+
+ARXIV_API = "https://export.arxiv.org/api/query"
 
 def search_arxiv(query, max_results=3, newest_first=False):
-    if newest_first:
-        terms = _arxiv_all_terms(query)
-        if terms:
-            url = (f'https://export.arxiv.org/api/query?search_query={urllib.parse.quote(terms, safe=":")}'
-                   f'&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending')
-            found = _fetch_arxiv(url, query)
-            if found:
-                return found
-        # Nothing matched every term: fall back to relevance ranking
-    url = f'https://export.arxiv.org/api/query?search_query=all:{urllib.parse.quote(query)}&start=0&max_results={max_results}'
+    """Papers matching every keyword, by relevance (or newest first). If none match them all, papers
+    matching the leading keywords; failing that, any-word relevance ranking."""
+    order = "&sortBy=submittedDate&sortOrder=descending" if newest_first else "&sortBy=relevance"
+    attempts = dict.fromkeys(filter(None, [_arxiv_all_terms(query), _arxiv_all_terms(query, ARXIV_LEADING_TERMS)]))
+    for terms in attempts:  # de-duplicated: a short query is tried once
+        url = f"{ARXIV_API}?search_query={urllib.parse.quote(terms, safe=':')}&start=0&max_results={max_results}{order}"
+        found = _fetch_arxiv(url, query)
+        if found:
+            return found
+    url = f"{ARXIV_API}?search_query=all:{urllib.parse.quote(query)}&start=0&max_results={max_results}&sortBy=relevance"
     return _fetch_arxiv(url, query)
 
 def _fetch_arxiv(url, query):
@@ -132,55 +142,6 @@ def _fetch_arxiv(url, query):
     except Exception as e:
         print(f"arXiv skipped for '{query}': {e}")
     return sources
-
-S2_SEARCH = "https://api.semanticscholar.org/graph/v1/paper/search"
-S2_FIELDS = "title,abstract,year,authors,url,externalIds,citationCount,venue,openAccessPdf"
-S2_INTERVAL = 1.1  # seconds between calls: Semantic Scholar allows about 1 request a second, key or not
-S2_COOL_OFF = 600  # seconds to skip Semantic Scholar after it keeps refusing (e.g. no key and a busy shared pool)
-_s2_lock = threading.Lock()
-_s2_last_call = 0.0
-_s2_skip_until = 0.0
-
-def _s2_get(params):
-    """One throttled call; searches run in parallel threads, so they queue here. Retries once on 429,
-    then skips Semantic Scholar for S2_COOL_OFF seconds so later searches don't wait on it."""
-    global _s2_last_call, _s2_skip_until
-    headers = {"x-api-key": os.environ["SEMANTIC_SCHOLAR_API_KEY"]} if os.getenv("SEMANTIC_SCHOLAR_API_KEY") else {}
-    for attempt in range(2):
-        with _s2_lock:
-            time.sleep(max(0.0, _s2_last_call + S2_INTERVAL - time.monotonic()))
-            _s2_last_call = time.monotonic()
-        response = requests.get(S2_SEARCH, params=params, headers=headers, timeout=10)
-        if response.status_code != 429:
-            return response
-        time.sleep(2 * (attempt + 1))
-    _s2_skip_until = time.monotonic() + S2_COOL_OFF
-    print(f"Semantic Scholar is rate limiting; skipping it for {S2_COOL_OFF // 60} minutes. "
-          "A free key (SEMANTIC_SCHOLAR_API_KEY) gives a dedicated limit.")
-    return response
-
-def s2_source(paper):
-    """A Semantic Scholar paper as a source. The URL is the most readable copy: arXiv, then DOI, then S2."""
-    ids = paper.get("externalIds") or {}
-    url = (f"https://arxiv.org/abs/{ids['ArXiv']}" if ids.get("ArXiv")
-           else f"https://doi.org/{ids['DOI']}" if ids.get("DOI") else paper.get("url"))
-    authors = [a.get("name") for a in paper.get("authors") or [] if a.get("name")]
-    return {"title": paper.get("title") or "No Title", "url": url, "summary": paper.get("abstract") or "No abstract available.",
-            "source": "Semantic Scholar", "year": paper.get("year"), "authors": authors[:6],
-            "citations": paper.get("citationCount")}
-
-def search_semantic_scholar(query, max_results=3):
-    """Relevance-ranked search over 200M+ papers, with citation counts, so well-known work surfaces first."""
-    if time.monotonic() < _s2_skip_until:
-        return []
-    try:
-        response = _s2_get({"query": query, "limit": max_results, "fields": S2_FIELDS})
-        if response.status_code == 200:
-            return [s2_source(p) for p in response.json().get("data") or [] if p.get("title")]
-        print(f"Semantic Scholar returned {response.status_code} for '{query}'")
-    except Exception as e:
-        print(f"Semantic Scholar search failed for '{query}': {e}")
-    return []
 
 def search_web(query, max_results=5):
     key = os.getenv("TAVILY_API_KEY")

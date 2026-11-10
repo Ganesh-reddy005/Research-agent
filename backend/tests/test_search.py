@@ -4,7 +4,7 @@ import pytest
 from langchain_core.messages import AIMessage
 
 import agents.retriever
-import search.planner, search.screening, search.providers
+import search.planner, search.screening, search.providers, search.semantic_scholar
 from search.planner import clean_query, normalise
 from conftest import PLAN, PROFILE
 
@@ -147,12 +147,12 @@ S2_PAPER = {"title": "Attention Is All You Need", "abstract": "The dominant sequ
             "externalIds": {"ArXiv": "1706.03762", "DOI": "10.5555/x"}, "authors": [{"name": "Ashish Vaswani"}]}
 
 def test_semantic_scholar_papers_link_to_the_most_readable_copy():
-    source = search.providers.s2_source(S2_PAPER)
+    source = search.semantic_scholar.s2_source(S2_PAPER)
     assert source["url"] == "https://arxiv.org/abs/1706.03762"  # arXiv before DOI before S2
     assert source["citations"] == 150000 and source["authors"] == ["Ashish Vaswani"]
-    no_arxiv = search.providers.s2_source({**S2_PAPER, "externalIds": {"DOI": "10.5555/x"}})
+    no_arxiv = search.semantic_scholar.s2_source({**S2_PAPER, "externalIds": {"DOI": "10.5555/x"}})
     assert no_arxiv["url"] == "https://doi.org/10.5555/x"
-    neither = search.providers.s2_source({**S2_PAPER, "externalIds": {}})
+    neither = search.semantic_scholar.s2_source({**S2_PAPER, "externalIds": {}})
     assert neither["url"] == "https://www.semanticscholar.org/paper/abc"
 
 def test_semantic_scholar_is_throttled_and_retries_once_when_rate_limited(monkeypatch):
@@ -161,12 +161,12 @@ def test_semantic_scholar_is_throttled_and_retries_once_when_rate_limited(monkey
         def json(self): return {"data": [S2_PAPER]}
     statuses = [429, 200]
     sleeps = []
-    monkeypatch.setattr(search.providers.requests, "get", lambda *a, **k: Response(statuses.pop(0)))
-    monkeypatch.setattr(search.providers.time, "sleep", sleeps.append)
-    monkeypatch.setattr(search.providers, "_s2_last_call", 0.0)
-    monkeypatch.setattr(search.providers, "_s2_skip_until", 0.0)
+    monkeypatch.setattr(search.semantic_scholar.requests, "get", lambda *a, **k: Response(statuses.pop(0)))
+    monkeypatch.setattr(search.semantic_scholar.time, "sleep", sleeps.append)
+    monkeypatch.setattr(search.semantic_scholar, "_s2_last_call", 0.0)
+    monkeypatch.setattr(search.semantic_scholar, "_s2_skip_until", 0.0)
 
-    found = search.providers.search_semantic_scholar("attention is all you need")
+    found = search.semantic_scholar.search_semantic_scholar("attention is all you need")
     assert [s["title"] for s in found] == ["Attention Is All You Need"]
     assert 2 in sleeps  # backed off after the 429
 
@@ -185,12 +185,43 @@ def test_semantic_scholar_is_skipped_for_a_while_after_repeated_rate_limits(monk
     calls = []
     class Refused:
         status_code = 429
-    monkeypatch.setattr(search.providers.requests, "get", lambda *a, **k: calls.append(1) or Refused())
-    monkeypatch.setattr(search.providers.time, "sleep", lambda s: None)
-    monkeypatch.setattr(search.providers, "_s2_last_call", 0.0)
-    monkeypatch.setattr(search.providers, "_s2_skip_until", 0.0)
+    monkeypatch.setattr(search.semantic_scholar.requests, "get", lambda *a, **k: calls.append(1) or Refused())
+    monkeypatch.setattr(search.semantic_scholar.time, "sleep", lambda s: None)
+    monkeypatch.setattr(search.semantic_scholar, "_s2_last_call", 0.0)
+    monkeypatch.setattr(search.semantic_scholar, "_s2_skip_until", 0.0)
 
-    assert search.providers.search_semantic_scholar("q1") == []
+    assert search.semantic_scholar.search_semantic_scholar("q1") == []
     assert len(calls) == 2  # tried, retried once
-    assert search.providers.search_semantic_scholar("q2") == []
+    assert search.semantic_scholar.search_semantic_scholar("q2") == []
     assert len(calls) == 2  # cooling off: not called again
+
+# ---- arXiv ---------------------------------------------------------------------------
+
+def test_arxiv_relevance_search_requires_every_keyword_first(monkeypatch):
+    urls = []
+    monkeypatch.setattr(search.providers, "_fetch_arxiv", lambda url, q: urls.append(url) or [{"title": "hit"}])
+    search.providers.search_arxiv("Attention Is All You Need")
+    assert len(urls) == 1
+    assert "search_query=all:Attention%20AND%20all:Need&" in urls[0]  # "Is All You" are ignored by arXiv
+    assert urls[0].endswith("&sortBy=relevance")
+
+def test_arxiv_relaxes_to_leading_keywords_then_any_word(monkeypatch):
+    urls = []
+    monkeypatch.setattr(search.providers, "_fetch_arxiv", lambda url, q: urls.append(url) or ([{"title": "hit"}] if len(urls) == 3 else []))
+    found = search.providers.search_arxiv("Attention Is All You Need causal self-attention models")
+    assert found == [{"title": "hit"}] and len(urls) == 3
+    assert urls[0].count("%20AND%20") == 5                      # every keyword (6, stopwords dropped)
+    assert "all:Attention%20AND%20all:Need%20AND%20all:causal%20AND%20all:self&" in urls[1]  # the leading four
+    assert "AND" not in urls[2]                                  # any word
+
+def test_arxiv_short_query_is_not_tried_twice(monkeypatch):
+    urls = []
+    monkeypatch.setattr(search.providers, "_fetch_arxiv", lambda url, q: urls.append(url) or [])
+    search.providers.search_arxiv("FlashAttention")
+    assert len(urls) == 2  # all keywords (= leading keywords), then any word
+
+def test_arxiv_newest_first_still_sorts_by_date(monkeypatch):
+    urls = []
+    monkeypatch.setattr(search.providers, "_fetch_arxiv", lambda url, q: urls.append(url) or [{"title": "hit"}])
+    search.providers.search_arxiv("sparse attention", newest_first=True)
+    assert urls[0].endswith("&sortBy=submittedDate&sortOrder=descending")
