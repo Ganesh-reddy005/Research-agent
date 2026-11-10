@@ -1,22 +1,12 @@
 """Live search tools the brainstorm agent can call: the web (Tavily), arXiv and OpenAlex."""
-import os
 import asyncio
 from langchain_core.tools import tool
-from tavily import TavilyClient
-from agents.retriever import search_arxiv, search_openalex
+from search.providers import search_arxiv, search_openalex, search_web
 
 RESULTS_PER_SEARCH = 5
 
-def _search_web(query, max_results=RESULTS_PER_SEARCH):
-    key = os.getenv("TAVILY_API_KEY")
-    if not key:
-        return []
-    res = TavilyClient(api_key=key).search(query=query, search_depth="basic", max_results=max_results)
-    return [{"title": r.get("title", ""), "url": r.get("url", ""), "summary": r.get("content", ""), "source": "Web"}
-            for r in res.get("results", [])]
-
 _SEARCHERS = {
-    "web_search": _search_web,
+    "web_search": search_web,
     "search_arxiv": search_arxiv,
     "search_openalex": search_openalex,
 }

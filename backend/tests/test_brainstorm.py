@@ -200,6 +200,6 @@ def test_earlier_turns_are_sent_without_their_search_results(chat):
     assert second_turn_input[2].content == "first answer"
 
 def test_arxiv_newest_first_requires_every_topic_term():
-    from agents.retriever import _arxiv_all_terms
+    from search.providers import _arxiv_all_terms
     assert _arxiv_all_terms("latest sparse attention for long-context LLMs 2026") == \
         "all:sparse AND all:attention AND all:long AND all:context AND all:LLMs"

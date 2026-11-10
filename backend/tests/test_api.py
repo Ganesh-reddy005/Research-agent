@@ -85,7 +85,8 @@ def test_stream_announces_agents_and_progress_without_json_tokens(client):
     started = [d["agent"] for e, d in events if e == "agent_start"]
     assert started == ["retriever", "indexer", "assistance"]  # each announced as it begins
     progress = [d["message"] for e, d in events if e == "progress"]
-    assert any(m.startswith("Searching 2 queries") for m in progress) and any(m.startswith("Found") for m in progress)
+    assert "Planned 2 searches: 1 for papers, 1 on the web; 1 covered without searching" in progress
+    assert any(m.startswith("Kept") for m in progress)
     assert names.index("agent_start") < names.index("progress") < names.index("step")
     # The retriever's LLM output is a JSON list of queries: never streamed to the UI
     assert not any(d.get("agent") == "retriever" for e, d in events if e == "thought")

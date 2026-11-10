@@ -34,6 +34,7 @@ class AgentState(TypedDict, total=False):
     plan_approved: bool
     plan_edits: str
     search_queries: List[str]
+    search_plan: List[Dict[str, Any]]  # each need: section, need, kind, query, sources kept
     raw_sources: List[Dict[str, Any]]
     indexed_count: int
     assistance_summary: str

@@ -46,6 +46,17 @@ export type StartResearchRequest = {
   pages?: number;         // paper length in IEEE pages; omit to let Lume choose
 };
 
+/** One search the planner chose: what a section needs and where it was looked for. */
+export type SearchNeed = {
+  id: number;
+  section: string;
+  need: string;
+  kind: 'papers' | 'web' | 'none';  // none: covered by the project or the paper's own argument
+  query: string;
+  retry_query?: string;             // rewritten once because the first query found too little
+  sources: number;                  // relevant sources kept
+};
+
 export type CitationAudit = {
   total_citations_found: number;
   unique_sources_cited: number;
@@ -71,6 +82,7 @@ export type ResearchState = {
   repo_url?: string;
   project_profile?: ProjectProfile;
   target_pages?: number;
+  search_plan?: SearchNeed[];
 };
 
 export type ResearchDepth = 'light' | 'deep';

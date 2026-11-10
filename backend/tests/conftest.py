@@ -29,10 +29,19 @@ from langgraph.checkpoint.memory import MemorySaver
 import agents.clarification, agents.planning, agents.retriever, agents.assistance
 import agents.synthesis, agents.writer, agents.critic, agents.refinement
 import repo.profiler
+import search.planner, search.screening, search.providers
 from graph.workflow import build_graph
 
-LLM_MODULES = [agents.clarification, agents.planning, agents.retriever, agents.assistance,
-               agents.synthesis, agents.writer, agents.critic, agents.refinement, repo.profiler]
+LLM_MODULES = [agents.clarification, agents.planning, agents.assistance,
+               agents.synthesis, agents.writer, agents.critic, agents.refinement, repo.profiler,
+               search.planner, search.screening]
+
+# The search planner's answer: one need per kind
+SEARCH_PLAN = [
+    {"section": "Introduction", "need": "background", "kind": "papers", "query": "query one"},
+    {"section": "Introduction", "need": "tooling", "kind": "web", "query": "query two"},
+    {"section": "Conclusion", "need": "own argument", "kind": "none", "query": ""},
+]
 
 PROFILE = {
     "title": "Fast Sparse Attention for Long Documents",
@@ -57,7 +66,7 @@ async def fake_llm(messages, agent_name=None, temperature=0.2, **kwargs):
     canned = {
         "clarification": json.dumps([{"id": "1", "question": "Scope?"}]),
         "planning": json.dumps(PLAN),
-        "retrieval": json.dumps(["query one", "query two"]),
+        "search_planning": json.dumps(SEARCH_PLAN),
         "refinement": "Final paper citing [1].",
         "repo_analysis": json.dumps(PROFILE),
     }
@@ -78,9 +87,10 @@ def offline_graph(monkeypatch):
         return lambda query, max_results=3: [
             {"title": f"{name}:{query}", "url": f"https://{name}/{query}", "summary": "s", "source": name}]
 
-    monkeypatch.setattr(agents.retriever, "search_private_library", fake_private)
-    monkeypatch.setattr(agents.retriever, "search_openalex", fake_public("openalex"))
-    monkeypatch.setattr(agents.retriever, "search_arxiv", fake_public("arxiv"))
-    monkeypatch.setattr(agents.retriever, "search_core", lambda q, max_results=3: [])
+    monkeypatch.setattr(search.providers, "search_private_library", fake_private)
+    monkeypatch.setattr(search.providers, "search_openalex", fake_public("openalex"))
+    monkeypatch.setattr(search.providers, "search_arxiv", fake_public("arxiv"))
+    monkeypatch.setattr(search.providers, "search_core", lambda q, max_results=3: [])
+    monkeypatch.setattr(search.providers, "search_web", fake_public("web"))
     return build_graph(checkpointer=MemorySaver()), calls
 

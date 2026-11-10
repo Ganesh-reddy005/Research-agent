@@ -1,0 +1,140 @@
+import asyncio
+import json
+import pytest
+from langchain_core.messages import AIMessage
+
+import agents.retriever
+import search.planner, search.screening, search.providers
+from search.planner import clean_query, normalise
+from conftest import PLAN, PROFILE
+
+STATE = {"topic": "x", "research_mode": "light", "research_plan": PLAN["research_plan"], "user_id": None}
+
+def llm(answers, prompts=None):
+    """A fake LLM answering by agent name; records (agent, system prompt, human message)."""
+    async def fake(messages, agent_name=None, **kwargs):
+        if prompts is not None:
+            prompts.append((agent_name, messages[0].content, messages[-1].content))
+        answer = answers.get(agent_name, "unparseable")
+        return AIMessage(content=answer(messages) if callable(answer) else answer)
+    return fake
+
+@pytest.fixture
+def searches(monkeypatch):
+    """Providers that record which queries reached them."""
+    calls = {"papers": [], "web": []}
+    def provider(kind, name):
+        def run(query, max_results=3):
+            calls[kind].append(query)
+            return [{"title": f"{name}: {query}", "url": f"https://{name}/{query}", "summary": "s", "source": name}]
+        return run
+    monkeypatch.setattr(search.providers, "search_openalex", provider("papers", "openalex"))
+    monkeypatch.setattr(search.providers, "search_arxiv", provider("papers", "arxiv"))
+    monkeypatch.setattr(search.providers, "search_core", lambda q, max_results=3: [])
+    monkeypatch.setattr(search.providers, "search_web", provider("web", "web"))
+    return calls
+
+def use_llm(monkeypatch, answers, prompts=None):
+    fake = llm(answers, prompts)
+    monkeypatch.setattr(search.planner, "ainvoke_llm", fake)
+    monkeypatch.setattr(search.screening, "ainvoke_llm", fake)
+
+PLANNED = json.dumps([
+    {"section": "Related Work", "need": "prior minimal GPTs", "kind": "papers", "query": '"GPT-2" language model 2019'},
+    {"section": "Implementation", "need": "multi-GPU training", "kind": "web", "query": "PyTorch DistributedDataParallel"},
+    {"section": "Results", "need": "our results", "kind": "none", "query": "anything"},
+])
+
+# ---- Planning ----------------------------------------------------------------------
+
+def test_clean_query_keeps_keywords_only():
+    assert clean_query('"FlashAttention" AND (GPU) 2023') == "FlashAttention GPU"
+    assert len(clean_query("one two three four five six seven eight nine ten").split()) == 8
+
+def test_normalise_validates_dedupes_and_caps():
+    needs = normalise([
+        {"section": "A", "need": "n", "kind": "papers", "query": "sparse attention"},
+        {"section": "B", "need": "n", "kind": "papers", "query": "Sparse Attention"},   # duplicate
+        {"section": "C", "need": "n", "kind": "blogs", "query": "graph neural nets"},   # unknown kind -> papers
+        {"section": "D", "need": "n", "kind": "none", "query": "ignored"},
+        {"section": "E", "need": "n", "kind": "web", "query": "over the cap"},
+    ], max_needs=2)
+    assert [(n["section"], n["kind"], n["query"]) for n in needs] == [
+        ("A", "papers", "sparse attention"), ("C", "papers", "graph neural nets"), ("D", "none", "")]
+    assert [n["id"] for n in needs] == [1, 2, 3]
+
+def test_unparseable_plan_falls_back_to_the_topic(monkeypatch):
+    use_llm(monkeypatch, {})
+    needs = asyncio.run(search.planner.plan_searches({**STATE, "topic": "Sparse attention for long documents"}))
+    assert {n["kind"] for n in needs} == {"papers", "web"}
+    assert all(n["query"] == "Sparse attention for long documents" for n in needs)
+
+def test_planner_sees_the_project(monkeypatch):
+    prompts = []
+    use_llm(monkeypatch, {"search_planning": PLANNED}, prompts)
+    asyncio.run(search.planner.plan_searches({**STATE, "project_profile": {**PROFILE, "name": "octo/sparse"}}))
+    human = prompts[0][2]
+    assert "Block-sparse attention kernels" in human and "sparse attention; long-context transformers" in human
+
+# ---- Retrieval -----------------------------------------------------------------------
+
+def test_each_need_is_searched_only_where_it_can_be_answered(monkeypatch, searches):
+    use_llm(monkeypatch, {"search_planning": PLANNED})
+    out = asyncio.run(agents.retriever.retriever_node(STATE))
+
+    assert searches["papers"] == ["GPT-2 language model"] * 2         # openalex + arxiv, cleaned query
+    assert searches["web"] == ["PyTorch DistributedDataParallel"]     # web need never hits paper search
+    assert {s["section"] for s in out["raw_sources"]} == {"Related Work", "Implementation"}  # "none" not searched
+    plan = {n["section"]: n for n in out["search_plan"]}
+    assert plan["Results"]["kind"] == "none" and plan["Related Work"]["sources"] == 2
+
+def test_screening_drops_irrelevant_results(monkeypatch, searches):
+    use_llm(monkeypatch, {"search_planning": PLANNED, "source_screening": '{"keep": [1, 3]}'})
+    out = asyncio.run(agents.retriever.retriever_node(STATE))
+    assert [s["title"] for s in out["raw_sources"]] == [
+        "openalex: GPT-2 language model", "arxiv: GPT-2 language model"]
+
+def test_thin_needs_are_searched_once_more_with_a_rewritten_query(monkeypatch, searches):
+    prompts = []
+    use_llm(monkeypatch, {
+        "search_planning": PLANNED,
+        "source_screening": lambda m: '{"keep": [1, 3]}' if "openalex" in m[-1].content else '{"keep": [1]}',
+        "query_rewrite": '{"2": "PyTorch distributed training"}',
+    }, prompts)
+    out = asyncio.run(agents.retriever.retriever_node(STATE))
+
+    assert searches["web"] == ["PyTorch DistributedDataParallel", "PyTorch distributed training"]
+    assert [p[0] for p in prompts].count("query_rewrite") == 1  # one retry round, no more
+    plan = {n["section"]: n for n in out["search_plan"]}
+    assert plan["Implementation"]["retry_query"] == "PyTorch distributed training"
+    assert plan["Implementation"]["sources"] == 1
+
+def test_unreadable_screening_keeps_everything(monkeypatch, searches):
+    use_llm(monkeypatch, {"search_planning": PLANNED, "source_screening": "I think they're all fine"})
+    out = asyncio.run(agents.retriever.retriever_node(STATE))
+    assert len(out["raw_sources"]) == 3
+
+def test_repository_is_cited_once_even_when_the_web_finds_it(monkeypatch, searches):
+    monkeypatch.setattr(search.providers, "search_web", lambda q, max_results=3: [
+        {"title": "octo/sparse", "url": "https://github.com/octo/sparse", "summary": "s", "source": "Web"}])
+    use_llm(monkeypatch, {"search_planning": PLANNED})
+    profile = {**PROFILE, "name": "octo/sparse", "url": "https://github.com/octo/sparse"}
+    out = asyncio.run(agents.retriever.retriever_node({**STATE, "project_profile": profile}))
+    urls = [s["url"] for s in out["raw_sources"]]
+    assert urls.count("https://github.com/octo/sparse") == 1 and urls[0] == "https://github.com/octo/sparse"
+
+def test_the_same_paper_from_two_providers_is_kept_once(monkeypatch, searches):
+    same = lambda q, max_results=3: [{"title": "StableMask: Refining Causal Masking", "url": "https://core/x", "summary": "s", "source": "CORE"}]
+    monkeypatch.setattr(search.providers, "search_openalex", lambda q, max_results=3: [
+        {"title": "StableMask: refining causal masking.", "url": "https://openalex/x", "summary": "s", "source": "OpenAlex"}])
+    monkeypatch.setattr(search.providers, "search_core", same)
+    use_llm(monkeypatch, {"search_planning": PLANNED})
+    titles = [s["title"] for s in asyncio.run(agents.retriever.retriever_node(STATE))["raw_sources"]]
+    assert sum("stablemask" in t.lower() for t in titles) == 1
+
+def test_every_section_is_covered_before_any_gets_a_second_search():
+    raw = [{"section": "Related Work", "kind": "papers", "query": f"related {i}"} for i in range(3)] + \
+          [{"section": "Training", "kind": "web", "query": "PyTorch DDP"},
+           {"section": "Architecture", "kind": "papers", "query": "FlashAttention"}]
+    needs = normalise(raw, max_needs=3)
+    assert [n["section"] for n in needs] == ["Related Work", "Training", "Architecture"]

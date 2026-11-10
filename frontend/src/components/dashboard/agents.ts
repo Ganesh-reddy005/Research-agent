@@ -24,7 +24,7 @@ const HINTS: Record<string, string[]> = {
   repo_ingest: ['Downloading the repository…', 'Reading the README and source files…', 'Working out what the project does…'],
   clarification: ['Reading your topic…', 'Working out what is ambiguous…', 'Drafting clarifying questions…'],
   planning: ['Turning your answers into a brief…', 'Outlining the sections of the paper…', 'Choosing the questions each section must answer…'],
-  retriever: ['Writing search queries…', 'Searching arXiv, OpenAlex, CORE and the web…', 'Collecting and de-duplicating results…'],
+  retriever: ['Working out what each section needs…', 'Searching papers and the web…', 'Checking which results are relevant…'],
   indexer: ['Downloading the full text of the top sources…', 'Splitting papers into passages…', 'Indexing passages so they can be cited…'],
   assistance: ['Summarising what was found…'],
   synthesis: ['Finding themes across the sources…', 'Looking for disagreements and open gaps…'],
@@ -49,8 +49,10 @@ export function describeStep(step: string, data: ResearchState & { indexed_count
       return `${data.clarification_questions?.length ?? 0} questions ready`;
     case 'planning':
       return `Plan with ${data.research_plan?.sections.length ?? 0} sections`;
-    case 'retriever':
-      return `Found ${data.raw_sources?.length ?? 0} sources`;
+    case 'retriever': {
+      const searches = data.search_plan?.filter(n => n.kind !== 'none').length;
+      return `Found ${data.raw_sources?.length ?? 0} relevant sources${searches ? ` from ${searches} searches` : ''}`;
+    }
     case 'indexer':
       return data.indexed_count ? `Indexed ${data.indexed_count} passages` : 'Indexing finished';
     case 'assistance':
