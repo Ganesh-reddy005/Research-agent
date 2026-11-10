@@ -9,8 +9,8 @@ import { agentLabel, agentHints, describeStep } from './agents';
 const STEP_TITLES = [
   { title: 'Preparing your questions', description: 'Lume is working out what it needs to know about your topic.' },
   { title: 'Drafting a research plan', description: 'Turning your answers into a plan you can review and edit.' },
-  { title: 'Gathering sources', description: 'Searching arXiv, OpenAlex, CORE, the web and your library, then reading what it finds.' },
-  { title: 'Gathering sources', description: 'Searching arXiv, OpenAlex, CORE, the web and your library, then reading what it finds.' },
+  { title: 'Gathering sources', description: 'Searching Semantic Scholar, arXiv, OpenAlex, CORE, the web and your library, then reading what it finds.' },
+  { title: 'Gathering sources', description: 'Searching Semantic Scholar, arXiv, OpenAlex, CORE, the web and your library, then reading what it finds.' },
   { title: 'Writing your paper', description: 'Writing each section, reviewing the draft and checking the citations. This takes a few minutes.' },
 ];
 

@@ -1,6 +1,6 @@
 # Lume.ai: Autonomous Research Agent for Computer Science
 
-**Lume** takes a research idea from question to paper. It scopes the question with you, plans the paper, searches arXiv, OpenAlex, CORE, the web and your own PDFs, and then writes an IEEE-style draft. Every citation points to a source it actually retrieved. Built with **LangGraph**, **FastAPI** and **Next.js**.
+**Lume** takes a research idea from question to paper. It scopes the question with you, plans the paper, searches Semantic Scholar, arXiv, OpenAlex, CORE, the web and your own PDFs, and then writes an IEEE-style draft. Every citation points to a source it actually retrieved. Built with **LangGraph**, **FastAPI** and **Next.js**.
 
 Lume is built for computer-science researchers first. The next major capability on the roadmap is **running experiments**: the agent writes the code, runs it in an isolated sandbox and puts the real results and figures into the paper.
 
@@ -13,7 +13,7 @@ A multi-agent pipeline with checkpoints where you stay in control:
 
 1. **Clarify:** Lume asks a few questions to pin down scope, baselines and what counts as a result.
 2. **Plan:** you review the research plan, edit, add or remove sections, and approve it before anything is searched.
-3. **Gather sources:** parallel searches across arXiv, OpenAlex, CORE, the web (Tavily) and your private library. The top sources are read in full and indexed in Qdrant.
+3. **Gather sources:** parallel searches across Semantic Scholar, arXiv, OpenAlex, CORE, the web (Tavily) and your private library. The top sources are read in full and indexed in Qdrant.
 4. **Review:** read a summary and ask questions about the sources before Lume writes.
 5. **Write and verify:**
    - Each section is written from evidence passages labelled with their reference numbers.
@@ -174,6 +174,7 @@ Key variables in `backend/.env`:
 | `OPENROUTER_API_KEY` | LLMs and embeddings |
 | `TAVILY_API_KEY` | Web search |
 | `OPENALEX_API_KEY`, `CORE_API_KEY`, `CONTACT_EMAIL` | Optional: academic search (CORE is skipped without a key) |
+| `SEMANTIC_SCHOLAR_API_KEY` | Recommended: Semantic Scholar finds well-known papers best, but anonymous access is usually rate limited. Without a key, Lume skips it for 10 minutes after it refuses. [Get a free key](https://www.semanticscholar.org/product/api#api-key-form) |
 | `DATABASE_URL` | Supabase Postgres, used by the LangGraph checkpointer |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Auth checks, sessions and library tables |
 | `QDRANT_URL`, `QDRANT_API_KEY` | Vector store |

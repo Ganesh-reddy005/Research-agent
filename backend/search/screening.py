@@ -36,12 +36,17 @@ def _json_object(content: str) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def _cited(source) -> str:
+    """Citation count, where the provider has one: it tells a landmark paper from a minor one."""
+    return f" (cited by {source['citations']:,})" if isinstance(source.get("citations"), int) else ""
+
+
 async def screen(results: list[tuple[dict, dict]]) -> list[tuple[dict, dict]]:
     """results are (need, source) pairs, in order; returns the relevant ones, order kept."""
     if not results:
         return []
     batch, rest = results[:MAX_SCREENED], results[MAX_SCREENED:]
-    lines = [f"[{i}] need: {need['need'] or need['query']} | {src.get('title', '')} | {src.get('summary', '')[:SUMMARY_CHARS]}"
+    lines = [f"[{i}] need: {need['need'] or need['query']} | {src.get('title', '')}{_cited(src)} | {src.get('summary', '')[:SUMMARY_CHARS]}"
              for i, (need, src) in enumerate(batch, start=1)]
     messages = [SystemMessage(content=SCREEN_PROMPT), HumanMessage(content="\n".join(lines))]
     response = await ainvoke_llm(messages, agent_name="source_screening")

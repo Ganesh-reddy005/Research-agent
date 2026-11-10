@@ -91,6 +91,7 @@ def offline_graph(monkeypatch):
     monkeypatch.setattr(search.providers, "search_openalex", fake_public("openalex"))
     monkeypatch.setattr(search.providers, "search_arxiv", fake_public("arxiv"))
     monkeypatch.setattr(search.providers, "search_core", lambda q, max_results=3: [])
+    monkeypatch.setattr(search.providers, "search_semantic_scholar", lambda q, max_results=3: [])
     monkeypatch.setattr(search.providers, "search_web", fake_public("web"))
     return build_graph(checkpointer=MemorySaver()), calls
 

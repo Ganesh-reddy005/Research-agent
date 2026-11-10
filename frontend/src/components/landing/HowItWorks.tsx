@@ -20,7 +20,7 @@ const STEPS = [
   {
     icon: Library,
     title: 'Review the literature',
-    body: 'Searches arXiv, OpenAlex, CORE, the web and your own PDFs, then maps the themes, disagreements and gaps.',
+    body: 'Searches Semantic Scholar, arXiv, OpenAlex, CORE, the web and your own PDFs, then maps the themes, disagreements and gaps.',
   },
   {
     icon: FlaskConical,

@@ -32,7 +32,7 @@ const MODES: Record<Mode, { tab: string; title: string; description: string; pla
     steps: [
       'Lume asks a few questions to pin down the scope.',
       'You review and edit the research plan before anything is searched.',
-      'Lume searches arXiv, OpenAlex, CORE, the web and your library, then writes the paper.',
+      'Lume searches Semantic Scholar, arXiv, OpenAlex, CORE, the web and your library, then writes the paper.',
     ],
   },
   repo: {

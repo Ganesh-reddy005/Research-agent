@@ -38,7 +38,7 @@ def test_retriever_does_not_block_event_loop(offline_graph, monkeypatch):
         time.sleep(0.4)  # a slow, synchronous HTTP call
         return []
     import search.providers
-    for name in ["search_openalex", "search_arxiv", "search_core", "search_private_library", "search_web"]:
+    for name in ["search_semantic_scholar", "search_openalex", "search_arxiv", "search_core", "search_private_library", "search_web"]:
         monkeypatch.setattr(search.providers, name, lambda *a, **k: slow_search(a[0]))
 
     async def scenario():

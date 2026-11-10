@@ -24,7 +24,7 @@ const FAQS = [
   },
   {
     q: 'Where do the sources come from?',
-    a: 'arXiv, OpenAlex, CORE and web search, plus any PDFs you add to your private library. Each source links back to the original document.',
+    a: 'Semantic Scholar, arXiv, OpenAlex, CORE and web search, plus any PDFs you add to your private library. Each source links back to the original document.',
   },
   {
     q: 'Who can see my PDFs and data?',
