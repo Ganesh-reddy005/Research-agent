@@ -1,5 +1,8 @@
 import os
+import asyncio
 from functools import lru_cache
+import httpx
+from qdrant_client.http.exceptions import ResponseHandlingException
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from langchain_qdrant import QdrantVectorStore
@@ -10,7 +13,28 @@ def qdrant_configured() -> bool:
 
 @lru_cache(maxsize=1)
 def get_qdrant_client() -> QdrantClient:
-    return QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"))
+    # 30 s: writes of a few hundred vectors can take longer than the client's default over a slow link
+    return QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"), timeout=30)
+
+BATCH = 32
+ATTEMPTS = 3
+TRANSIENT = (ResponseHandlingException, httpx.TransportError, ConnectionError, TimeoutError)
+
+
+async def add_documents_reliably(store, docs, batch: int = BATCH) -> int:
+    """Index docs in small batches, retrying each on network drops (resets, timeouts), so one dropped
+    connection doesn't lose the whole run. Returns how many were indexed."""
+    for start in range(0, len(docs), batch):
+        for attempt in range(ATTEMPTS):
+            try:
+                await store.aadd_documents(docs[start:start + batch])
+                break
+            except TRANSIENT as e:
+                if attempt == ATTEMPTS - 1:
+                    raise
+                print(f"Qdrant write failed ({e}); retrying batch {start // batch + 1}")
+                await asyncio.sleep(2 * (attempt + 1))
+    return len(docs)
 
 @lru_cache(maxsize=1)
 def get_embeddings() -> OpenRouterEmbeddings:

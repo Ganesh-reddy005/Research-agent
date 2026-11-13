@@ -84,8 +84,10 @@ def search_openalex(query, max_results=3):
                 url = work.get("doi") or work.get("id")
                 summary = _openalex_abstract(work.get("abstract_inverted_index")) or "No abstract available."
                 authors = [a.get("author", {}).get("display_name") for a in work.get("authorships", [])]
+                open_copy = (work.get("best_oa_location") or {}).get("pdf_url")  # for reading in full
                 sources.append({"title": title, "url": url, "summary": summary, "source": "OpenAlex",
-                                "year": work.get("publication_year"), "authors": [a for a in authors if a][:6]})
+                                "year": work.get("publication_year"), "authors": [a for a in authors if a][:6],
+                                "pdf_url": open_copy})
     except Exception as e:
         print(f"OpenAlex search failed: {e}")
     return sources

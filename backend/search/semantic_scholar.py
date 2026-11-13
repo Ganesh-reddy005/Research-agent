@@ -49,7 +49,8 @@ def s2_source(paper):
     authors = [a.get("name") for a in paper.get("authors") or [] if a.get("name")]
     return {"title": paper.get("title") or "No Title", "url": url, "summary": paper.get("abstract") or "No abstract available.",
             "source": "Semantic Scholar", "year": paper.get("year"), "authors": authors[:6],
-            "citations": paper.get("citationCount")}
+            "citations": paper.get("citationCount"),
+            "pdf_url": (paper.get("openAccessPdf") or {}).get("url") or None}  # an open copy, for reading in full
 
 def search_semantic_scholar(query, max_results=3):
     """Relevance-ranked search over 200M+ papers, with citation counts, so well-known work surfaces first."""

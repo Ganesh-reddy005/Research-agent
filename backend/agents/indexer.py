@@ -2,7 +2,7 @@ import asyncio
 from utils.events import report_progress
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from utils.vectorstore import qdrant_configured, research_collection, ensure_collection, get_vector_store
+from utils.vectorstore import qdrant_configured, research_collection, ensure_collection, get_vector_store, add_documents_reliably
 from utils.scraper import process_sources_with_full_text
 from agents.project_context import is_project_source
 
@@ -71,6 +71,6 @@ async def indexer_node(state):
     await report_progress(f"Indexing {len(docs)} passages for retrieval")
         
     # Store in Qdrant
-    await get_vector_store(collection_name).aadd_documents(docs)
+    await add_documents_reliably(get_vector_store(collection_name), docs)
     
     return {"current_step": "indexer", "indexed_count": len(docs)}
