@@ -64,6 +64,7 @@ export default function Dashboard({ user }: { user: User }) {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [live, setLive] = useState<LiveActivity | null>(null);
   const [stalledReason, setStalledReason] = useState<'stopped' | 'interrupted'>('interrupted');
+  const [resumeAt, setResumeAt] = useState<string | null>(null); // the step a stopped run continues from
   const [sourceChat, setSourceChat] = useState<ChatMessage[]>([]);
   const [brainstorm, setBrainstorm] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -180,6 +181,7 @@ export default function Dashboard({ user }: { user: User }) {
 
   const handleStop = () => {
     abortRef.current?.abort();
+    setResumeAt(live?.agent ?? null); // the step cut short runs again on Continue
     setIsProcessing(false);
     setLive(null);
     if (stage === 'brainstorm') {
@@ -254,8 +256,9 @@ export default function Dashboard({ user }: { user: User }) {
 
   const handleWritePaper = () => run(4, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
 
+  const stalledStep = (resumeAt ? agentStep(resumeAt) : undefined) ?? STAGE_STEP.stalled!;
   const handleContinue = () =>
-    run(STAGE_STEP.stalled!, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
+    run(stalledStep, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
 
   const handleSourceQuestion = async (query: string) => {
     if (!threadId) return;
@@ -314,6 +317,7 @@ export default function Dashboard({ user }: { user: User }) {
     setStage('loading');
     try {
       const snapshot = await getResearchSession(tid);
+      setResumeAt(snapshot.next[0] ?? null);
       setResearch({ ...snapshot.state, pending_question: snapshot.question || undefined });
       if (snapshot.state.research_mode) setDepth(snapshot.state.research_mode);
       setStage(stageFromNext(snapshot.next, { ...snapshot.state, pending_question: snapshot.question }));
@@ -353,7 +357,7 @@ export default function Dashboard({ user }: { user: User }) {
 
   const report = research.final_report || research.draft_report || '';
   const showProgress = !['idle', 'brainstorm', 'loading'].includes(stage);
-  const progressStep = stage === 'working' ? workingStep : STAGE_STEP[stage] ?? 0;
+  const progressStep = stage === 'working' ? workingStep : stage === 'stalled' ? stalledStep : STAGE_STEP[stage] ?? 0;
   const title = stage === 'brainstorm'
     ? brainstorm[0]?.content ?? 'Brainstorm'
     : research.topic || research.repo_url || 'New research';
@@ -505,7 +509,7 @@ export default function Dashboard({ user }: { user: User }) {
                   />
                 )}
                 {stage === 'stalled' && threadId && !error && (
-                  <StageStalled reason={stalledReason} onContinue={handleContinue} isProcessing={isProcessing} />
+                  <StageStalled reason={stalledReason} resumeAt={resumeAt} onContinue={handleContinue} isProcessing={isProcessing} />
                 )}
               </motion.div>
             </AnimatePresence>
