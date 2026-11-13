@@ -1,4 +1,5 @@
 """The sandbox interface every backend implements, and the limits it enforces."""
+import os
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -8,8 +9,9 @@ MAX_OUTPUT_CHARS = 20_000  # per stream; long build logs keep their end, where e
 
 @dataclass(frozen=True)
 class Limits:
-    cpus: int = 4  # cores the container is pinned to
-    memory: str = "3g"
+    # Defaults fit Docker Desktop at 6 CPUs / 6 GB, leaving room for Docker itself; override in .env
+    cpus: int = int(os.getenv("SANDBOX_CPUS", "5"))  # cores the container is pinned to
+    memory: str = os.getenv("SANDBOX_MEMORY", "4g")
     processes: int = 512
     timeout: int = 600  # seconds per command
     network: bool = False  # only the setup stage gets network

@@ -149,7 +149,7 @@ All endpoints require a Supabase access token (`Authorization: Bearer …`).
 
 ### 1. Prerequisites
 - Python 3.10+ and Node.js 18+
-- Optional, for experiments: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (4 GB memory is enough)
+- Optional, for experiments: [Docker Desktop](https://www.docker.com/products/docker-desktop/). The sandbox defaults (5 cores, 4 GB per run) fit Docker Desktop set to 6 CPUs and 6 GB; change them with `SANDBOX_CPUS` and `SANDBOX_MEMORY`
 - A [Supabase](https://supabase.com/) project (Auth and Postgres)
 - A [Qdrant](https://qdrant.tech/) instance (local or cloud)
 - API keys: [OpenRouter](https://openrouter.ai/) and [Tavily](https://tavily.com/). OpenAlex and [CORE](https://core.ac.uk/services/api) keys are optional, and Groq is optional.
