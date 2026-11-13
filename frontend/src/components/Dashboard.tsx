@@ -6,10 +6,11 @@ import { AlertCircle, Menu, Activity } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions, deleteSession,
+  saveExperimentBrief,
   type EventCallbacks, type ResumeData,
 } from '@/lib/api';
 import type {
-  ActivityLog, ChatMessage, LiveActivity, ResearchDepth, ResearchPlan, ResearchState, SessionSummary, StartResearchRequest,
+  ActivityLog, ChatMessage, ExperimentBrief, LiveActivity, ResearchDepth, ResearchPlan, ResearchState, SessionSummary, StartResearchRequest,
 } from '@/lib/types';
 
 import Sidebar from './dashboard/Sidebar';
@@ -21,25 +22,26 @@ import StageClarification from './dashboard/StageClarification';
 import StagePlanning from './dashboard/StagePlanning';
 import StageResearching from './dashboard/StageResearching';
 import StageReview from './dashboard/StageReview';
+import StageExperimentBrief from './dashboard/StageExperimentBrief';
 import StageCompleted from './dashboard/StageCompleted';
 import StageBrainstorm from './dashboard/StageBrainstorm';
 import StageStalled from './dashboard/StageStalled';
 import { Button } from './dashboard/ui';
 import { agentStep } from './dashboard/agents';
 
-type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'completed' | 'stalled';
+type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'brief' | 'completed' | 'stalled';
 type Panel = 'activity' | 'library' | null;
 
 // Where the graph paused (its next node) decides what the user sees.
 function stageFromNext(next: string[], state: ResearchState): Stage {
   if (next.includes('planning')) return 'clarification';
   if (next.includes('retriever')) return 'planning';
-  if (next.includes('synthesis')) return 'review';
+  if (next.includes('synthesis')) return state.current_step === 'experiment_brief' ? 'brief' : 'review';
   if (next.length === 0) return state.final_report || state.draft_report ? 'completed' : 'stalled';
   return 'stalled'; // stopped mid-run (e.g. connection dropped); can be continued
 }
 
-const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, completed: 4, stalled: 2 };
+const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, brief: 3, completed: 4, stalled: 2 };
 
 export default function Dashboard({ user }: { user: User }) {
   const [stage, setStage] = useState<Stage>('idle');
@@ -123,12 +125,12 @@ export default function Dashboard({ user }: { user: User }) {
         ? { ...prev, text: prev.text + token }
         : { agent, startedAt: Date.now(), text: token }));
     },
-    onInterrupt: (tid, next) => {
+    onInterrupt: (tid, next, step) => {
       setThreadId(tid);
       setIsProcessing(false);
       setLive(null);
-      // Interrupts always name the paused-before node, so the state isn't needed here
-      setStage(stageFromNext(next, {}));
+      // The paused-before node, plus the step that paused where two pauses share one node
+      setStage(stageFromNext(next, { current_step: step }));
       refreshSessions();
     },
     onDone: (tid) => {
@@ -208,6 +210,15 @@ export default function Dashboard({ user }: { user: User }) {
     setResearch(prev => ({ ...prev, research_plan: plan }));
     const data: ResumeData = { mode: research.research_mode ?? depth, plan };
     run(2, signal => resumeResearch(threadId!, 'approve', data, callbacks, signal));
+  };
+
+  const handlePlanExperiments = () =>
+    run(3, signal => resumeResearch(threadId!, 'plan_experiments', {}, callbacks, signal));
+
+  const handleSaveBrief = async (brief: ExperimentBrief) => {
+    const saved = await saveExperimentBrief(threadId!, brief);
+    setResearch(prev => ({ ...prev, experiment_brief: saved.brief }));
+    return saved.missing;
   };
 
   const handleWritePaper = () => run(4, signal => resumeResearch(threadId!, 'continue', {}, callbacks, signal));
@@ -424,6 +435,15 @@ export default function Dashboard({ user }: { user: User }) {
                     sources={research.raw_sources ?? []}
                     chat={sourceChat}
                     onAsk={handleSourceQuestion}
+                    onWritePaper={handleWritePaper}
+                    onPlanExperiments={handlePlanExperiments}
+                    isProcessing={isProcessing}
+                  />
+                )}
+                {stage === 'brief' && research.experiment_brief && (
+                  <StageExperimentBrief
+                    brief={research.experiment_brief}
+                    onSave={handleSaveBrief}
                     onWritePaper={handleWritePaper}
                     isProcessing={isProcessing}
                   />

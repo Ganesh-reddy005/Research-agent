@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowRight, Search, Send } from 'lucide-react';
+import { ArrowRight, FlaskConical, Search, Send } from 'lucide-react';
 import type { ChatMessage, Source } from '@/lib/types';
 import { Button, SectionLabel, StageHeader, inputClass } from './ui';
 import { SourceLink } from './SearchActivity';
@@ -39,12 +39,13 @@ function countBySource(sources: Source[]) {
   return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
 }
 
-export default function StageReview({ summary, sources, chat, onAsk, onWritePaper, isProcessing }: {
+export default function StageReview({ summary, sources, chat, onAsk, onWritePaper, onPlanExperiments, isProcessing }: {
   summary: string;
   sources: Source[];
   chat: ChatMessage[];
   onAsk: (question: string) => void;
   onWritePaper: () => void;
+  onPlanExperiments: () => void;
   isProcessing: boolean;
 }) {
   const [question, setQuestion] = useState('');
@@ -60,7 +61,7 @@ export default function StageReview({ summary, sources, chat, onAsk, onWritePape
     <div className="space-y-10">
       <StageHeader
         title="Here's what Lume found"
-        description="Read the summary and ask questions about the sources. When you're ready, Lume writes the paper."
+        description="Read the summary and ask questions about the sources. Then write the draft, or first plan experiments for the coding agent to run."
       />
 
       <section className="space-y-4">
@@ -114,9 +115,12 @@ export default function StageReview({ summary, sources, chat, onAsk, onWritePape
         </form>
       </section>
 
-      <div className="flex justify-end pt-6 border-t border-mistral-black/10">
+      <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-6 border-t border-mistral-black/10">
+        <Button variant="secondary" onClick={onPlanExperiments} disabled={isProcessing} className="!px-6 !py-3">
+          <FlaskConical className="w-4 h-4" aria-hidden /> Plan experiments first
+        </Button>
         <Button onClick={onWritePaper} disabled={isProcessing} className="!px-6 !py-3">
-          Write the paper <ArrowRight className="w-4 h-4" aria-hidden />
+          Write the draft <ArrowRight className="w-4 h-4" aria-hidden />
         </Button>
       </div>
     </div>

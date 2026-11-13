@@ -25,7 +25,8 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "brainstorm": "BRAINSTORM_MODEL",
         "assistance": "ASSISTANCE_MODEL",
         "chat": "CHAT_MODEL",
-        "repo_analysis": "REPO_ANALYSIS_MODEL"
+        "repo_analysis": "REPO_ANALYSIS_MODEL",
+        "experiment_brief": "PLANNING_MODEL"
     }
 
     # Per-agent model -> DEFAULT_MODEL -> built-in default

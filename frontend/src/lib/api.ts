@@ -1,13 +1,13 @@
 import { supabase } from './supabaseClient';
 import type {
-  ChatMessage, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
+  ChatMessage, ExperimentBrief, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
   StartResearchRequest,
 } from './types';
 
 export type EventCallbacks = {
   onStep: (step: string, state: ResearchState, threadId: string) => void;
   onThought: (agent: string, token: string) => void;
-  onInterrupt: (threadId: string, next: string[]) => void;
+  onInterrupt: (threadId: string, next: string[], step?: string) => void;  // step: the agent that paused
   onDone: (threadId: string) => void;
   onError: (error: string) => void;
   onAgentStart?: (agent: string, threadId: string) => void;
@@ -69,7 +69,7 @@ async function handleSSEResponse(
           } else if (currentEvent === 'error') {
             callbacks.onError(data.error);
           } else if (currentEvent === 'interrupt') {
-            callbacks.onInterrupt(data.thread_id, data.next);
+            callbacks.onInterrupt(data.thread_id, data.next, data.step);
           } else if (currentEvent === 'step') {
             callbacks.onStep(data.step, data.state, data.thread_id);
           } else if (currentEvent === 'thought') {
@@ -118,7 +118,7 @@ export type ResumeData =
 
 export async function resumeResearch(
   threadId: string,
-  action: 'answer' | 'approve' | 'continue',
+  action: 'answer' | 'approve' | 'continue' | 'plan_experiments',
   data: ResumeData,
   callbacks: EventCallbacks,
   signal?: AbortSignal
@@ -136,6 +136,19 @@ export async function resumeResearch(
   } catch (error) {
     if (!isAbort(error)) callbacks.onError(message(error));
   }
+}
+
+/** Save edits to the experiment brief; returns it as stored and what is still missing before launch. */
+export async function saveExperimentBrief(
+  threadId: string,
+  brief: ExperimentBrief
+): Promise<{ brief: ExperimentBrief; missing: string[] }> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/api/research/${threadId}/brief`, {
+    method: 'PUT', headers, body: JSON.stringify({ brief }),
+  });
+  if (!response.ok) throw new Error(await errorDetail(response, 'Could not save the experiment brief'));
+  return response.json();
 }
 
 export async function getResearchSession(threadId: string): Promise<SessionSnapshot> {

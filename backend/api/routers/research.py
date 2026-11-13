@@ -3,7 +3,8 @@ import uuid
 import asyncio
 from fastapi import APIRouter, Request, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
-from api.models import ResearchStartRequest, ResearchResumeRequest
+from api.models import ResearchStartRequest, ResearchResumeRequest, ExperimentBriefRequest
+from experiments.brief import normalise_brief, missing_fields
 from utils.auth import get_current_user, get_supabase_client, verify_session, ensure_profile
 from repo.github import parse_github_url, RepoError
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/api/research", tags=["research"])
 SESSION_FIELDS = [
     "topic", "research_mode", "clarification_questions", "user_answers", "research_brief",
     "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
-    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan",
+    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief",
 ]
 
 # Agents whose LLM output is prose worth showing live; the rest emit JSON
@@ -44,7 +45,8 @@ async def stream_graph(graph, graph_input, config, thread_id, on_complete=None):
 
         snapshot = await graph.aget_state(config)
         if snapshot.next:
-            yield event("interrupt", next=snapshot.next)
+            # The step that paused tells apart two pauses before the same node (review vs. brief)
+            yield event("interrupt", next=snapshot.next, step=snapshot.values.get("current_step"))
         else:
             if on_complete:
                 await on_complete()
@@ -119,6 +121,8 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
                 raise HTTPException(status_code=400, detail="Edited plan must contain at least one section")
             updates["research_plan"] = edited_plan
         await graph.aupdate_state(config, updates)
+    elif request.action == "plan_experiments":
+        await graph.aupdate_state(config, {"wants_experiments": True})
     elif request.action == "continue":
         await graph.aupdate_state(config, {})
     else:
@@ -129,6 +133,18 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
         await asyncio.to_thread(supabase.table("sessions").update({"status": "completed"}).eq("thread_id", request.thread_id).execute)
 
     return EventSourceResponse(stream_graph(graph, None, config, request.thread_id, on_complete=mark_completed), ping=20)
+
+@router.put("/{thread_id}/brief")
+async def save_experiment_brief(thread_id: str, request: ExperimentBriefRequest, req: Request, user=Depends(get_current_user)):
+    """Save the user's edits to the experiment brief while the session is paused on it."""
+    await verify_session(thread_id, user.id)
+    graph, config = req.app.state.graph, {"configurable": {"thread_id": thread_id}}
+    snapshot = await graph.aget_state(config)
+    if (snapshot.values or {}).get("current_step") != "experiment_brief" or not snapshot.next:
+        raise HTTPException(status_code=409, detail="This session isn't waiting on an experiment brief")
+    brief = normalise_brief(request.brief, default_target=snapshot.values.get("repo_url", ""))
+    await graph.aupdate_state(config, {"experiment_brief": brief})
+    return {"brief": brief, "missing": missing_fields(brief)}
 
 @router.get("/{thread_id}")
 async def get_research_session(thread_id: str, req: Request, user=Depends(get_current_user)):

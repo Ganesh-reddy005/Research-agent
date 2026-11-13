@@ -29,12 +29,13 @@ from langgraph.checkpoint.memory import MemorySaver
 import agents.clarification, agents.planning, agents.retriever, agents.assistance
 import agents.synthesis, agents.writer, agents.critic, agents.refinement
 import repo.profiler
+import experiments.brief
 import search.planner, search.screening, search.providers
 from graph.workflow import build_graph
 
 LLM_MODULES = [agents.clarification, agents.planning, agents.assistance,
                agents.synthesis, agents.writer, agents.critic, agents.refinement, repo.profiler,
-               search.planner, search.screening]
+               search.planner, search.screening, experiments.brief]
 
 # The search planner's answer: one need per kind
 SEARCH_PLAN = [
@@ -62,6 +63,10 @@ PLAN = {
     },
 }
 
+# The experiment-brief agent's answer: messy on purpose, as models are
+BRIEF = {"objective": "Make inference faster", "metric": {"name": "tokens per second", "goal": "Maximize"},
+         "must_hold": ["unit tests pass", ""], "open_questions": []}
+
 async def fake_llm(messages, agent_name=None, temperature=0.2, **kwargs):
     canned = {
         "clarification": json.dumps([{"id": "1", "question": "Scope?"}]),
@@ -69,6 +74,7 @@ async def fake_llm(messages, agent_name=None, temperature=0.2, **kwargs):
         "search_planning": json.dumps(SEARCH_PLAN),
         "refinement": "Final paper citing [1].",
         "repo_analysis": json.dumps(PROFILE),
+        "experiment_brief": json.dumps(BRIEF),
     }
     return AIMessage(content=canned.get(agent_name, f"{agent_name} output"))
 

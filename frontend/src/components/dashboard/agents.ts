@@ -15,6 +15,7 @@ const AGENTS: Record<string, { label: string; step: number }> = {
   critic: { label: 'Reviewing the draft', step: 4 },
   refinement: { label: 'Editing the final version', step: 4 },
   auditor: { label: 'Checking citations', step: 4 },
+  experiment_brief: { label: 'Drafting the experiment brief', step: 3 },
 };
 
 export const agentLabel = (agent: string) => AGENTS[agent.toLowerCase()]?.label ?? 'Working';
@@ -32,6 +33,7 @@ const HINTS: Record<string, string[]> = {
   critic: ['Reviewing the draft like a peer reviewer…', 'Looking for weak arguments and missing evidence…'],
   refinement: ['Editing the final version…', 'Tightening the wording…', 'Formatting the paper…'],
   auditor: ['Checking every citation against the sources…'],
+  experiment_brief: ['Working out what to measure…', 'Choosing the checks every attempt must pass…'],
 };
 
 export const agentHints = (agent: string) => HINTS[agent.toLowerCase()] ?? ['Working…'];

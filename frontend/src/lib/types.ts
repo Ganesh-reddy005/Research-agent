@@ -57,6 +57,19 @@ export type SearchNeed = {
   sources: number;                  // relevant sources kept
 };
 
+/** What the coding agent is asked to do, drafted by Lume and approved by the user before anything runs. */
+export type ExperimentBrief = {
+  objective: string;
+  target: string;               // the code or system to experiment on
+  metric: { name: string; goal: 'maximize' | 'minimize'; measured_by: string };
+  baseline: string;             // what results are compared with
+  must_hold: string[];          // checks every attempt must still pass
+  off_limits: string[];         // what the agent must not change
+  open_questions: string[];     // for the user to answer before the agent starts
+  notes: string[];              // the user's answers and anything else the agent should know
+  attempt_limit: number;        // safety net; the user decides after every attempt
+};
+
 export type CitationAudit = {
   total_citations_found: number;
   unique_sources_cited: number;
@@ -83,6 +96,7 @@ export type ResearchState = {
   project_profile?: ProjectProfile;
   target_pages?: number;
   search_plan?: SearchNeed[];
+  experiment_brief?: ExperimentBrief;
 };
 
 export type ResearchDepth = 'light' | 'deep';

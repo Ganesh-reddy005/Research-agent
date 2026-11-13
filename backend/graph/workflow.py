@@ -19,6 +19,7 @@ from agents.critic import critic_node
 from agents.refinement import refinement_node
 from agents.auditor import citation_auditor_node
 from agents.repo_ingest import repo_ingest_node
+from agents.experiment_brief import experiment_brief_node
 from repo.github import is_transient
 
 class AgentState(TypedDict, total=False):
@@ -48,10 +49,17 @@ class AgentState(TypedDict, total=False):
     repo_url: str
     project_notes: str
     project_profile: Dict[str, Any]
+    # Experiments: chosen at the review pause instead of writing the draft straight away
+    wants_experiments: bool
+    experiment_brief: Dict[str, Any]
 
 def route_start(state) -> Literal["repo_ingest", "clarification"]:
     """A project paper reads its repository before asking questions."""
     return "repo_ingest" if state.get("repo_url") else "clarification"
+
+def route_after_review(state) -> Literal["experiment_brief", "synthesis"]:
+    """After the sources are reviewed: write the draft, or first plan experiments for the coding agent."""
+    return "experiment_brief" if state.get("wants_experiments") else "synthesis"
 
 def build_graph(checkpointer=None):
     workflow = StateGraph(AgentState)
@@ -69,6 +77,7 @@ def build_graph(checkpointer=None):
     workflow.add_node("critic", critic_node)
     workflow.add_node("refinement", refinement_node)
     workflow.add_node("auditor", citation_auditor_node)
+    workflow.add_node("experiment_brief", experiment_brief_node)
     
     # Define Edges
     workflow.add_conditional_edges(START, route_start, ["repo_ingest", "clarification"])
@@ -77,7 +86,9 @@ def build_graph(checkpointer=None):
     workflow.add_edge("planning", "retriever")
     workflow.add_edge("retriever", "indexer")
     workflow.add_edge("indexer", "assistance")
-    workflow.add_edge("assistance", "synthesis")
+    workflow.add_conditional_edges("assistance", route_after_review, ["experiment_brief", "synthesis"])
+    # Until the coding agent ships, an approved brief leads on to the draft
+    workflow.add_edge("experiment_brief", "synthesis")
     workflow.add_edge("synthesis", "writer")
     workflow.add_edge("writer", "critic")
     workflow.add_edge("critic", "refinement")
@@ -87,6 +98,6 @@ def build_graph(checkpointer=None):
     # Compile with interrupts for human-in-the-loop
     return workflow.compile(
         checkpointer=checkpointer,
-        interrupt_after=["clarification", "planning", "assistance"]
+        interrupt_after=["clarification", "planning", "assistance", "experiment_brief"]
     )
 

@@ -13,6 +13,9 @@ class ResearchResumeRequest(BaseModel):
     action: str # "answer", "approve", or "continue"
     data: Optional[Dict[str, Any]] = None
 
+class ExperimentBriefRequest(BaseModel):
+    brief: Dict[str, Any]  # the edited brief; normalised server-side
+
 class ChatRequest(BaseModel):
     thread_id: str
     query: str
