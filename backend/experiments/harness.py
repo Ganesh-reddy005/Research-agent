@@ -4,6 +4,7 @@ pays for a benchmark, and one quick measurement comes before the full repeats.
 The spec is fixed when the user approves the plan; the agent can't change how it is graded. Timings
 use hyperfine (warm-up, repeats, mean and spread); other metrics are read from the measure command's
 output, as a JSON key or a regular expression."""
+import fnmatch
 import json
 import re
 import shlex
@@ -23,13 +24,20 @@ class BenchmarkSpec:
     repeats: int = 5
     warmup: int = 1
     timeout: int = 600  # seconds per command
+    protected: tuple = ()  # globs of files no attempt may change: tests, benchmark inputs, the checks themselves
 
     def to_dict(self) -> dict:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict) -> "BenchmarkSpec":
-        return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
+        fields = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+        if "protected" in fields:
+            fields["protected"] = tuple(fields["protected"] or ())
+        return cls(**fields)
+
+    def is_protected(self, path: str) -> bool:
+        return any(fnmatch.fnmatch(path, glob) or fnmatch.fnmatch(path, f"{glob.rstrip('/')}/*") for glob in self.protected)
 
 
 def read_number(text: str, read: str) -> float | None:
@@ -73,10 +81,15 @@ def _measure(box, spec: BenchmarkSpec, runs: int, warmup: int) -> tuple[list[flo
     return samples, None, ""
 
 
-def run_attempt(box, spec: BenchmarkSpec, quick: bool = False) -> dict:
+def run_attempt(box, spec: BenchmarkSpec, quick: bool = False, changed: list[str] | None = None) -> dict:
     """Build, checks, one quick measurement, then (unless quick) the full repeats. Stops at the first
-    failure. Returns the stage reached, check results, metric (mean), spread (stdev) and samples."""
+    failure. changed: the attempt's changed files; touching a protected one fails it before anything runs.
+    Returns the stage reached, check results, metric (mean), spread (stdev) and samples."""
     result = {"stage": "build", "checks": {}, "metric": None, "spread": None, "samples": [], "error": "", "log": ""}
+    touched = [path for path in changed or [] if spec.is_protected(path)]
+    if touched:
+        result["checks"]["protected files unchanged"] = False
+        return _failed(result, "checks", "changed protected files", ", ".join(touched))
     if spec.build:
         out = box.run(spec.build, timeout=spec.timeout)
         result["build_seconds"] = out.seconds

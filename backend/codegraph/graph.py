@@ -63,6 +63,22 @@ class CodeGraph:
                     graph.references[name].extend((path, line) for line in lines)
         return graph
 
+    def update_file(self, path: str) -> None:
+        """Re-read one file after an edit, so lookups stay true to the code."""
+        source = self.root / path
+        symbols = parse_file(path, source.read_bytes()) if source.is_file() else None
+        self.files.pop(path, None)
+        if symbols:
+            self.files[path] = symbols
+        self.definitions, self.references = defaultdict(list), defaultdict(list)
+        for symbols in self.files.values():
+            for definition in symbols.definitions:
+                self.definitions[definition.name].append(definition)
+        for file_path, symbols in self.files.items():
+            for name, lines in symbols.references.items():
+                if name in self.definitions:
+                    self.references[name].extend((file_path, line) for line in lines)
+
     def find_definition(self, name: str) -> list[Definition]:
         return list(self.definitions.get(name, []))
 

@@ -4,6 +4,7 @@ from utils.llm import ainvoke_llm
 from evidence import section_evidence
 from agents.project_context import is_project_paper, project_context
 from agents.paper_length import writer_rule, evidence_size
+from experiments.lab import results_context
 
 def number_evidence(passages, sources):
     """Label each passage with its source's citation number. [n] is raw_sources[n - 1],
@@ -80,6 +81,7 @@ STRICT FORMATTING & LENGTH RULES:
 4. TECHNICAL DEPTH: Focus on evidence and technical data over generic descriptions.
 5. Do not write the section heading; it is added automatically.
 {rules}
+{results_context(state)}
 Synthesis Context:
 {synthesis}
 

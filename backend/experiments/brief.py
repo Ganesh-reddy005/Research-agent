@@ -81,7 +81,7 @@ def missing_fields(brief: dict) -> list[str]:
     return missing + (["answers to the open questions"] if brief["open_questions"] else [])
 
 
-def _json_object(content: str) -> dict:
+def json_object(content: str) -> dict:
     match = re.search(r"\{.*\}", content, re.DOTALL)
     try:
         data = json.loads(match.group(0)) if match else {}
@@ -106,4 +106,4 @@ async def draft_brief(state) -> dict:
     answer can't be read, so the user can still fill it in."""
     messages = [SystemMessage(content=PROMPT), HumanMessage(content=_context(state))]
     response = await ainvoke_llm(messages, agent_name="experiment_brief")
-    return normalise_brief(_json_object(response.content), default_target=state.get("repo_url", ""))
+    return normalise_brief(json_object(response.content), default_target=state.get("repo_url", ""))

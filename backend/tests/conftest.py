@@ -101,3 +101,9 @@ def offline_graph(monkeypatch):
     monkeypatch.setattr(search.providers, "search_web", fake_public("web"))
     return build_graph(checkpointer=MemorySaver()), calls
 
+
+@pytest.fixture(autouse=True)
+def no_price_list(monkeypatch):
+    """LLM costs are priced from OpenRouter's list; tests never fetch it."""
+    import utils.costs
+    monkeypatch.setattr(utils.costs, "_load_prices", lambda: None)

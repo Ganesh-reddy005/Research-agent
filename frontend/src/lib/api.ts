@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import type {
-  ChatMessage, ExperimentBrief, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
+  BenchmarkSpec, ChatMessage, ExperimentBrief, ExperimentDecision, Hypothesis, LibraryDocument, ResearchDepth, ResearchPlan, ResearchState, SearchSource, SessionSnapshot, SessionSummary,
   StartResearchRequest,
 } from './types';
 
@@ -114,11 +114,14 @@ export async function startResearch(
 export type ResumeData =
   | { answers: Record<string, string> }
   | { mode: ResearchDepth; plan: ResearchPlan }
+  | { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }
+  | { decision: ExperimentDecision; direction?: string }
   | Record<string, never>;
 
 export async function resumeResearch(
   threadId: string,
-  action: 'answer' | 'approve' | 'continue' | 'plan_experiments',
+  action: 'answer' | 'approve' | 'continue' | 'plan_experiments'
+    | 'launch_experiments' | 'approve_experiment_plan' | 'experiment_decision',
   data: ResumeData,
   callbacks: EventCallbacks,
   signal?: AbortSignal

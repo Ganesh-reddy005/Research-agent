@@ -70,6 +70,72 @@ export type ExperimentBrief = {
   attempt_limit: number;        // safety net; the user decides after every attempt
 };
 
+/** How every attempt is graded: fixed when the user approves the plan. */
+export type BenchmarkSpec = {
+  build: string;
+  checks: Record<string, string>;  // name -> command that must exit 0
+  measure: string;
+  read: string;                    // "time", "json:<key>" or "regex:<pattern>"
+  repeats: number;
+  warmup: number;
+  timeout: number;
+  protected: string[];             // files no attempt may change
+};
+
+export type Hypothesis = {
+  id: number;
+  idea: string;
+  why?: string;
+  expected_gain?: string;
+  cost?: string;
+  files?: string[];
+  status: 'pending' | 'done';
+  attempt?: number;
+};
+
+/** One entry of the lab notebook. */
+export type Attempt = {
+  n: number;
+  hypothesis: string;
+  change?: string;
+  checks: Record<string, boolean>;
+  metric: number | null;
+  spread: number;
+  verdict: 'baseline' | 'improved' | 'no gain' | 'worse' | 'failed checks' | 'crashed';
+  lesson?: string;
+  cost_usd?: number;
+  files?: string[];
+  stage?: string;
+  error?: string;
+  log?: string;
+};
+
+export type ExperimentReport = {
+  findings?: string;
+  lesson?: string;
+  next?: string;
+  recommend?: string;
+  attempt?: number;
+  attempts_left: number;
+  pending: string[];
+};
+
+/** The coding agent's working state. */
+export type Lab = {
+  ready: boolean;          // dependencies installed and the baseline measured
+  env?: { summary?: string; build_system?: string; key_files?: string[]; risks?: string[]; questions?: string[] };
+  setup: string[];
+  spec: BenchmarkSpec;
+  hypotheses: Hypothesis[];
+  plan_notes?: string;
+  error?: string;
+  report?: ExperimentReport;
+  cost_usd?: number;
+  tokens?: number;
+};
+
+export type ExperimentDecision = 'continue' | 'change plan' | 'stop';
+
 export type CitationAudit = {
   total_citations_found: number;
   unique_sources_cited: number;
@@ -97,6 +163,8 @@ export type ResearchState = {
   target_pages?: number;
   search_plan?: SearchNeed[];
   experiment_brief?: ExperimentBrief;
+  lab?: Lab;
+  notebook?: Attempt[];
 };
 
 export type ResearchDepth = 'light' | 'deep';

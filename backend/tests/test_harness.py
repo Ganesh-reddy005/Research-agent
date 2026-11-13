@@ -105,3 +105,11 @@ def test_real_sandbox_builds_checks_and_times_a_program(tmp_path):
         result = run_attempt(box, spec)
     assert result["stage"] == "done" and result["checks"] == {"prints the sum": True}
     assert len(result["samples"]) == 3 and result["metric"] > 0
+
+def test_changing_a_protected_file_fails_the_attempt_before_anything_runs():
+    box = FakeBox({})
+    spec = BenchmarkSpec.from_dict({"measure": "./bench", "checks": {"t": "pytest"}, "protected": ["tests/", "bench.py"]})
+    result = run_attempt(box, spec, changed=["src/fast.c", "tests/test_speed.py"])
+    assert result["checks"] == {"protected files unchanged": False} and result["log"] == "tests/test_speed.py"
+    assert box.ran == []  # not even built
+    assert spec.is_protected("bench.py") and not spec.is_protected("src/bench.py.bak")

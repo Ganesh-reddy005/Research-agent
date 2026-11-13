@@ -16,6 +16,11 @@ const AGENTS: Record<string, { label: string; step: number }> = {
   refinement: { label: 'Editing the final version', step: 4 },
   auditor: { label: 'Checking citations', step: 4 },
   experiment_brief: { label: 'Drafting the experiment brief', step: 3 },
+  exp_understand: { label: 'Reading the target code', step: 3 },
+  exp_plan: { label: 'Planning the experiments', step: 3 },
+  exp_setup: { label: 'Setting up and measuring the baseline', step: 3 },
+  exp_attempt: { label: 'Running an experiment', step: 3 },
+  exp_reflect: { label: 'Writing up the attempt', step: 3 },
 };
 
 export const agentLabel = (agent: string) => AGENTS[agent.toLowerCase()]?.label ?? 'Working';
@@ -34,6 +39,11 @@ const HINTS: Record<string, string[]> = {
   refinement: ['Editing the final version…', 'Tightening the wording…', 'Formatting the paper…'],
   auditor: ['Checking every citation against the sources…'],
   experiment_brief: ['Working out what to measure…', 'Choosing the checks every attempt must pass…'],
+  exp_understand: ['Mapping the codebase…', 'Reading the build files…', 'Working out how to measure the metric…'],
+  exp_plan: ['Checking what was already tried…', 'Searching the project history…', 'Ranking ideas by expected gain…'],
+  exp_setup: ['Installing dependencies (the only step with network)…', 'Building the unmodified code…', 'Measuring the baseline…'],
+  exp_attempt: ['Finding the code to change…', 'Editing and compiling…', 'Running a quick check…', 'Grading in a fresh sandbox…'],
+  exp_reflect: ['Comparing with the baseline and the best so far…'],
 };
 
 export const agentHints = (agent: string) => HINTS[agent.toLowerCase()] ?? ['Working…'];

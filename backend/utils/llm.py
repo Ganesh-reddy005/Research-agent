@@ -26,7 +26,12 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "assistance": "ASSISTANCE_MODEL",
         "chat": "CHAT_MODEL",
         "repo_analysis": "REPO_ANALYSIS_MODEL",
-        "experiment_brief": "PLANNING_MODEL"
+        "experiment_brief": "PLANNING_MODEL",
+        # The coding agent: understanding, planning and reflecting; editing code
+        "experiment_understand": "EXPERIMENT_MODEL",
+        "experiment_plan": "EXPERIMENT_MODEL",
+        "experiment_reflect": "EXPERIMENT_MODEL",
+        "experiment_code": "CODING_MODEL"
     }
 
     # Per-agent model -> DEFAULT_MODEL -> built-in default

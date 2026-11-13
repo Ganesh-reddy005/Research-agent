@@ -7,6 +7,7 @@ An attempt is a plain dict (it lives in the graph state):
 import re
 
 BASELINE, IMPROVED, NO_GAIN, WORSE = "baseline", "improved", "no gain", "worse"
+BASELINE_NAME = "baseline: the unmodified code"
 FAILED_CHECKS, CRASHED = "failed checks", "crashed"
 SIMILAR = 0.6  # word overlap above which a new hypothesis counts as already tried
 _WORDS = re.compile(r"[a-z0-9]+")

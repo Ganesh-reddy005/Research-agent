@@ -26,6 +26,8 @@ def build_base_image(client: docker.DockerClient | None = None) -> str:
 
 def runtime_config(workspace: Path, limits: Limits, hidden: Path | None, setup: bool) -> dict:
     mounts = [Mount(WORKDIR, str(workspace.resolve()), type="bind")]
+    if (workspace / ".git").is_dir():  # attempts are git commits: code inside can't rewrite them
+        mounts.append(Mount(f"{WORKDIR}/.git", str((workspace / ".git").resolve()), type="bind", read_only=True))
     if hidden:
         mounts.append(Mount(HIDDEN_DIR, str(hidden.resolve()), type="bind", read_only=True))
     config = {

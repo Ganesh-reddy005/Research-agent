@@ -25,9 +25,10 @@ function applyAnswers(brief: ExperimentBrief, answers: Record<number, string>): 
   };
 }
 
-export default function StageExperimentBrief({ brief: initial, onSave, onWritePaper, isProcessing }: {
+export default function StageExperimentBrief({ brief: initial, onSave, onLaunch, onWritePaper, isProcessing }: {
   brief: ExperimentBrief;
   onSave: (brief: ExperimentBrief) => Promise<string[]>;
+  onLaunch: () => void;
   onWritePaper: () => void;
   isProcessing: boolean;
 }) {
@@ -40,19 +41,24 @@ export default function StageExperimentBrief({ brief: initial, onSave, onWritePa
   const setMetric = (patch: Partial<ExperimentBrief['metric']>) => set({ metric: { ...brief.metric, ...patch } });
   const missing = missingFields(applyAnswers(brief, answers));
 
-  const save = async () => {
+  const save = async (): Promise<boolean> => {
     setSaving(true);
     try {
       await onSave(applyAnswers(brief, answers));
       setBrief(prev => applyAnswers(prev, answers));
       setAnswers({});
       setStatus('Saved.');
+      return true;
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Could not save the brief.');
+      return false;
     } finally {
       setSaving(false);
     }
   };
+
+  // The agent works from the saved brief, so the latest edits are saved first
+  const launch = async () => { if (await save()) onLaunch(); };
 
   return (
     <div className="space-y-10">
@@ -129,12 +135,13 @@ export default function StageExperimentBrief({ brief: initial, onSave, onWritePa
             <PenLine className="w-4 h-4" aria-hidden /> Write the draft instead
           </Button>
           <Button variant="secondary" onClick={save} loading={saving}>Save brief</Button>
-          <Button disabled title="The coding agent arrives with the sandbox. Your saved brief will be ready for it."
-                  className="!px-6">
+          <Button onClick={launch} disabled={missing.length > 0 || saving} loading={isProcessing} className="!px-6">
             <FlaskConical className="w-4 h-4" aria-hidden /> Launch coding agent
           </Button>
         </div>
-        <p className="text-sm text-mistral-black/60 sm:text-right">The coding agent arrives with the sandbox. Your saved brief will be ready for it.</p>
+        <p className="text-sm text-mistral-black/60 sm:text-right">
+          The agent reads the code and proposes a plan first. Nothing runs until you approve it.
+        </p>
       </div>
     </div>
   );

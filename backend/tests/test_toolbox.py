@@ -69,8 +69,15 @@ def ctx(code):
     return ToolContext(code=code, target="https://github.com/owner/repo", goal="maximize")
 
 def test_each_phase_gets_only_its_tools(code):
+    from experiments.edit_tools import EditTools
+    from experiments.harness import BenchmarkSpec
     for phase, allowed in PHASE_TOOLS.items():
-        assert [t.name for t in build_tools(phase, ctx(code))] == list(allowed)
+        context = ctx(code)
+        if phase == "code":
+            with pytest.raises(ValueError):
+                build_tools(phase, context)  # editing needs a sandbox and the approved benchmark
+            context.edits = EditTools(code, box=None, spec=BenchmarkSpec(measure="m"))
+        assert [t.name for t in build_tools(phase, context)] == list(allowed)
     assert "ask_user" not in PHASE_TOOLS["code"] and "search_literature" not in PHASE_TOOLS["understand"]
     with pytest.raises(ValueError):
         build_tools("deploy", ctx(code))
@@ -113,3 +120,17 @@ def test_literature_search_reuses_the_retriever_providers(monkeypatch):
     monkeypatch.setattr(prior_work, "run_need", fake_run_need)
     text = asyncio.run(prior_work.search_literature("loop unrolling", kind="nonsense"))  # unknown kinds -> papers
     assert text.startswith("- Unrolling Loops (2001) https://x") and text.endswith("…")
+
+def test_edit_tools_change_code_but_never_protected_files(code):
+    from experiments.edit_tools import EditTools
+    from experiments.harness import BenchmarkSpec
+    edits = EditTools(code, box=None, spec=BenchmarkSpec(measure="m", protected=("tests/", "src/main.c")))
+    assert edits.edit_file("src/kernel.c", "return n * 2;", "return n << 1;") == "Edited src/kernel.c."
+    assert "return n << 1;" in (code.root / "src/kernel.c").read_text()
+    assert "appears 0 times" in edits.edit_file("src/kernel.c", "return n * 2;", "x")
+    assert edits.edit_file("src/main.c", "int", "long").startswith("src/main.c is protected")
+    assert edits.write_file("tests/test_new.py", "assert True").startswith("tests/test_new.py is protected")
+    assert edits.write_file("../escape.c", "x").endswith("outside the target.")
+    assert edits.write_file(".git/config", "x").endswith("outside the target.")
+    assert edits.write_file("src/fast.c", "static int fast_dot(int n) { return n; }\n").startswith("Wrote src/fast.c")
+    assert code.find_definition("fast_dot").startswith("src/fast.c:1")  # the code graph sees the new file

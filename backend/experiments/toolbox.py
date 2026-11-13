@@ -16,12 +16,13 @@ LOOKUP = ("repo_map", "outline", "find_definition", "find_references", "grep", "
 PHASE_TOOLS = {
     "understand": LOOKUP + ("ask_user",),
     "plan": LOOKUP + ("search_literature", "search_project_history", "read_notebook", "check_already_tried", "ask_user"),
-    "code": LOOKUP[1:] + ("read_notebook", "search_project_history"),
+    "code": LOOKUP[1:] + ("read_notebook", "search_project_history", "edit_file", "write_file", "run_command", "quick_check"),
     "reflect": ("read_notebook", "read_file"),
 }
 LIMITS = {  # calls per phase
     "repo_map": 2, "outline": 20, "find_definition": 30, "find_references": 20, "grep": 20, "read_file": 30,
     "search_literature": 3, "search_project_history": 3, "read_notebook": 5, "check_already_tried": 10, "ask_user": 2,
+    "edit_file": 40, "write_file": 10, "run_command": 15, "quick_check": 5,
 }
 
 DESCRIPTIONS = {
@@ -40,6 +41,13 @@ DESCRIPTIONS = {
                               "already tried, merged or rejected, and why.",
     "read_notebook": "Every earlier attempt: what it changed, whether the checks held, its result and lesson.",
     "check_already_tried": "Whether an idea was already attempted, so you never pay twice for the same failure.",
+    "edit_file": "Replace one exact piece of text in a file (old must appear exactly once; copy it from read_file, "
+                 "without the line numbers). Protected files are refused.",
+    "write_file": "Create a new file, or replace a whole file. Prefer edit_file for changes to existing files.",
+    "run_command": "Run a shell command in this attempt's sandbox (no network), e.g. compile, or run one test, to "
+                   "find errors early. Output is cut to the last 3000 characters.",
+    "quick_check": "Build, run the checks and take one measurement with the approved benchmark. Call it before you "
+                   "finish: if it fails, fix the problem first.",
     "ask_user": "Ask the user something only they can answer: a decision, a preference, or a fact that is not in "
                 "the code, the brief or the sources. Never ask what you can look up. One clear question.",
 }
@@ -65,6 +73,7 @@ class ToolContext:
     target: str  # the brief's target, e.g. a repository URL
     goal: str  # the brief's metric goal: maximize or minimize
     notebook: list = field(default_factory=list)
+    edits: object = None  # EditTools, in the code phase
 
 
 def _ask_user(question: str) -> str:
@@ -90,7 +99,9 @@ def _functions(ctx: ToolContext) -> dict:
     return {"repo_map": ctx.code.repo_map, "outline": ctx.code.outline, "find_definition": ctx.code.find_definition,
             "find_references": ctx.code.find_references, "grep": ctx.code.grep, "read_file": ctx.code.read_file,
             "search_literature": literature, "search_project_history": history, "read_notebook": notebook,
-            "check_already_tried": already, "ask_user": _ask_user}
+            "check_already_tried": already, "ask_user": _ask_user,
+            **({"edit_file": ctx.edits.edit_file, "write_file": ctx.edits.write_file, "run_command": ctx.edits.run_command,
+                "quick_check": ctx.edits.quick_check} if ctx.edits else {})}
 
 
 def _limited(name: str, func, budget: ToolBudget):
@@ -110,6 +121,8 @@ def build_tools(phase: str, ctx: ToolContext, budget: ToolBudget | None = None) 
     """The tools one phase may use, each counted against the phase's budget."""
     if phase not in PHASE_TOOLS:
         raise ValueError(f"Unknown phase {phase!r}; expected one of {', '.join(PHASE_TOOLS)}")
+    if phase == "code" and ctx.edits is None:
+        raise ValueError("The code phase needs EditTools (a sandbox and the approved benchmark)")
     budget, functions, tools = budget or ToolBudget(), _functions(ctx), []
     for name in PHASE_TOOLS[phase]:
         func = _limited(name, functions[name], budget)

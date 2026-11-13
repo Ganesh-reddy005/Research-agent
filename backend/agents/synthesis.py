@@ -2,6 +2,7 @@ import asyncio
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
 from agents.project_context import project_context
+from experiments.lab import results_context
 from utils.vectorstore import qdrant_configured, research_collection, collection_exists, get_vector_store
 
 async def synthesis_node(state):
@@ -36,6 +37,10 @@ Make sure you maintain max 200 words only keeping it concise and to the point, a
     if project:
         input_text += f"\n\n{project}\n\nRelate the findings to this project: where it fits, what it does differently, and what the literature says about its approach."
     
+    results = results_context(state)
+    if results:
+        input_text += f"\n\n{results}\n\nWeigh these measured results against what the literature claims."
+
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=input_text)

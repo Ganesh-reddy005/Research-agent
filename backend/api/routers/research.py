@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 from api.models import ResearchStartRequest, ResearchResumeRequest, ExperimentBriefRequest
 from experiments.brief import normalise_brief, missing_fields
+from api.experiment_actions import ACTIONS as EXPERIMENT_ACTIONS, experiment_update
 from utils.auth import get_current_user, get_supabase_client, verify_session, ensure_profile
 from repo.github import parse_github_url, RepoError
 
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api/research", tags=["research"])
 SESSION_FIELDS = [
     "topic", "research_mode", "clarification_questions", "user_answers", "research_brief",
     "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
-    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief",
+    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief", "lab", "notebook", "last_attempt",
 ]
 
 # Agents whose LLM output is prose worth showing live; the rest emit JSON
@@ -121,6 +122,9 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
                 raise HTTPException(status_code=400, detail="Edited plan must contain at least one section")
             updates["research_plan"] = edited_plan
         await graph.aupdate_state(config, updates)
+    elif request.action in EXPERIMENT_ACTIONS:
+        values = (await graph.aget_state(config)).values or {}
+        await graph.aupdate_state(config, experiment_update(request.action, values, data))
     elif request.action == "plan_experiments":
         await graph.aupdate_state(config, {"wants_experiments": True})
     elif request.action == "continue":
