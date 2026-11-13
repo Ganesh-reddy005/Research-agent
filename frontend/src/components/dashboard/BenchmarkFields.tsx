@@ -34,7 +34,7 @@ export default function BenchmarkFields({ setup, spec, locked, onChange }: {
   }
   return (
     <div className="space-y-8">
-      <BriefListField label="Setup commands" hint="Run once, with network, to install dependencies. Nothing after this has network."
+      <BriefListField label="Setup commands" hint="Run once, with network: install dependencies and download any models or data. Nothing after this has network."
                       items={setup} placeholder="e.g. pip install -r requirements.txt" onChange={next => onChange(next, spec)} />
       <section className="space-y-3">
         <SectionLabel>How every attempt is graded</SectionLabel>

@@ -14,8 +14,10 @@ metric can be measured. Start with repo_map (focus on the brief's terms), then r
 the code the objective is about.
 
 The commands you propose run from the repository root (/work) in Debian with python3, pip, build-essential, cmake,
-ninja, git and hyperfine. setup runs once, as root, with network (install dependencies); everything after has
-no network and runs as an unprivileged user.
+ninja, git and hyperfine. setup runs once, as root, with network; everything after has no network and runs as an
+unprivileged user. So setup must fetch everything the build, checks and measure need: packages, git submodules,
+and any model weights, datasets or test inputs that aren't in the repository (pick the smallest that the brief
+allows, and download into the repository folder). Leave setup empty only if nothing is missing.
 benchmark: build (may be empty), checks (name -> command that must exit 0; they must cover the brief's "must
 hold" items), measure (the command whose run time, or printed number, is the metric), read ("time" for run
 time, "json:<key>" or "regex:<pattern with one group>" for a printed number), repeats, warmup, timeout (seconds).
