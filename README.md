@@ -149,6 +149,7 @@ All endpoints require a Supabase access token (`Authorization: Bearer …`).
 
 ### 1. Prerequisites
 - Python 3.10+ and Node.js 18+
+- Optional, for experiments: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (4 GB memory is enough)
 - A [Supabase](https://supabase.com/) project (Auth and Postgres)
 - A [Qdrant](https://qdrant.tech/) instance (local or cloud)
 - API keys: [OpenRouter](https://openrouter.ai/) and [Tavily](https://tavily.com/). OpenAlex and [CORE](https://core.ac.uk/services/api) keys are optional, and Groq is optional.
@@ -202,12 +203,22 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-### 5. Tests
+### 5. Experiment sandbox (optional)
+Generated code never runs in the backend process. It runs in Docker containers with no network, capped CPU,
+memory and processes, a read-only system, an unprivileged user and a timeout on every command. Build the
+base image once (about 800 MB: compilers, Python, git, hyperfine, ripgrep):
+```bash
+docker build -t lume-sandbox:base backend/sandbox
+```
+Target workspaces are cloned to `~/.lume/workspaces` (override with `LUME_WORKSPACES`).
+
+### 6. Tests
 ```bash
 cd backend
 ../venv/bin/python -m pytest tests
 ```
 The suite runs offline. LLMs, search APIs, Qdrant and Supabase are replaced with fakes, so no keys are used.
+One sandbox test runs real containers when Docker is running and the base image is built; it is skipped otherwise.
 
 ## Troubleshooting
 - **IPv6-only database host:** Supabase's direct `db.<project>.supabase.co` host is IPv6-only. Many hosting platforms can't reach it; use the **connection pooler** URL from *Database → Connect* for `DATABASE_URL` when deploying.

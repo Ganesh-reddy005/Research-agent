@@ -6,7 +6,8 @@ An attempt is a plain dict (it lives in the graph state):
 {"n", "hypothesis", "change", "checks": {name: passed}, "metric", "spread", "verdict", "lesson", "cost_usd"}"""
 import re
 
-IMPROVED, NO_GAIN, WORSE, FAILED_CHECKS, CRASHED = "improved", "no gain", "worse", "failed checks", "crashed"
+BASELINE, IMPROVED, NO_GAIN, WORSE = "baseline", "improved", "no gain", "worse"
+FAILED_CHECKS, CRASHED = "failed checks", "crashed"
 SIMILAR = 0.6  # word overlap above which a new hypothesis counts as already tried
 _WORDS = re.compile(r"[a-z0-9]+")
 _STOP = {"the", "a", "an", "to", "of", "and", "or", "in", "on", "for", "with", "by", "use", "try", "using", "instead"}
@@ -15,12 +16,12 @@ _STOP = {"the", "a", "an", "to", "of", "and", "or", "in", "on", "for", "with", "
 def verdict(metric, checks: dict, best, goal: str, spread: float = 0.0) -> str:
     """How an attempt went against the best result so far. A gain smaller than the run-to-run spread
     is noise, not an improvement; and no number counts if a check failed."""
+    if not all(checks.values()):
+        return FAILED_CHECKS  # checked first: a failed check stops the run before anything is measured
     if metric is None:
         return CRASHED
-    if not all(checks.values()):
-        return FAILED_CHECKS
     if best is None:
-        return IMPROVED  # the first measured result sets the bar
+        return BASELINE  # the first measured result sets the bar
     gain = metric - best if goal == "maximize" else best - metric
     if gain > spread:
         return IMPROVED
@@ -65,9 +66,9 @@ def render(notebook: list[dict], goal: str) -> str:
     lines = []
     for a in notebook:
         failed = [name for name, ok in a["checks"].items() if not ok]
-        result = f"{a['metric']}" + (f" ±{a['spread']}" if a.get("spread") else "") if a["metric"] is not None else "no result"
+        result = f"{a['metric']:.4g}" + (f" ±{a['spread']:.2g}" if a.get("spread") else "") if a["metric"] is not None else "no result"
         lines.append(f"#{a['n']} [{a['verdict']}] {a['hypothesis']} -> {result}"
                      + (f"; failed: {', '.join(failed)}" if failed else "") + (f". Lesson: {a['lesson']}" if a.get("lesson") else ""))
     best = best_attempt(notebook, goal)
-    lines.append(f"Best so far: #{best['n']} ({best['metric']})" if best else "No attempt has passed every check yet.")
+    lines.append(f"Best so far: #{best['n']} ({best['metric']:.4g})" if best else "No attempt has passed every check yet.")
     return "\n".join(lines)

@@ -49,7 +49,8 @@ def test_verdicts_treat_noise_and_failed_checks_honestly():
     assert nb.verdict(10.4, {"tests": True}, 10, "maximize", spread=0.5) == nb.NO_GAIN  # within run-to-run noise
     assert nb.verdict(11, {"tests": True}, 10, "maximize", spread=0.5) == nb.IMPROVED
     assert nb.verdict(11, {"tests": True}, 10, "minimize", spread=0.5) == nb.WORSE
-    assert nb.verdict(5, {}, None, "minimize") == nb.IMPROVED  # the first result sets the bar
+    assert nb.verdict(5, {}, None, "minimize") == nb.BASELINE  # the first result sets the bar
+    assert nb.verdict(None, {"tests": False}, 10, "minimize") == nb.FAILED_CHECKS  # stopped at the check, not a crash
 
 def test_notebook_tracks_the_best_valid_attempt_and_spots_repeats():
     book = []
@@ -57,12 +58,12 @@ def test_notebook_tracks_the_best_valid_attempt_and_spots_repeats():
     book.append(nb.record(book, "maximize", "unroll the inner dot product loop", "kernel.c", {"tests": False}, 140.0,
                           lesson="unrolling broke odd lengths"))
     book.append(nb.record(book, "maximize", "use 4 threads instead of 8", "config", {"tests": True}, 110.0, spread=1.0))
-    assert [a["verdict"] for a in book] == [nb.IMPROVED, nb.FAILED_CHECKS, nb.IMPROVED]
+    assert [a["verdict"] for a in book] == [nb.BASELINE, nb.FAILED_CHECKS, nb.IMPROVED]
     assert nb.best_attempt(book, "maximize")["n"] == 3  # 140 failed a check, so it doesn't count
     assert nb.already_tried(book, "Unroll the inner dot-product loop")["n"] == 2
     assert nb.already_tried(book, "vectorise the reduction with NEON") is None
     text = nb.render(book, "maximize")
-    assert "#2 [failed checks]" in text and "failed: tests" in text and "Best so far: #3 (110.0)" in text
+    assert "#2 [failed checks]" in text and "failed: tests" in text and "Best so far: #3 (110)" in text
 
 def ctx(code):
     return ToolContext(code=code, target="https://github.com/owner/repo", goal="maximize")

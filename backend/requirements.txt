@@ -31,3 +31,5 @@ tree-sitter-go
 tree-sitter-rust
 tree-sitter-java
 ripgrep  # the rg binary, for the agent's grep
+# Experiment sandbox: generated code runs in Docker containers
+llm-sandbox[docker]
