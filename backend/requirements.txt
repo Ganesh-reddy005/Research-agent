@@ -20,3 +20,13 @@ supabase
 psycopg2-binary
 pypdf
 python-multipart
+# Code graph for the coding agent: parsers for common languages
+tree-sitter
+tree-sitter-python
+tree-sitter-c
+tree-sitter-cpp
+tree-sitter-javascript
+tree-sitter-typescript
+tree-sitter-go
+tree-sitter-rust
+tree-sitter-java

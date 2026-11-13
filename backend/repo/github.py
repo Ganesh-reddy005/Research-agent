@@ -69,7 +69,7 @@ def parse_github_url(url: str) -> RepoRef:
     return RepoRef(owner, name, ref.strip("/") if ref else None)
 
 
-def _headers(token: str | None) -> dict:
+def api_headers(token: str | None) -> dict:
     headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
     token = token or os.getenv("GITHUB_TOKEN")
     if token:
@@ -87,7 +87,7 @@ def _check(response: httpx.Response, repo: RepoRef) -> None:
 
 async def fetch_repo(repo: RepoRef, include: Callable[[str, int], bool], token: str | None = None) -> FetchedRepo:
     """Download the repository and read the files `include(path, size)` accepts."""
-    async with httpx.AsyncClient(headers=_headers(token), timeout=30, follow_redirects=True) as client:
+    async with httpx.AsyncClient(headers=api_headers(token), timeout=30, follow_redirects=True) as client:
         meta = await client.get(f"{API}/repos/{repo.full_name}")
         _check(meta, repo)
         info = meta.json()
