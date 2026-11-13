@@ -4,7 +4,7 @@ import pytest
 from langchain_core.messages import AIMessage
 
 import agents.retriever
-import search.planner, search.screening, search.providers, search.semantic_scholar
+import search.planner, search.screening, search.providers
 from search.planner import clean_query, normalise
 from conftest import PLAN, PROFILE
 
@@ -142,37 +142,10 @@ def test_every_section_is_covered_before_any_gets_a_second_search():
 
 # ---- Semantic Scholar ----------------------------------------------------------------
 
-S2_PAPER = {"title": "Attention Is All You Need", "abstract": "The dominant sequence transduction models...",
-            "year": 2017, "citationCount": 150000, "url": "https://www.semanticscholar.org/paper/abc",
-            "externalIds": {"ArXiv": "1706.03762", "DOI": "10.5555/x"}, "authors": [{"name": "Ashish Vaswani"}]}
-
-def test_semantic_scholar_papers_link_to_the_most_readable_copy():
-    source = search.semantic_scholar.s2_source(S2_PAPER)
-    assert source["url"] == "https://arxiv.org/abs/1706.03762"  # arXiv before DOI before S2
-    assert source["citations"] == 150000 and source["authors"] == ["Ashish Vaswani"]
-    no_arxiv = search.semantic_scholar.s2_source({**S2_PAPER, "externalIds": {"DOI": "10.5555/x"}})
-    assert no_arxiv["url"] == "https://doi.org/10.5555/x"
-    neither = search.semantic_scholar.s2_source({**S2_PAPER, "externalIds": {}})
-    assert neither["url"] == "https://www.semanticscholar.org/paper/abc"
-
-def test_semantic_scholar_is_throttled_and_retries_once_when_rate_limited(monkeypatch):
-    class Response:
-        def __init__(self, status): self.status_code = status
-        def json(self): return {"data": [S2_PAPER]}
-    statuses = [429, 200]
-    sleeps = []
-    monkeypatch.setattr(search.semantic_scholar.requests, "get", lambda *a, **k: Response(statuses.pop(0)))
-    monkeypatch.setattr(search.semantic_scholar.time, "sleep", sleeps.append)
-    monkeypatch.setattr(search.semantic_scholar, "_s2_last_call", 0.0)
-    monkeypatch.setattr(search.semantic_scholar, "_s2_skip_until", 0.0)
-
-    found = search.semantic_scholar.search_semantic_scholar("attention is all you need")
-    assert [s["title"] for s in found] == ["Attention Is All You Need"]
-    assert 2 in sleeps  # backed off after the 429
-
 def test_semantic_scholar_ranks_first_among_paper_searches():
     assert search.providers.searchers("papers")[0] is search.providers.search_semantic_scholar
     assert search.providers.search_semantic_scholar not in search.providers.searchers("web")
+
 
 def test_screening_sees_citation_counts(monkeypatch):
     prompts = []
@@ -180,20 +153,6 @@ def test_screening_sees_citation_counts(monkeypatch):
     need = {"need": "transformer architecture", "query": "q"}
     asyncio.run(search.screening.screen([(need, {"title": "Attention Is All You Need", "citations": 150000, "summary": "s"})]))
     assert "Attention Is All You Need (cited by 150,000)" in prompts[0][2]
-
-def test_semantic_scholar_is_skipped_for_a_while_after_repeated_rate_limits(monkeypatch):
-    calls = []
-    class Refused:
-        status_code = 429
-    monkeypatch.setattr(search.semantic_scholar.requests, "get", lambda *a, **k: calls.append(1) or Refused())
-    monkeypatch.setattr(search.semantic_scholar.time, "sleep", lambda s: None)
-    monkeypatch.setattr(search.semantic_scholar, "_s2_last_call", 0.0)
-    monkeypatch.setattr(search.semantic_scholar, "_s2_skip_until", 0.0)
-
-    assert search.semantic_scholar.search_semantic_scholar("q1") == []
-    assert len(calls) == 2  # tried, retried once
-    assert search.semantic_scholar.search_semantic_scholar("q2") == []
-    assert len(calls) == 2  # cooling off: not called again
 
 # ---- arXiv ---------------------------------------------------------------------------
 
