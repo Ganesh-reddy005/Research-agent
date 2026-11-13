@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { FlaskConical, PenLine } from 'lucide-react';
 import type { ExperimentBrief } from '@/lib/types';
-import { Button, SectionLabel, StageHeader, inputClass } from './ui';
+import { Button, FieldLabel, SectionLabel, StageHeader, inputClass } from './ui';
 import BriefListField from './BriefListField';
 
 /** What still has to be filled in before the coding agent can start (mirrors the backend's check). */
@@ -107,10 +107,16 @@ export default function StageExperimentBrief({ brief: initial, onSave, onLaunch,
             <option value="minimize">Lower is better</option>
           </select>
         </div>
-        <input value={brief.metric.measured_by} onChange={e => setMetric({ measured_by: e.target.value })}
-               aria-label="Measured by" placeholder="Measured by: the tool, command or procedure" className={inputClass} />
-        <input value={brief.baseline} onChange={e => set({ baseline: e.target.value })} aria-label="Baseline"
-               placeholder="Compared with: the unmodified system, or a published result" className={inputClass} />
+        <div>
+          <FieldLabel htmlFor="measured-by">Measured by</FieldLabel>
+          <input id="measured-by" value={brief.metric.measured_by} onChange={e => setMetric({ measured_by: e.target.value })}
+                 placeholder="The tool, command or procedure" className={inputClass} />
+        </div>
+        <div>
+          <FieldLabel htmlFor="baseline">Compared with</FieldLabel>
+          <input id="baseline" value={brief.baseline} onChange={e => set({ baseline: e.target.value })}
+                 placeholder="The unmodified system, or a published result" className={inputClass} />
+        </div>
       </section>
 
       <BriefListField label="Must still pass" hint="Checks every attempt must pass, so a better number is a real improvement."

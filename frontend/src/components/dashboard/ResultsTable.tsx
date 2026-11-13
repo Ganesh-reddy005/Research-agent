@@ -3,6 +3,9 @@ import type { Attempt } from '@/lib/types';
 
 type Results = NonNullable<Attempt['results']>;
 
+// 23100000 -> "23,100,000", 1.48215 -> "1.482": never scientific notation
+const show = (n: number) => n.toLocaleString('en-US', { maximumSignificantDigits: 4 });
+
 /** Results of code built from scratch: one row per variant, one column per metric, mean ± spread.
  *  "quicksort.seconds" is variant "quicksort", metric "seconds"; a name without a dot is its own row. */
 export default function ResultsTable({ results }: { results: Results }) {
@@ -16,7 +19,7 @@ export default function ResultsTable({ results }: { results: Results }) {
   if (rows.size === 0) return <p className="text-sm text-mistral-black/60">No results yet: the evaluation runs, but no variant is built.</p>;
   return (
     <div className="overflow-x-auto border border-mistral-black/10">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[28rem] text-sm">
         <thead className="bg-mistral-beige/60 text-left text-mistral-black/70">
           <tr><th className="px-3 py-2 font-semibold">Variant</th>{metrics.map(m => <th key={m} className="px-3 py-2 font-semibold">{m}</th>)}</tr>
         </thead>
@@ -27,7 +30,7 @@ export default function ResultsTable({ results }: { results: Results }) {
               {metrics.map(m => {
                 const v = values.get(m);
                 return <td key={m} className="px-3 py-2 whitespace-nowrap text-mistral-black">
-                  {v ? <>{v.mean.toPrecision(4)}{v.spread ? <span className="text-mistral-black/60"> ±{v.spread.toPrecision(2)}</span> : null}</> : '—'}
+                  {v ? <>{show(v.mean)}{v.spread ? <span className="text-mistral-black/60"> ±{show(v.spread)}</span> : null}</> : '—'}
                 </td>;
               })}
             </tr>

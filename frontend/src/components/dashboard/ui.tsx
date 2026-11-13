@@ -44,5 +44,10 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h2 className="text-sm font-semibold text-mistral-black/70">{children}</h2>;
 }
 
+/** A small caption above a field: placeholders vanish once a field is filled in. */
+export function FieldLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
+  return <label htmlFor={htmlFor} className="block text-xs font-semibold text-mistral-black/65 mb-1">{children}</label>;
+}
+
 export const inputClass =
   'w-full bg-white border border-mistral-black/15 px-4 py-3 text-base text-mistral-black placeholder:text-mistral-black/40 focus:outline-none focus:border-mistral-orange focus:ring-2 focus:ring-mistral-orange/15 transition-colors';

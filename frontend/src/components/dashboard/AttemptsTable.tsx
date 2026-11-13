@@ -11,7 +11,9 @@ const VERDICT_STYLE: Record<Attempt['verdict'], string> = {
   crashed: 'text-red-700 border-red-600/40 bg-red-50',
 };
 
-const format = (n: number) => (Math.abs(n) >= 100 ? n.toFixed(1) : n.toPrecision(4));
+const format = (n: number) => n.toLocaleString('en-US', { maximumSignificantDigits: 4 });
+// A failure before anything was built says where it happened
+const label = (a: Attempt) => (a.stage === 'setup' && a.verdict === 'failed checks' ? 'setup failed' : a.verdict);
 
 /** The lab notebook as a table: every attempt, its verdict, its result and its change against the baseline. */
 export default function AttemptsTable({ attempts, metric, goal, scores = true }: {
@@ -23,7 +25,7 @@ export default function AttemptsTable({ attempts, metric, goal, scores = true }:
   const baseline = attempts.find(a => a.verdict === 'baseline')?.metric ?? null;
   return (
     <div className="overflow-x-auto border border-mistral-black/10">
-      <table className="w-full text-sm">
+      <table className={`w-full text-sm ${scores ? 'min-w-[36rem]' : 'min-w-[24rem]'}`}>
         <thead className="bg-mistral-beige/60 text-left text-mistral-black/70">
           <tr>
             <th className="px-3 py-2 font-semibold">#</th>
@@ -40,12 +42,12 @@ export default function AttemptsTable({ attempts, metric, goal, scores = true }:
             return (
               <tr key={a.n} className="border-t border-mistral-black/10 align-top">
                 <td className="px-3 py-2 text-mistral-black/60">{a.n}</td>
-                <td className="px-3 py-2 text-mistral-black">{a.hypothesis}</td>
+                <td className="px-3 py-2 text-mistral-black min-w-[12rem]">{a.hypothesis}</td>
                 <td className="px-3 py-2">
-                  <span className={`inline-block px-2 py-0.5 border text-xs font-semibold whitespace-nowrap ${VERDICT_STYLE[a.verdict]}`}>{a.verdict}</span>
+                  <span className={`inline-block px-2 py-0.5 border text-xs font-semibold whitespace-nowrap ${VERDICT_STYLE[a.verdict]}`}>{label(a)}</span>
                 </td>
                 {scores && <td className="px-3 py-2 whitespace-nowrap text-mistral-black">
-                  {a.metric === null ? '—' : <>{format(a.metric)}{a.spread ? <span className="text-mistral-black/60"> ±{a.spread.toPrecision(2)}</span> : null}</>}
+                  {a.metric === null ? '—' : <>{format(a.metric)}{a.spread ? <span className="text-mistral-black/60"> ±{format(a.spread)}</span> : null}</>}
                 </td>}
                 {scores && <td className={`px-3 py-2 whitespace-nowrap ${change === null ? 'text-mistral-black/50' : better ? 'text-emerald-700' : 'text-amber-800'}`}>
                   {change === null ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`}

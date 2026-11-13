@@ -28,7 +28,9 @@ export default function StageExperimentReport({ brief, lab, notebook, onDecide, 
   const report = lab.report;
   const latest = notebook[notebook.length - 1];
   const left = report?.attempts_left ?? 0;
-  const title = !lab.ready ? 'The setup needs fixing' : latest ? `Attempt ${latest.n}: ${TITLES[latest.verdict]}` : 'Report';
+  const title = !lab.ready ? 'The setup needs fixing'
+    : latest ? `${building ? 'Step' : 'Attempt'} ${latest.n}: ${TITLES[latest.verdict]}` : 'Report';
+  const changedCode = notebook.some(a => (a.files?.length ?? 0) > 0);
 
   return (
     <div className="space-y-10">
@@ -56,9 +58,11 @@ export default function StageExperimentReport({ brief, lab, notebook, onDecide, 
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <SectionLabel>Every {building ? 'step' : 'attempt'} so far</SectionLabel>
-            <Button variant="secondary" onClick={onDownload} className="!py-1.5 !px-3 !text-xs">
-              <Download className="w-3.5 h-3.5" aria-hidden /> Download code
-            </Button>
+            {changedCode && (
+              <Button variant="secondary" onClick={onDownload} className="!py-1.5 !px-3 !text-xs">
+                <Download className="w-3.5 h-3.5" aria-hidden /> Download code
+              </Button>
+            )}
           </div>
           <AttemptsTable attempts={notebook} metric={brief.metric.name} goal={brief.metric.goal} scores={!building} />
         </section>

@@ -32,7 +32,7 @@ export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
 
       {lab.env?.summary && (
         <section className="space-y-2">
-          <SectionLabel>What Lume found in the code</SectionLabel>
+          <SectionLabel>{lab.mode === 'build' ? 'What Lume will build' : 'What Lume found in the code'}</SectionLabel>
           <p className="text-base text-mistral-black/85 leading-relaxed">{lab.env.summary}</p>
           {lab.env.risks && lab.env.risks.length > 0 && (
             <p className="text-sm text-mistral-black/70">Watch out for: {lab.env.risks.join('; ')}</p>
@@ -75,7 +75,8 @@ export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-end pt-6 border-t border-mistral-black/10">
         {!valid && <span className="text-sm text-mistral-black/60">Add at least one idea{lab.ready ? '' : ' and a measure command'}.</span>}
         <Button onClick={approve} disabled={!valid} loading={isProcessing} className="!px-6 !py-3">
-          {lab.ready ? 'Approve and run the next attempt' : 'Approve, set up and measure the baseline'} <ArrowRight className="w-4 h-4" aria-hidden />
+          {lab.ready ? 'Approve and run the next attempt'
+            : lab.mode === 'build' ? 'Approve, set up and write the evaluation' : 'Approve, set up and measure the baseline'} <ArrowRight className="w-4 h-4" aria-hidden />
         </Button>
       </div>
     </div>
