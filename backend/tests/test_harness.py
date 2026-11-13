@@ -113,3 +113,16 @@ def test_changing_a_protected_file_fails_the_attempt_before_anything_runs():
     assert result["checks"] == {"protected files unchanged": False} and result["log"] == "tests/test_speed.py"
     assert box.ran == []  # not even built
     assert spec.is_protected("bench.py") and not spec.is_protected("src/bench.py.bak")
+
+def test_a_measure_that_is_not_a_command_says_so_with_its_own_error():
+    class Box(FakeBox):
+        def run(self, command, timeout=None):
+            self.ran.append(command)
+            if command.startswith("hyperfine"):
+                return CommandResult(command, 1, "", "Error: Command terminated with non-zero exit code: 127.", 0.1)
+            return CommandResult(command, 127, "", "sh: 1: we: not found", 0.1)
+    box = Box({})
+    result = run_attempt(box, BenchmarkSpec(measure="we must check the factual accuracy of model"))
+    assert result["stage"] == "quick measure" and "command not found" in result["error"] and "`we`" in result["error"]
+    assert "we: not found" in result["log"]  # the command's own error, not hyperfine's
+    assert box.ran[-1] == "we must check the factual accuracy of model"

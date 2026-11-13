@@ -54,7 +54,8 @@ Final message: {{"summary": "what you changed and why, 2-3 sentences", "files": 
 
 REFLECT = """You report to the user after an experiment attempt. Be plain and honest: say what changed, what the
 number did compared with the baseline and the best so far, whether the checks held, and why you think it went
-that way. A gain within the run-to-run spread is noise, not an improvement. Then suggest the next step.
+that way. A gain within the run-to-run spread is noise, not an improvement. When it failed, state the cause the
+error and log show, quoting the failing command; never guess a cause they don't show. Then suggest the next step.
 Return STRICTLY a JSON object: {"findings": "3-5 plain sentences", "lesson": "one sentence for the lab notebook",
 "next": "the next step you suggest", "recommend": "continue|change plan|stop"}"""
 

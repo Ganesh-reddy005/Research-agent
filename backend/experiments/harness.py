@@ -82,6 +82,21 @@ def summarise(runs: list[dict]) -> dict[str, dict]:
                 "spread": statistics.stdev(r[n] for r in runs) if len(runs) > 1 else 0.0} for n in sorted(names)}
 
 
+NOT_FOUND, NOT_EXECUTABLE = 127, 126  # the shell's exit codes for a missing program and a non-executable file
+
+
+def _why(out, error: str) -> str:
+    """The error, plus what the shell's exit code means when it says more than "failed"."""
+    if out.timed_out:
+        return f"{error} (timed out)"
+    first = (out.command or "").split(maxsplit=1)[0] if (out.command or "").strip() else ""
+    if out.exit_code == NOT_FOUND:
+        return f"{error}: a program it runs doesn't exist in the sandbox (exit 127, command not found; it starts with `{first}`)"
+    if out.exit_code == NOT_EXECUTABLE:
+        return f"{error}: a file it runs isn't executable (exit 126; it starts with `{first}`)"
+    return error
+
+
 def _failed(result, stage: str, error: str, log: str) -> dict:
     return {**result, "stage": stage, "error": error, "log": log}
 
@@ -92,8 +107,11 @@ def _measure(box, spec: BenchmarkSpec, runs: int, warmup: int) -> tuple[list[flo
         command = (f"hyperfine --style none --warmup {warmup} --runs {max(runs, 2)} "
                    f"--export-json {HYPERFINE_OUT} {shlex.quote(spec.measure)} && cat {HYPERFINE_OUT}")
         out = box.run(command, timeout=spec.timeout * (runs + warmup + 1))
-        if not out.ok:
-            return [], "the measure command failed or timed out", out.tail()
+        if not out.ok:  # hyperfine hides the command's own output: run it once more, alone, to see why
+            alone = box.run(spec.measure, timeout=spec.timeout)
+            if alone.ok:
+                return [], _why(out, "the measure command failed or timed out"), out.tail()
+            return [], _why(alone, "the measure command failed"), alone.tail()
         times = json.loads(out.stdout[out.stdout.index("{"):])["results"][0]["times"]
         return times[:runs], None, ""
     samples = []
@@ -104,7 +122,7 @@ def _measure(box, spec: BenchmarkSpec, runs: int, warmup: int) -> tuple[list[flo
         else:
             value = read_number(out.stdout, spec.read) if out.ok else None
         if value is None:
-            return samples, f"no {spec.read} value in the measure output" if out.ok else "the measure command failed", out.tail()
+            return samples, f"no {spec.read} value in the measure output" if out.ok else _why(out, "the measure command failed"), out.tail()
         if i >= warmup:
             samples.append(value)
     return samples, None, ""
@@ -123,13 +141,13 @@ def run_attempt(box, spec: BenchmarkSpec, quick: bool = False, changed: list[str
         out = box.run(spec.build, timeout=spec.timeout)
         result["build_seconds"] = out.seconds
         if not out.ok:
-            return _failed(result, "build", "timed out" if out.timed_out else "the build failed", out.tail())
+            return _failed(result, "build", "timed out" if out.timed_out else _why(out, "the build failed"), out.tail())
     result["stage"] = "checks"
     for name, command in spec.checks.items():
         out = box.run(command, timeout=spec.timeout)
         result["checks"][name] = out.ok
         if not out.ok:
-            return _failed(result, "checks", f"check failed: {name}", out.tail())
+            return _failed(result, "checks", _why(out, f"check failed: {name}"), out.tail())
     result["stage"] = "quick measure"
     samples, error, log = _measure(box, spec, runs=1, warmup=0)
     if error or quick:
