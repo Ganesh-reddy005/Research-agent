@@ -1,7 +1,8 @@
 """The coding agent's ways of looking at the target code. Each answer is compact text with a hard cap,
 because every line the agent reads costs tokens: it should look things up, not read whole files."""
-import os
-import re
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 from codegraph.graph import CodeGraph, VENDORED_DIRS
 from codegraph.repomap import repo_map
@@ -10,7 +11,9 @@ from repo.filetypes import SKIP_DIRS
 MAX_READ_LINES = 200
 MAX_MATCHES = 40
 MAX_OUTLINE = 80
-MAX_TEXT_BYTES = 1_000_000
+GREP_TIMEOUT = 20  # seconds
+# ripgrep comes from the `ripgrep` package, next to the Python running the app; else from PATH
+RG = shutil.which("rg", path=str(Path(sys.executable).parent)) or shutil.which("rg")
 MAX_MAP_TOKENS = 3000
 
 
@@ -63,31 +66,27 @@ class CodeTools:
         body = "\n".join(f"{n}: {lines[n - 1]}" for n in range(start, end + 1))
         return f"{path} lines {start}-{end} of {len(lines)}\n{body}"
 
-    def _text_files(self, glob: str):
-        for directory, subdirs, names in os.walk(self.root):
-            subdirs[:] = sorted(d for d in subdirs if d not in SKIP_DIRS | VENDORED_DIRS and not d.startswith("."))
-            for name in sorted(names):
-                path = Path(directory) / name
-                relative = path.relative_to(self.root)
-                if (not glob or relative.match(glob)) and path.stat().st_size <= MAX_TEXT_BYTES:
-                    yield relative.as_posix(), path
-
     def grep(self, pattern: str, glob: str = "") -> str:
-        """Regex search over text files (optionally only those matching glob, e.g. '*.c')."""
+        """Regex search over text files (optionally only those matching glob, e.g. '*.c'), with ripgrep:
+        fast, skips binary, hidden and .gitignored files."""
+        excluded = [f"!{d}/" for d in sorted(SKIP_DIRS | VENDORED_DIRS)]
+        command = [RG or "rg", "--line-number", "--no-heading", "--color", "never", "--max-filesize", "1M",
+                   *(arg for d in excluded for arg in ("-g", d)), *(["-g", glob] if glob else []), "-e", pattern, "."]  # an explicit path: without one, rg reads stdin
         try:
-            regex = re.compile(pattern)
-        except re.error as e:
-            return f"Invalid pattern: {e}"
-        matches, total = [], 0
-        for relative, path in self._text_files(glob):
-            data = path.read_bytes()
-            if b"\0" in data[:4096]:
-                continue  # binary
-            for n, line in enumerate(data.decode("utf-8", "replace").splitlines(), start=1):
-                if regex.search(line):
-                    total += 1
-                    if len(matches) < MAX_MATCHES:
-                        matches.append(f"{relative}:{n}: {line.strip()[:160]}")
-        if not matches:
+            result = subprocess.run(command, cwd=self.root, capture_output=True, text=True, timeout=GREP_TIMEOUT,
+                                    stdin=subprocess.DEVNULL)
+        except FileNotFoundError:
+            return "grep needs ripgrep (rg) installed on the server."
+        except subprocess.TimeoutExpired:
+            return f"Search took over {GREP_TIMEOUT}s; narrow the pattern or glob."
+        if result.returncode == 2:  # rg's exit code for errors, such as an invalid pattern
+            return f"Invalid pattern: {result.stderr.strip().splitlines()[-1] if result.stderr.strip() else pattern}"
+        found = result.stdout.splitlines()
+        if not found:
             return f"No matches for {pattern}."
-        return "\n".join(matches) + (f"\n... {total - MAX_MATCHES} more matches; narrow the pattern or glob" if total > MAX_MATCHES else "")
+        shown = []
+        for line in found[:MAX_MATCHES]:
+            path, number, text = line.removeprefix("./").split(":", 2)
+            shown.append(f"{path}:{number}: {text.strip()[:160]}")
+        more = len(found) - MAX_MATCHES
+        return "\n".join(shown) + (f"\n... {more} more matches; narrow the pattern or glob" if more > 0 else "")

@@ -36,6 +36,13 @@ def test_grep_searches_text_files_and_rejects_bad_patterns(code):
     assert code.grep("(").startswith("Invalid pattern")
     assert "more matches" in code.grep("line")
 
+def test_grep_searches_files_even_when_stdin_is_a_pipe(code, monkeypatch):
+    # ripgrep searches stdin instead of files when given no path and stdin isn't a terminal
+    import subprocess
+    real_run = subprocess.run
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: real_run(*a, **{**k, "stdin": k.get("stdin", subprocess.PIPE)}))
+    assert "src/main.c:1:" in code.grep("dot_product")
+
 def test_verdicts_treat_noise_and_failed_checks_honestly():
     assert nb.verdict(None, {}, 10, "maximize") == nb.CRASHED
     assert nb.verdict(99, {"tests": False}, 10, "maximize") == nb.FAILED_CHECKS  # a great number with a broken check
