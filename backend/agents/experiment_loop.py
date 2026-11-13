@@ -107,6 +107,8 @@ def route_after_report(state) -> str:
     lab, decision = state["lab"], (state.get("experiment_decision") or {}).get("decision", CONTINUE)
     if decision == STOP or (lab.get("ready") and labs.attempts_left(state) == 0):
         return "synthesis"
+    if not lab.get("ready") and lab.get("mode") != "build" and not (lab.get("env") or {}).get("summary"):
+        return "exp_understand"  # the code was never understood (that step failed): read it again first
     if decision == REVISE or not lab.get("ready") or labs.next_hypothesis(lab) is None:
         return "exp_plan"
     return "exp_attempt"

@@ -114,7 +114,7 @@ def build_graph(checkpointer=None):
     workflow.add_conditional_edges("exp_plan", route_after_plan, ["exp_setup", "exp_attempt"])
     workflow.add_conditional_edges("exp_setup", route_after_setup, ["exp_attempt", "exp_reflect"])
     workflow.add_edge("exp_attempt", "exp_reflect")
-    workflow.add_conditional_edges("exp_reflect", route_after_report, ["exp_attempt", "exp_plan", "synthesis"])
+    workflow.add_conditional_edges("exp_reflect", route_after_report, ["exp_attempt", "exp_understand", "exp_plan", "synthesis"])
     workflow.add_edge("synthesis", "writer")
     workflow.add_edge("writer", "critic")
     workflow.add_edge("critic", "refinement")

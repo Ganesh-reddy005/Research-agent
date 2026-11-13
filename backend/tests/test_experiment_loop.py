@@ -292,3 +292,11 @@ def test_from_scratch_a_failed_step_is_retried_with_its_error_and_nothing_freeze
     assert snap.values["lab"]["frozen"] is False  # the evaluation never worked: nothing to freeze
     assert snap.values["notebook"][-1]["hypothesis"] == "write the evaluation"  # the same step again, not the next one
     assert "This step was tried before and failed" in tasks[-1][1]
+
+def test_after_a_failed_setup_with_no_understanding_the_code_is_read_again():
+    from agents.experiment_loop import route_after_report
+    never_read = {"lab": {"ready": False, "mode": "improve", "env": {"summary": ""}}, "experiment_decision": {"decision": "change plan"}}
+    assert route_after_report(never_read) == "exp_understand"
+    read = {**never_read, "lab": {**never_read["lab"], "env": {"summary": "a runtime"}}}
+    assert route_after_report(read) == "exp_plan"
+    assert route_after_report({**never_read, "experiment_decision": {"decision": "stop"}}) == "synthesis"
