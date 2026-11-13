@@ -44,7 +44,10 @@ async def understand_node(state):
 
 def phase_record(result: dict) -> dict:
     """What a phase did, kept for the plan screen: its tool calls, and how it ended if not cleanly."""
-    return {"trace": result.get("trace", []), "note": str(result.get("note") or result.get("error") or "")}
+    note = str(result.get("note") or result.get("error") or "")
+    if result.get("error") and result.get("raw"):
+        note += f". Its last reply: {' '.join(str(result['raw']).split())[:400] or '(empty)'}"
+    return {"trace": result.get("trace", []), "note": note}
 
 
 async def plan_node(state):

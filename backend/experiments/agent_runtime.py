@@ -46,6 +46,10 @@ async def run_phase(phase: str, agent_name: str, system: str, task: str, ctx: To
         prompt = [SystemMessage(content=system), *answered(messages), HumanMessage(content=OUT_OF_STEPS if ran_out else REPAIR)]
         text = _text(await final.ainvoke(prompt, config={"callbacks": [usage]}))
         result = json_object(text)
+        if not result and text.strip():  # it answered in prose: reformat just that reply (small and cheap)
+            text = _text(await llm.ainvoke([SystemMessage(content=system), HumanMessage(content=f"{REPAIR}\n\nYour answer:\n{text[-6000:]}")],
+                                           config={"callbacks": [usage]}))
+            result = json_object(text)
     if not result:
         result = {"error": f"stopped after {MAX_STEPS[phase]} steps without a final answer" if ran_out
                   else "the final answer wasn't valid JSON", "raw": text[-1500:]}

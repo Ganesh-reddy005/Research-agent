@@ -7,6 +7,7 @@ TIMED_OUT = {124, 137}  # coreutils `timeout`: 124 when it stops the command, 13
 MAX_OUTPUT_CHARS = 20_000  # per stream; long build logs keep their end, where errors are
 
 
+WORKDIR = "/work"  # where the target is mounted inside the sandbox
 @dataclass(frozen=True)
 class Limits:
     # Defaults fit Docker Desktop at 6 CPUs / 6 GB, leaving room for Docker itself; override in .env

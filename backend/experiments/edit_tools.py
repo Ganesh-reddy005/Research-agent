@@ -17,7 +17,7 @@ class EditTools:
 
     def _target(self, path: str):
         """(file, refusal): the file inside the target, or why it may not be changed."""
-        resolved = (self.code.root / path).resolve()
+        resolved = (self.code.root / self.code.relative(path)).resolve()
         if not resolved.is_relative_to(self.code.root) or ".git" in resolved.relative_to(self.code.root).parts:
             return None, f"{path} is outside the target."
         if self.spec.is_protected(resolved.relative_to(self.code.root).as_posix()):

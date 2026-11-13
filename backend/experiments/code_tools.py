@@ -7,6 +7,7 @@ from pathlib import Path
 from codegraph.graph import CodeGraph, VENDORED_DIRS
 from codegraph.repomap import repo_map
 from repo.filetypes import SKIP_DIRS
+from sandbox.base import WORKDIR
 
 MAX_READ_LINES = 200
 MAX_MATCHES = 40
@@ -22,15 +23,27 @@ class CodeTools:
         self.root = Path(root).resolve()
         self.graph = CodeGraph.build(self.root)
 
+    def relative(self, path: str) -> str:
+        """A path as the tools take it, relative to the target: the commands' view (/work/src/x.c) and the
+        checkout's absolute path both name the same file, so the agent never loses a turn on the prefix."""
+        path = str(path or "").strip()
+        for prefix in (str(self.root), WORKDIR):
+            if path == prefix:
+                return "."
+            if path.startswith(prefix + "/"):
+                return path[len(prefix) + 1:]
+        return path.removeprefix("./") or "."
+
     def _resolve(self, path: str) -> Path | None:
         """The file inside the target, or None for anything outside it (../, absolute paths, links)."""
-        target = (self.root / path).resolve()
+        target = (self.root / self.relative(path)).resolve()
         return target if target.is_relative_to(self.root) and target.is_file() else None
 
     def repo_map(self, focus: str = "", budget_tokens: int = 1500) -> str:
         return repo_map(self.graph, budget_tokens=min(budget_tokens, MAX_MAP_TOKENS), focus=focus.split())
 
     def outline(self, path: str) -> str:
+        path = self.relative(path)
         definitions = self.graph.outline(path)
         if not definitions:
             return f"No definitions found in {path} (not a parsed source file, or wrong path)."
@@ -57,7 +70,7 @@ class CodeTools:
 
     def read_file(self, path: str, start: int = 1, end: int = 0) -> str:
         """Lines start..end (1-based, inclusive), numbered; at most MAX_READ_LINES per call."""
-        target = self._resolve(path)
+        path, target = self.relative(path), self._resolve(path)
         if target is None:
             return f"No such file in the target: {path}"
         lines = target.read_text(errors="replace").splitlines()

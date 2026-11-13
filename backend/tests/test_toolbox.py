@@ -221,3 +221,10 @@ def test_out_of_steps_answers_from_what_was_found_instead_of_losing_it(code, mon
     assert result["key_files"] == ["src/kernel.c"] and "error" not in result
     assert result["note"].startswith("answered at the 5-step limit")
     assert result["trace"] and all(t["tool"] == "find_definition" for t in result["trace"])
+
+def test_tools_accept_the_sandbox_and_checkout_paths(code):
+    assert code.read_file("/work/src/kernel.c").startswith("src/kernel.c lines 1-")
+    assert code.read_file(f"{code.root}/src/kernel.c").startswith("src/kernel.c lines 1-")
+    assert code.read_file("./src/kernel.c").startswith("src/kernel.c lines 1-")
+    assert code.outline("/work/src/kernel.c") == code.outline("src/kernel.c")
+    assert code.read_file("/etc/passwd").startswith("No such file")  # still nothing outside the target

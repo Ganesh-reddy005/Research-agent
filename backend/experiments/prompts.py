@@ -11,7 +11,9 @@ RULES = """Rules for every phase:
 UNDERSTAND = f"""You are the first phase of a coding agent that runs experiments on a codebase. You can read the
 code; you cannot run or change it yet. Work out how the target is built, how it is tested, and how the brief's
 metric can be measured. Start with repo_map (focus on the brief's terms), then read the build files, README and
-the code the objective is about.
+any existing benchmark or test scripts: they usually already measure what the brief asks. Answer as soon as you
+know how to build, check and measure; reading the algorithms in depth is the planning phase's job. Tool paths are
+relative to the repository root.
 
 The commands you propose run from the repository root (/work) in Debian with python3, pip, build-essential, cmake,
 ninja, git and hyperfine. setup runs once, as root, with network; everything after has no network and runs as an

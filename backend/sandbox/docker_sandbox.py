@@ -9,11 +9,11 @@ from pathlib import Path
 import docker
 from docker.types import Mount
 from llm_sandbox import SandboxSession
-from sandbox.base import CommandResult, Limits, clip
+from sandbox.base import WORKDIR, CommandResult, Limits, clip
 
 BASE_IMAGE = "lume-sandbox:base"
 DOCKERFILE_DIR = Path(__file__).parent
-WORKDIR, HIDDEN_DIR = "/work", "/hidden"
+HIDDEN_DIR = "/hidden"
 KILL_AFTER = 5  # seconds between asking a timed-out command to stop and killing it
 
 
