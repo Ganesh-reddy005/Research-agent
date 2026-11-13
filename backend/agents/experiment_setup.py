@@ -34,7 +34,7 @@ async def understand_node(state):
     spec = labs.normalise_spec({**(result.get("benchmark") or {}), "protected": result.get("protected") or []})
     lab = {**(state.get("lab") or {}), "mode": "improve", "frozen": True,  # protected files apply from the start
            "workspace": str(workspace.path), "base_commit": workspace.head(), "ready": False, "hypotheses": [],
-           "env": {k: result.get(k) for k in ("summary", "build_system", "key_files", "risks", "questions")},
+           "env": labs.normalise_env(result),
            "setup": [str(c) for c in result.get("setup") or [] if c], "spec": spec, "error": result.get("error", "")}
     return {"lab": spend(lab, usage), "notebook": [], "current_step": "exp_understand"}
 

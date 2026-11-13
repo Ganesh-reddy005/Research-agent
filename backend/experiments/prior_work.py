@@ -17,9 +17,25 @@ def _clip(text) -> str:
     return text[:SUMMARY_CHARS] + ("…" if len(text) > SUMMARY_CHARS else "")
 
 
+SITE = re.compile(r"\bsite:(\S+)")
+
+
+def plain_query(query: str) -> str:
+    """Search providers take words, not operators: site: filters are dropped, and a query that was only
+    filters searches for the words in their paths (site:github.com/owner/repo -> "owner repo")."""
+    words = SITE.sub(" ", query).split()
+    if words:
+        return " ".join(words)
+    paths = [site.split("/", 1)[1] for site in SITE.findall(query) if "/" in site]
+    return " ".join(w for path in paths for w in re.split(r"[/._-]+", path) if w)
+
+
 async def search_literature(query: str, kind: str = "papers") -> str:
     """Papers (kind="papers") or practical articles and docs (kind="web") about an idea."""
     kind = kind if kind in {"papers", "web"} else "papers"
+    query = plain_query(query)
+    if not query:
+        return "Search needs words describing the idea; site: filters alone can't be searched."
     sources = (await run_need({"query": query, "kind": kind}, None, PER_PROVIDER))[:MAX_RESULTS]
     if not sources:
         return f"Nothing found for {query!r} ({kind})."

@@ -121,6 +121,25 @@ def test_literature_search_reuses_the_retriever_providers(monkeypatch):
     text = asyncio.run(prior_work.search_literature("loop unrolling", kind="nonsense"))  # unknown kinds -> papers
     assert text.startswith("- Unrolling Loops (2001) https://x") and text.endswith("…")
 
+def test_literature_search_drops_site_operators(monkeypatch):
+    queries = []
+    async def fake_run_need(need, user_id, per_provider):
+        queries.append(need["query"])
+        return []
+    monkeypatch.setattr(prior_work, "run_need", fake_run_need)
+    asyncio.run(prior_work.search_literature("site:github.com/owner/mem-store", kind="web"))
+    asyncio.run(prior_work.search_literature("site:arxiv.org memory agents"))
+    assert queries == ["owner mem store", "memory agents"]
+    assert asyncio.run(prior_work.search_literature("site:github.com")).startswith("Search needs words")
+
+def test_plan_task_survives_what_understand_left_out():
+    from experiments import lab as labs
+    env = labs.normalise_env({"summary": "a cache", "key_files": None, "risks": "slow disk", "questions": ["", None]})
+    assert env == {"summary": "a cache", "build_system": "", "key_files": [], "risks": ["slow disk"], "questions": []}
+    brief = {"objective": "o", "target": "t", "metric": {"name": "time", "goal": "minimize"}}
+    old = {"env": {"summary": None, "key_files": None}}  # labs saved before env was normalised
+    assert "Key files: not listed" in labs.plan_task(brief, old, [], "")
+
 def test_edit_tools_change_code_but_never_protected_files(code):
     from experiments.edit_tools import EditTools
     from experiments.harness import BenchmarkSpec

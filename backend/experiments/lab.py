@@ -48,6 +48,18 @@ def normalise_spec(raw) -> dict:
                          protected=tuple(str(g) for g in raw.get("protected") or () if g)).to_dict()
 
 
+def strings(value, cap: int = 20) -> list[str]:
+    """A model's list field as strings: null, a lone string, or a list with blanks all come out as a clean list."""
+    items = [value] if isinstance(value, str) else value if isinstance(value, (list, tuple)) else []
+    return [str(item).strip() for item in items if str(item or "").strip()][:cap]
+
+
+def normalise_env(result: dict) -> dict:
+    """What the understand phase learned about the code, with every field present and the right type."""
+    return {"summary": str(result.get("summary") or ""), "build_system": str(result.get("build_system") or ""),
+            **{key: strings(result.get(key)) for key in ("key_files", "risks", "questions")}}
+
+
 def normalise_hypotheses(raw, earlier: list[dict]) -> list[dict]:
     """The attempted hypotheses stay (from earlier, never from raw, so an edited plan sent back whole can't
     queue them again); the new plan's ideas follow them as pending."""
@@ -104,8 +116,8 @@ def code_task(brief: dict, lab: dict, hypothesis: dict, notebook: list[dict]) ->
 
 def plan_task(brief: dict, lab: dict, notebook: list[dict], direction: str) -> str:
     env = lab.get("env") or {}
-    parts = [brief_text(brief), f"What the code is: {env.get('summary', '')}",
-             f"Key files: {', '.join(env.get('key_files', []))}", f"Lab notebook:\n{nb.render(notebook, brief['metric']['goal'])}"]
+    parts = [brief_text(brief), f"What the code is: {env.get('summary') or ''}",
+             f"Key files: {', '.join(strings(env.get('key_files'))) or 'not listed'}", f"Lab notebook:\n{nb.render(notebook, brief['metric']['goal'])}"]
     if direction:
         parts.append(f"The user's direction for the next attempts: {direction}")
     return "\n\n".join(parts)
