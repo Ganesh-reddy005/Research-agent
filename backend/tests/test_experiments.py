@@ -18,7 +18,7 @@ def test_brief_is_normalised_whatever_the_model_sends():
 
 def test_brief_lists_what_is_missing_before_the_agent_can_start():
     empty = normalise_brief({})
-    assert missing_fields(empty) == ["objective", "target", "metric"]
+    assert missing_fields(empty) == ["objective", "metric"]  # no target: Lume finds or writes the code
     ready = normalise_brief({"objective": "o", "target": "t", "metric": {"name": "m"}})
     assert missing_fields(ready) == []
     assert missing_fields({**ready, "open_questions": ["Which dataset?"]}) == ["answers to the open questions"]
@@ -61,7 +61,7 @@ def test_edited_brief_is_saved_and_writing_the_draft_still_works(client):
 
     res = http.put(f"/api/research/{THREAD}/brief", json={"brief": {"objective": "Edited", "metric": {"name": "m"}}})
     assert res.status_code == 200
-    assert res.json()["missing"] == ["target"]
+    assert res.json()["missing"] == []
     assert asyncio.run(graph.aget_state(CONFIG)).values["experiment_brief"]["objective"] == "Edited"
 
     assert "event: done" in resume(http, "continue")  # "Write the draft instead"

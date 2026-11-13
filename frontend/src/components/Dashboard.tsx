@@ -6,7 +6,7 @@ import { AlertCircle, Menu, Activity } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   startResearch, resumeResearch, chatWithData, brainstormResearch, getBrainstorm, getResearchSession, getSessions, deleteSession,
-  saveExperimentBrief,
+  saveExperimentBrief, downloadExperimentCode,
   type EventCallbacks, type ResumeData,
 } from '@/lib/api';
 import type {
@@ -25,18 +25,20 @@ import StageReview from './dashboard/StageReview';
 import StageExperimentBrief from './dashboard/StageExperimentBrief';
 import StageExperimentPlan from './dashboard/StageExperimentPlan';
 import StageExperimentReport from './dashboard/StageExperimentReport';
+import StageExperimentStart from './dashboard/StageExperimentStart';
 import StageCompleted from './dashboard/StageCompleted';
 import StageBrainstorm from './dashboard/StageBrainstorm';
 import StageStalled from './dashboard/StageStalled';
 import { Button } from './dashboard/ui';
 import { agentStep } from './dashboard/agents';
 
-type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'brief' | 'expplan' | 'expreport' | 'completed' | 'stalled';
+type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'brief' | 'expstart' | 'expplan' | 'expreport' | 'completed' | 'stalled';
 type Panel = 'activity' | 'library' | null;
 
 // Where the graph paused (its next node) decides what the user sees.
 function stageFromNext(next: string[], state: ResearchState): Stage {
   // The coding agent's pauses are told apart by the step that paused
+  if (next.length && state.current_step === 'exp_scout') return 'expstart';
   if (next.length && state.current_step === 'exp_plan') return 'expplan';
   if (next.length && state.current_step === 'exp_reflect') return 'expreport';
   if (next.includes('planning')) return 'clarification';
@@ -46,7 +48,7 @@ function stageFromNext(next: string[], state: ResearchState): Stage {
   return 'stalled'; // stopped mid-run (e.g. connection dropped); can be continued
 }
 
-const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, brief: 3, expplan: 3, expreport: 3, completed: 4, stalled: 2 };
+const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, brief: 3, expstart: 3, expplan: 3, expreport: 3, completed: 4, stalled: 2 };
 
 export default function Dashboard({ user }: { user: User }) {
   const [stage, setStage] = useState<Stage>('idle');
@@ -228,6 +230,12 @@ export default function Dashboard({ user }: { user: User }) {
 
   const handleLaunchExperiments = () =>
     run(3, signal => resumeResearch(threadId!, 'launch_experiments', {}, callbacks, signal));
+
+  const handleChooseStart = (choice: { url: string } | { scratch: true }) =>
+    run(3, signal => resumeResearch(threadId!, 'choose_start', choice, callbacks, signal));
+
+  const handleDownloadCode = () =>
+    downloadExperimentCode(threadId!).catch(err => setError(err instanceof Error ? err.message : String(err)));
 
   const handleApproveExperimentPlan = (data: { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }) =>
     run(3, signal => resumeResearch(threadId!, 'approve_experiment_plan', data, callbacks, signal));
@@ -463,12 +471,15 @@ export default function Dashboard({ user }: { user: User }) {
                     isProcessing={isProcessing}
                   />
                 )}
+                {stage === 'expstart' && research.lab?.start && (
+                  <StageExperimentStart start={research.lab.start} onChoose={handleChooseStart} isProcessing={isProcessing} />
+                )}
                 {stage === 'expplan' && research.lab && (
                   <StageExperimentPlan lab={research.lab} onApprove={handleApproveExperimentPlan} isProcessing={isProcessing} />
                 )}
                 {stage === 'expreport' && research.lab && research.experiment_brief && (
                   <StageExperimentReport brief={research.experiment_brief} lab={research.lab} notebook={research.notebook ?? []}
-                                         onDecide={handleExperimentDecision} isProcessing={isProcessing} />
+                                         onDecide={handleExperimentDecision} onDownload={handleDownloadCode} isProcessing={isProcessing} />
                 )}
                 {stage === 'completed' && (
                   <StageCompleted

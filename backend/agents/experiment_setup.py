@@ -32,7 +32,8 @@ async def understand_node(state):
     ctx = ToolContext(code=code, target=brief["target"], goal=brief["metric"]["goal"])
     result, usage = await run_phase("understand", "experiment_understand", UNDERSTAND, labs.brief_text(brief), ctx)
     spec = labs.normalise_spec({**(result.get("benchmark") or {}), "protected": result.get("protected") or []})
-    lab = {"workspace": str(workspace.path), "base_commit": workspace.head(), "ready": False, "hypotheses": [],
+    lab = {**(state.get("lab") or {}), "mode": "improve", "frozen": True,  # protected files apply from the start
+           "workspace": str(workspace.path), "base_commit": workspace.head(), "ready": False, "hypotheses": [],
            "env": {k: result.get(k) for k in ("summary", "build_system", "key_files", "risks", "questions")},
            "setup": [str(c) for c in result.get("setup") or [] if c], "spec": spec, "error": result.get("error", "")}
     return {"lab": spend(lab, usage), "notebook": [], "current_step": "exp_understand"}
@@ -42,6 +43,8 @@ async def plan_node(state):
     print("--- EXPERIMENT: PLAN ---")
     brief, lab, notebook = state["experiment_brief"], state["lab"], state.get("notebook", [])
     direction = (state.get("experiment_decision") or {}).get("direction", "")
+    if lab.get("designed") and not direction:  # a design from scratch already holds the plan: don't pay for another
+        return {"lab": {**lab, "designed": False, "approved": False}, "experiment_decision": {}, "current_step": "exp_plan"}
     await report_progress("Checking what was already tried, then ranking ideas")
     code = await asyncio.to_thread(CodeTools, lab["workspace"])
     ctx = ToolContext(code=code, target=brief["target"], goal=brief["metric"]["goal"], notebook=notebook)
@@ -64,6 +67,8 @@ def _setup_and_measure(lab: dict, thread_id: str, goal: str) -> tuple[dict, dict
                 failed = {"checks": {"setup": False}, "metric": None, "spread": None, "stage": "setup",
                           "error": f"setup command failed: {command}", "log": out.tail(LOG_CHARS)}
                 return {**lab, "image": ""}, failed
+    if lab.get("mode") == "build":  # nothing to measure yet: the first step writes the evaluation
+        return {**lab, "image": image}, None
     with DockerSandbox(workspace.path, image=image) as box:
         return {**lab, "image": image}, run_attempt(box, spec)
 
@@ -73,6 +78,8 @@ async def setup_node(state):
     brief, lab = state["experiment_brief"], state["lab"]
     await report_progress("Installing dependencies and measuring the unmodified code (the baseline)")
     lab, result = await asyncio.to_thread(_setup_and_measure, lab, state["thread_id"], brief["metric"]["goal"])
+    if result is None:  # built from scratch: ready to write the first step
+        return {"lab": {**lab, "ready": True, "best_commit": lab["base_commit"]}, "current_step": "exp_setup"}
     entry = nb.record([], brief["metric"]["goal"], nb.BASELINE_NAME, "none", result["checks"], result["metric"],
                       spread=result["spread"] or 0.0)
     entry.update(commit=lab["base_commit"], stage=result["stage"], error=result["error"], log=result["log"][-LOG_CHARS:])

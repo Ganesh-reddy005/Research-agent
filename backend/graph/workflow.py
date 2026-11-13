@@ -21,7 +21,8 @@ from agents.auditor import citation_auditor_node
 from agents.repo_ingest import repo_ingest_node
 from agents.experiment_brief import experiment_brief_node
 from agents.experiment_setup import understand_node, plan_node, setup_node
-from agents.experiment_loop import attempt_node, reflect_node, route_after_plan, route_after_report
+from agents.experiment_loop import attempt_node, reflect_node, route_after_plan, route_after_report, route_after_setup
+from agents.experiment_start import scout_node, design_node, route_after_launch, route_after_scout
 from repo.github import is_transient
 
 class AgentState(TypedDict, total=False):
@@ -64,8 +65,8 @@ def route_start(state) -> Literal["repo_ingest", "clarification"]:
     """A project paper reads its repository before asking questions."""
     return "repo_ingest" if state.get("repo_url") else "clarification"
 
-def route_after_brief(state) -> Literal["exp_understand", "synthesis"]:
-    return "exp_understand" if state.get("launch_experiments") else "synthesis"
+def route_after_brief(state) -> Literal["exp_understand", "exp_scout", "synthesis"]:
+    return route_after_launch(state) if state.get("launch_experiments") else "synthesis"
 
 def route_after_review(state) -> Literal["experiment_brief", "synthesis"]:
     """After the sources are reviewed: write the draft, or first plan experiments for the coding agent."""
@@ -88,6 +89,8 @@ def build_graph(checkpointer=None):
     workflow.add_node("refinement", refinement_node)
     workflow.add_node("auditor", citation_auditor_node)
     workflow.add_node("experiment_brief", experiment_brief_node)
+    workflow.add_node("exp_scout", scout_node)
+    workflow.add_node("exp_design", design_node)
     workflow.add_node("exp_understand", understand_node)
     workflow.add_node("exp_plan", plan_node)
     workflow.add_node("exp_setup", setup_node)
@@ -103,10 +106,13 @@ def build_graph(checkpointer=None):
     workflow.add_edge("indexer", "assistance")
     workflow.add_conditional_edges("assistance", route_after_review, ["experiment_brief", "synthesis"])
     # The coding agent: understand -> plan (approved) -> setup + baseline -> report (decided) -> attempt -> report ...
-    workflow.add_conditional_edges("experiment_brief", route_after_brief, ["exp_understand", "synthesis"])
+    # No repository named: find one to start from (the user confirms), or design the code from scratch
+    workflow.add_conditional_edges("experiment_brief", route_after_brief, ["exp_understand", "exp_scout", "synthesis"])
+    workflow.add_conditional_edges("exp_scout", route_after_scout, ["exp_understand", "exp_design"])
     workflow.add_edge("exp_understand", "exp_plan")
+    workflow.add_edge("exp_design", "exp_plan")
     workflow.add_conditional_edges("exp_plan", route_after_plan, ["exp_setup", "exp_attempt"])
-    workflow.add_edge("exp_setup", "exp_reflect")
+    workflow.add_conditional_edges("exp_setup", route_after_setup, ["exp_attempt", "exp_reflect"])
     workflow.add_edge("exp_attempt", "exp_reflect")
     workflow.add_conditional_edges("exp_reflect", route_after_report, ["exp_attempt", "exp_plan", "synthesis"])
     workflow.add_edge("synthesis", "writer")
@@ -118,6 +124,6 @@ def build_graph(checkpointer=None):
     # Compile with interrupts for human-in-the-loop
     return workflow.compile(
         checkpointer=checkpointer,
-        interrupt_after=["clarification", "planning", "assistance", "experiment_brief", "exp_plan", "exp_reflect"]
+        interrupt_after=["clarification", "planning", "assistance", "experiment_brief", "exp_scout", "exp_plan", "exp_reflect"]
     )
 

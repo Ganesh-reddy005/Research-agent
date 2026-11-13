@@ -8,7 +8,7 @@ import BriefListField from './BriefListField';
 
 /** What still has to be filled in before the coding agent can start (mirrors the backend's check). */
 function missingFields(b: ExperimentBrief): string[] {
-  const missing = [['objective', b.objective], ['target', b.target], ['metric', b.metric.name]]
+  const missing = [['objective', b.objective], ['metric', b.metric.name]]
     .filter(([, value]) => !value.trim()).map(([label]) => label);
   return b.open_questions.length ? [...missing, 'answers to the open questions'] : missing;
 }
@@ -90,7 +90,10 @@ export default function StageExperimentBrief({ brief: initial, onSave, onLaunch,
       <section className="space-y-3">
         <SectionLabel>Target</SectionLabel>
         <input value={brief.target} onChange={e => set({ target: e.target.value })} aria-label="Target"
-               placeholder="Repository URL, or the system to experiment on" className={inputClass} />
+               placeholder="Repository URL (optional)" className={inputClass} />
+        <p className="text-sm text-mistral-black/60">
+          Leave it empty and Lume looks for existing open-source code to start from, or writes the code from scratch if nothing fits.
+        </p>
       </section>
 
       <section className="space-y-3">

@@ -90,6 +90,12 @@ def plan_task(brief: dict, lab: dict, notebook: list[dict], direction: str) -> s
     return "\n\n".join(parts)
 
 
+def latest_results(notebook: list[dict]) -> dict:
+    """The results table of the latest working step: every variant built so far."""
+    working = [a for a in notebook if a.get("verdict") == nb.WORKS and a.get("results")]
+    return working[-1]["results"] if working else {}
+
+
 def results_context(state) -> str:
     """The experiments, for the paper's writers: real runs, to be reported exactly, failures included."""
     notebook = state.get("notebook") or []
@@ -97,16 +103,23 @@ def results_context(state) -> str:
         return ""
     brief, lab = state["experiment_brief"], state.get("lab") or {}
     spec = lab.get("spec") or {}
-    best = nb.best_attempt(notebook, brief["metric"]["goal"])
-    baseline = notebook[0].get("metric")
-    gain = ""
-    if best and baseline and best["n"] != 1:
-        change = (best["metric"] - baseline) / baseline * 100
-        gain = f"Best result: attempt #{best['n']}, {change:+.1f}% {brief['metric']['name']} versus the baseline.\n"
+    goal = brief["metric"]["goal"]
+    if lab.get("mode") == "build":
+        table = "\n".join(f"- {name}: {v['mean']:.4g} ± {v['spread']:.2g}" for name, v in latest_results(notebook).items())
+        summary = ("Written from scratch and compared (no baseline). Results of the final code, mean ± spread over "
+                   f"{spec.get('repeats', '')} runs:\n{table or 'none'}\n")
+    else:
+        best, baseline = nb.best_attempt(notebook, goal), notebook[0].get("metric")
+        summary = ""
+        if best and baseline and best["n"] != 1:
+            change = (best["metric"] - baseline) / baseline * 100
+            summary = f"Best result: attempt #{best['n']}, {change:+.1f}% {brief['metric']['name']} versus the baseline.\n"
+        start = (lab.get("start") or {}).get("url") or brief.get("target", "")
+        summary = f"Starting point: {start} at commit {str(lab.get('base_commit', ''))[:12]}.\n" + summary
     return f"""EXPERIMENTS (real runs executed by Lume's coding agent in an isolated sandbox; report these numbers
 exactly, include attempts that failed or made things worse, and never add results that are not listed):
-Metric: {brief['metric']['name']} ({'higher' if brief['metric']['goal'] == 'maximize' else 'lower'} is better),
+Metric: {brief['metric']['name']} ({'higher' if goal == 'maximize' else 'lower'} is better),
 measured with: {spec.get('measure', '')} ({spec.get('repeats', '')} repeats after {spec.get('warmup', '')} warm-up runs).
 Checks every attempt had to pass: {', '.join(spec.get('checks', {})) or 'none'}.
-{gain}Attempts:
-{nb.render(notebook, brief['metric']['goal'])}"""
+{summary}Attempts:
+{nb.render(notebook, goal)}"""

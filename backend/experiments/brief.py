@@ -21,7 +21,8 @@ write and run code, measure the result, compare it with the baseline, and report
 
 Write what the agent needs to know before it starts:
 - objective: one or two sentences: what to improve or test, on which system.
-- target: the code or system to experiment on (a repository URL if one is known, else a description).
+- target: the repository to experiment on, only if the research or the user names one (its URL); otherwise
+  leave it empty, and Lume will look for existing code to start from, or write it from scratch.
 - metric: the single number the objective asks to improve (e.g. if the objective is speed, a time or a
   throughput, not an accuracy). name, goal ("maximize" or "minimize") and measured_by (the tool, command or
   procedure that produces it, if the research names one). Quality metrics are measured on held-out data, never
@@ -76,8 +77,8 @@ def normalise_brief(raw, default_target: str = "") -> dict:
 
 def missing_fields(brief: dict) -> list[str]:
     """What must be filled in before the agent can start; empty when the brief is ready."""
-    missing = [label for label, value in [("objective", brief["objective"]), ("target", brief["target"]),
-                                          ("metric", brief["metric"]["name"])] if not value]
+    # No target is fine: Lume looks for existing code to start from, or writes it from scratch
+    missing = [label for label, value in [("objective", brief["objective"]), ("metric", brief["metric"]["name"])] if not value]
     return missing + (["answers to the open questions"] if brief["open_questions"] else [])
 
 

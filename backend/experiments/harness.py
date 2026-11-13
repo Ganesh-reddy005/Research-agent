@@ -11,14 +11,14 @@ import shlex
 import statistics
 from dataclasses import asdict, dataclass, field
 
-TIME, JSON_PREFIX, REGEX_PREFIX = "time", "json:", "regex:"
+TIME, JSON_PREFIX, REGEX_PREFIX, RESULTS = "time", "json:", "regex:", "json"  # json: a table of results, no single metric
 HYPERFINE_OUT = "/tmp/lume-hyperfine.json"
 
 
 @dataclass(frozen=True)
 class BenchmarkSpec:
     measure: str  # the command whose time, or printed number, is the metric
-    read: str = TIME  # "time", "json:<dotted.key>" or "regex:<pattern with one group>"
+    read: str = TIME  # "time", "json:<dotted.key>", "regex:<pattern with one group>", or "json" for a results table
     build: str = ""
     checks: dict = field(default_factory=dict)  # name -> command that must exit 0
     repeats: int = 5
@@ -56,6 +56,32 @@ def read_number(text: str, read: str) -> float | None:
     return None
 
 
+def read_results(text: str) -> dict[str, float] | None:
+    """Every number in the JSON object on the output's last line, flattened: {"A": {"time": 1.2}} -> {"A.time": 1.2}."""
+    try:
+        data = json.loads(text.strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    flat = {}
+    def walk(value, key):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, f"{key}.{k}" if key else str(k))
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            flat[key] = float(value)
+    walk(data, "")
+    return flat
+
+
+def summarise(runs: list[dict]) -> dict[str, dict]:
+    """{name: {"mean", "spread"}} over repeated runs, for the names every run reported."""
+    names = set.intersection(*(set(r) for r in runs)) if runs else set()
+    return {n: {"mean": statistics.mean(r[n] for r in runs),
+                "spread": statistics.stdev(r[n] for r in runs) if len(runs) > 1 else 0.0} for n in sorted(names)}
+
+
 def _failed(result, stage: str, error: str, log: str) -> dict:
     return {**result, "stage": stage, "error": error, "log": log}
 
@@ -73,7 +99,10 @@ def _measure(box, spec: BenchmarkSpec, runs: int, warmup: int) -> tuple[list[flo
     samples = []
     for i in range(warmup + runs):
         out = box.run(spec.measure, timeout=spec.timeout)
-        value = read_number(out.stdout, spec.read) if out.ok else None
+        if spec.read == RESULTS:
+            value = read_results(out.stdout) if out.ok else None
+        else:
+            value = read_number(out.stdout, spec.read) if out.ok else None
         if value is None:
             return samples, f"no {spec.read} value in the measure output" if out.ok else "the measure command failed", out.tail()
         if i >= warmup:
@@ -104,10 +133,16 @@ def run_attempt(box, spec: BenchmarkSpec, quick: bool = False, changed: list[str
     result["stage"] = "quick measure"
     samples, error, log = _measure(box, spec, runs=1, warmup=0)
     if error or quick:
-        return _failed(result, "quick measure", error, log) if error else {**result, "metric": samples[0], "spread": 0.0, "samples": samples}
+        if error:
+            return _failed(result, "quick measure", error, log)
+        if spec.read == RESULTS:
+            return {**result, "results": summarise(samples)}
+        return {**result, "metric": samples[0], "spread": 0.0, "samples": samples}
     result["stage"] = "measure"
     samples, error, log = _measure(box, spec, runs=spec.repeats, warmup=spec.warmup)
     if error:
         return _failed(result, "measure", error, log)
+    if spec.read == RESULTS:
+        return {**result, "stage": "done", "results": summarise(samples)}
     spread = statistics.stdev(samples) if len(samples) > 1 else 0.0
     return {**result, "stage": "done", "metric": statistics.mean(samples), "spread": spread, "samples": samples}

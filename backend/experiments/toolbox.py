@@ -10,10 +10,12 @@ from langchain_core.tools import StructuredTool
 from langgraph.types import interrupt
 from experiments import notebook as nb
 from experiments.code_tools import CodeTools
-from experiments.prior_work import search_literature, search_project_history
+from experiments.prior_work import search_literature, search_project_history, search_repositories
 
 LOOKUP = ("repo_map", "outline", "find_definition", "find_references", "grep", "read_file")
 PHASE_TOOLS = {
+    "scout": ("search_repositories", "search_literature", "ask_user"),  # find existing code to start from
+    "design": ("search_literature", "search_repositories", "ask_user"),  # plan code written from scratch
     "understand": LOOKUP + ("ask_user",),
     "plan": LOOKUP + ("search_literature", "search_project_history", "read_notebook", "check_already_tried", "ask_user"),
     "code": LOOKUP[1:] + ("read_notebook", "search_project_history", "edit_file", "write_file", "run_command", "quick_check"),
@@ -21,7 +23,7 @@ PHASE_TOOLS = {
 }
 LIMITS = {  # calls per phase
     "repo_map": 2, "outline": 20, "find_definition": 30, "find_references": 20, "grep": 20, "read_file": 30,
-    "search_literature": 3, "search_project_history": 3, "read_notebook": 5, "check_already_tried": 10, "ask_user": 2,
+    "search_literature": 3, "search_project_history": 3, "search_repositories": 4, "read_notebook": 5, "check_already_tried": 10, "ask_user": 2,
     "edit_file": 40, "write_file": 10, "run_command": 15, "quick_check": 5,
 }
 
@@ -37,6 +39,8 @@ DESCRIPTIONS = {
                  "find the line range with outline or find_definition first.",
     "search_literature": "Papers (kind='papers') or practical articles and docs (kind='web') about an idea, "
                          "before you spend a run on it.",
+    "search_repositories": "Existing open-source repositories for an idea, most-starred first, with last activity, "
+                           "license and language. Query with the method's or tool's name, not a sentence.",
     "search_project_history": "The target project's issues and pull requests about an idea: what maintainers "
                               "already tried, merged or rejected, and why.",
     "read_notebook": "Every earlier attempt: what it changed, whether the checks held, its result and lesson.",
@@ -69,7 +73,7 @@ class ToolBudget:
 
 @dataclass
 class ToolContext:
-    code: CodeTools
+    code: CodeTools | None  # None before any code exists (scouting, designing from scratch)
     target: str  # the brief's target, e.g. a repository URL
     goal: str  # the brief's metric goal: maximize or minimize
     notebook: list = field(default_factory=list)
@@ -96,9 +100,10 @@ def _functions(ctx: ToolContext) -> dict:
         return (f"Already tried as #{earlier['n']} [{earlier['verdict']}]: {earlier['hypothesis']}. "
                 f"Lesson: {earlier.get('lesson') or 'none recorded'}") if earlier else "Not tried yet."
 
-    return {"repo_map": ctx.code.repo_map, "outline": ctx.code.outline, "find_definition": ctx.code.find_definition,
-            "find_references": ctx.code.find_references, "grep": ctx.code.grep, "read_file": ctx.code.read_file,
-            "search_literature": literature, "search_project_history": history, "read_notebook": notebook,
+    lookups = {"repo_map": ctx.code.repo_map, "outline": ctx.code.outline, "find_definition": ctx.code.find_definition,
+               "find_references": ctx.code.find_references, "grep": ctx.code.grep, "read_file": ctx.code.read_file} if ctx.code else {}
+    return {**lookups,
+            "search_literature": literature, "search_project_history": history, "search_repositories": search_repositories, "read_notebook": notebook,
             "check_already_tried": already, "ask_user": _ask_user,
             **({"edit_file": ctx.edits.edit_file, "write_file": ctx.edits.write_file, "run_command": ctx.edits.run_command,
                 "quick_check": ctx.edits.quick_check} if ctx.edits else {})}
@@ -123,6 +128,8 @@ def build_tools(phase: str, ctx: ToolContext, budget: ToolBudget | None = None) 
         raise ValueError(f"Unknown phase {phase!r}; expected one of {', '.join(PHASE_TOOLS)}")
     if phase == "code" and ctx.edits is None:
         raise ValueError("The code phase needs EditTools (a sandbox and the approved benchmark)")
+    if ctx.code is None and set(PHASE_TOOLS[phase]) & set(LOOKUP):
+        raise ValueError(f"The {phase} phase reads code, so it needs CodeTools")
     budget, functions, tools = budget or ToolBudget(), _functions(ctx), []
     for name in PHASE_TOOLS[phase]:
         func = _limited(name, functions[name], budget)

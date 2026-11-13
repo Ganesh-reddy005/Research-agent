@@ -29,6 +29,8 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "experiment_brief": "PLANNING_MODEL",
         # The coding agent: understanding, planning and reflecting; editing code
         "experiment_understand": "EXPERIMENT_MODEL",
+        "experiment_scout": "EXPERIMENT_MODEL",
+        "experiment_design": "EXPERIMENT_MODEL",
         "experiment_plan": "EXPERIMENT_MODEL",
         "experiment_reflect": "EXPERIMENT_MODEL",
         "experiment_code": "CODING_MODEL"

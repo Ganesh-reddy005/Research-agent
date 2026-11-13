@@ -49,6 +49,15 @@ A chat for exploring ideas before committing to a project:
 - You see each search live ("Searching arXiv for …"), followed by its sources.
 - Answers cite `[n]` with links. Conversations, searches and sources are saved to History.
 
+### Experiments (coding agent, local CPU sandbox)
+After the sources are reviewed, choose **Plan experiments first** instead of writing the draft straight away.
+- **Brief:** Lume drafts the objective, metric, checks that must still pass and what must not change; you edit it.
+- **Starting point:** a repository you name, or existing open-source code Lume finds (you confirm before it is read), or code written from scratch when nothing fits.
+- **Plan:** Lume reads the code (a tree-sitter code graph, not embeddings) and proposes setup, build, checks, the measure command, protected files and ranked ideas. Nothing runs until you approve.
+- **Attempts:** each one edits code in a Docker sandbox with no network, then a fresh sandbox grades it: build, checks, then repeated measurements (hyperfine for timings). After every attempt you see a report and decide: continue, change the plan, or stop.
+- **Honest results:** improving existing code is compared with its baseline; code written from scratch shows a results table (variant × metric, mean ± spread), with the evaluation written first and frozen once you review it. Protected files can't be changed, and failures are reported too.
+- **Download:** the code as a zip with `LUME_RUN.md` (how to reproduce it) and, for existing code, `changes.diff`. The paper is written from the measured results.
+
 ### Workspace
 - **Live progress:** the current agent with an elapsed timer, real progress messages ("Writing section 3 of 6: …"), the paper streaming as it's written, and a readable activity log.
 - **Private library:** upload PDFs, which are searched alongside public sources in every project.
@@ -60,7 +69,7 @@ A chat for exploring ideas before committing to a project:
 | Status | Capability |
 |---|---|
 | Next | **Grounded citations:** check that each cited passage actually supports its sentence; click a citation to see the exact passage; move the paper writer onto hybrid retrieval |
-| Planned | **Experiment sandbox:** the agent writes and runs experiment code in an isolated sandbox (GPU-capable for training), with hypotheses and metrics approved up front, several seeds, and figures and results cited as runs |
+| In progress | **Experiments:** the CPU coding agent above runs locally in Docker. Next: several repositories per experiment, figures from runs, and a cloud GPU sandbox for training |
 | Planned | **More autonomy:** gap-driven re-search, parallel section writers, critic-driven revision loops, budget limits |
 | Planned | **Judge model:** a probabilistic verifier for citation checks, reranking and rubric-based critique |
 

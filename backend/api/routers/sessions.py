@@ -18,6 +18,17 @@ def _delete_collections(thread_id: str) -> None:
         if client.collection_exists(name):
             client.delete_collection(name)
 
+def _delete_experiment(thread_id: str) -> None:
+    """The coding agent's workspace on disk and the task's Docker image, if the session had experiments."""
+    import shutil
+    from experiments.workspace import WORKSPACES
+    shutil.rmtree(WORKSPACES / thread_id, ignore_errors=True)
+    try:
+        import docker
+        docker.from_env().images.remove(f"lume-task:{thread_id[:12]}", force=True)
+    except Exception:
+        pass  # no image, or Docker isn't running
+
 @router.delete("/{thread_id}", status_code=204)
 async def delete_session(thread_id: str, req: Request, user=Depends(get_current_user)):
     """Delete a research project or brainstorm and everything stored for it.
@@ -29,6 +40,7 @@ async def delete_session(thread_id: str, req: Request, user=Depends(get_current_
             await asyncio.to_thread(_delete_collections, thread_id)
         except Exception as e:  # orphaned vectors are harmless; don't block the delete
             print(f"Could not delete Qdrant collections of {thread_id}: {e}")
+    await asyncio.to_thread(_delete_experiment, thread_id)
     supabase = get_supabase_client()
     await asyncio.to_thread(supabase.table("sessions").delete().eq("thread_id", thread_id).eq("user_id", user.id).execute)
     return Response(status_code=204)

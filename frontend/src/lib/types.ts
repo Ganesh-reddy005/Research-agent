@@ -101,7 +101,8 @@ export type Attempt = {
   checks: Record<string, boolean>;
   metric: number | null;
   spread: number;
-  verdict: 'baseline' | 'improved' | 'no gain' | 'worse' | 'failed checks' | 'crashed';
+  verdict: 'baseline' | 'improved' | 'no gain' | 'worse' | 'failed checks' | 'crashed' | 'works';
+  results?: Record<string, { mean: number; spread: number }> | null;  // built from scratch: e.g. "quicksort.seconds"
   lesson?: string;
   cost_usd?: number;
   files?: string[];
@@ -120,8 +121,20 @@ export type ExperimentReport = {
   pending: string[];
 };
 
+/** Existing code Lume proposes to start from, found before anything is read. */
+export type StartingPoint = {
+  url: string;            // empty when nothing fits
+  why: string;
+  alternatives: { url: string; why: string }[];
+  if_none: string;
+  known: string[];        // repositories the research already found
+};
+
 /** The coding agent's working state. */
 export type Lab = {
+  mode?: 'improve' | 'build';  // improve existing code against its baseline, or write it from scratch
+  frozen?: boolean;            // from scratch: the evaluation can no longer change
+  start?: StartingPoint;
   ready: boolean;          // dependencies installed and the baseline measured
   env?: { summary?: string; build_system?: string; key_files?: string[]; risks?: string[]; questions?: string[] };
   setup: string[];

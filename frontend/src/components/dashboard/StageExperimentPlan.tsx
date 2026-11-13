@@ -26,7 +26,7 @@ export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
   return (
     <div className="space-y-10">
       <StageHeader
-        title={lab.ready ? 'Review the revised plan' : 'Review the experiment plan'}
+        title={lab.ready ? 'Review the revised plan' : lab.mode === 'build' ? 'Review the plan to build from scratch' : 'Review the experiment plan'}
         description="Nothing runs until you approve. Edit the ideas, and before the first run, how attempts are set up and graded."
       />
 
@@ -47,7 +47,7 @@ export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
       )}
 
       <section className="space-y-4">
-        <SectionLabel>Ideas to try, in order</SectionLabel>
+        <SectionLabel>{lab.mode === 'build' ? 'Steps to build, in order (step 1 writes the evaluation)' : 'Ideas to try, in order'}</SectionLabel>
         {done.length > 0 && <p className="text-sm text-mistral-black/60">Already tried: {done.map(h => h.idea).join('; ')}</p>}
         <ol className="space-y-3">
           {ideas.map((h, i) => (

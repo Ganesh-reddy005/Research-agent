@@ -116,12 +116,13 @@ export type ResumeData =
   | { mode: ResearchDepth; plan: ResearchPlan }
   | { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }
   | { decision: ExperimentDecision; direction?: string }
+  | { url: string } | { scratch: true }
   | Record<string, never>;
 
 export async function resumeResearch(
   threadId: string,
   action: 'answer' | 'approve' | 'continue' | 'plan_experiments'
-    | 'launch_experiments' | 'approve_experiment_plan' | 'experiment_decision',
+    | 'launch_experiments' | 'choose_start' | 'approve_experiment_plan' | 'experiment_decision',
   data: ResumeData,
   callbacks: EventCallbacks,
   signal?: AbortSignal
@@ -152,6 +153,19 @@ export async function saveExperimentBrief(
   });
   if (!response.ok) throw new Error(await errorDetail(response, 'Could not save the experiment brief'));
   return response.json();
+}
+
+/** Download the experiment's code (zip with LUME_RUN.md) as a file. */
+export async function downloadExperimentCode(threadId: string) {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/api/research/${threadId}/code`, { headers });
+  if (!response.ok) throw new Error(await errorDetail(response, 'Could not download the code'));
+  const name = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? 'experiment.zip';
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(await response.blob());
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 export async function getResearchSession(threadId: string): Promise<SessionSnapshot> {

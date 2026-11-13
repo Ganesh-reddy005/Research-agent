@@ -9,6 +9,7 @@ import re
 BASELINE, IMPROVED, NO_GAIN, WORSE = "baseline", "improved", "no gain", "worse"
 BASELINE_NAME = "baseline: the unmodified code"
 FAILED_CHECKS, CRASHED = "failed checks", "crashed"
+WORKS = "works"  # a build step that runs and passes its checks (no baseline to compare with)
 SIMILAR = 0.6  # word overlap above which a new hypothesis counts as already tried
 _WORDS = re.compile(r"[a-z0-9]+")
 _STOP = {"the", "a", "an", "to", "of", "and", "or", "in", "on", "for", "with", "by", "use", "try", "using", "instead"}
@@ -38,12 +39,19 @@ def best_attempt(notebook: list[dict], goal: str) -> dict | None:
 
 
 def record(notebook: list[dict], goal: str, hypothesis: str, change: str, checks: dict, metric,
-           spread: float = 0.0, lesson: str = "", cost_usd: float = 0.0) -> dict:
-    """A new attempt with its verdict against the best so far (not yet added to the notebook)."""
+           spread: float = 0.0, lesson: str = "", cost_usd: float = 0.0, results: dict | None = None) -> dict:
+    """A new attempt with its verdict (not yet added to the notebook). With results (a build step's
+    table), there is no baseline: the step works, or it failed its checks or didn't run."""
     best = best_attempt(notebook, goal)
+    if results is not None:
+        outcome = FAILED_CHECKS if not all(checks.values()) else WORKS
+    elif not all(checks.values()) or metric is not None:
+        outcome = verdict(metric, checks, best["metric"] if best else None, goal, spread)
+    else:
+        outcome = CRASHED
     return {"n": len(notebook) + 1, "hypothesis": hypothesis, "change": change, "checks": dict(checks),
             "metric": metric, "spread": spread, "lesson": lesson, "cost_usd": round(cost_usd, 4),
-            "verdict": verdict(metric, checks, best["metric"] if best else None, goal, spread)}
+            "results": results, "verdict": outcome}
 
 
 def _keywords(text: str) -> set[str]:
@@ -67,9 +75,18 @@ def render(notebook: list[dict], goal: str) -> str:
     lines = []
     for a in notebook:
         failed = [name for name, ok in a["checks"].items() if not ok]
-        result = f"{a['metric']:.4g}" + (f" ±{a['spread']:.2g}" if a.get("spread") else "") if a["metric"] is not None else "no result"
+        if a.get("results"):
+            result = "; ".join(f"{k} {v['mean']:.4g}" + (f" ±{v['spread']:.2g}" if v["spread"] else "") for k, v in a["results"].items())
+        elif a["metric"] is not None:
+            result = f"{a['metric']:.4g}" + (f" ±{a['spread']:.2g}" if a.get("spread") else "")
+        else:
+            result = "no result"
         lines.append(f"#{a['n']} [{a['verdict']}] {a['hypothesis']} -> {result}"
                      + (f"; failed: {', '.join(failed)}" if failed else "") + (f". Lesson: {a['lesson']}" if a.get("lesson") else ""))
+    working = [a for a in notebook if a["verdict"] == WORKS]
+    if any(a.get("results") is not None for a in notebook):  # building from scratch: no baseline, no "best"
+        lines.append(f"Latest working step: #{working[-1]['n']}" if working else "No step has passed its checks yet.")
+        return "\n".join(lines)
     best = best_attempt(notebook, goal)
     lines.append(f"Best so far: #{best['n']} ({best['metric']:.4g})" if best else "No attempt has passed every check yet.")
     return "\n".join(lines)

@@ -8,7 +8,7 @@ from experiments.brief import json_object
 from experiments.toolbox import ToolBudget, ToolContext, build_tools
 from utils.llm import get_llm
 
-MAX_STEPS = {"understand": 25, "plan": 15, "code": 40}  # model turns per phase
+MAX_STEPS = {"scout": 10, "design": 15, "understand": 25, "plan": 15, "code": 40}  # model turns per phase
 MAX_TOKENS = 8000  # per model reply
 
 

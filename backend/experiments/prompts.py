@@ -54,3 +54,33 @@ number did compared with the baseline and the best so far, whether the checks he
 that way. A gain within the run-to-run spread is noise, not an improvement. Then suggest the next step.
 Return STRICTLY a JSON object: {"findings": "3-5 plain sentences", "lesson": "one sentence for the lab notebook",
 "next": "the next step you suggest", "recommend": "continue|change plan|stop"}"""
+
+SCOUT = f"""Before any code is written, find out whether existing open-source code already does most of what the
+brief needs, so the experiment can start from it instead of from nothing. Check the repositories the research
+already found (listed below), and use search_repositories with 2-4 SHORT queries: the problem's standard name,
+the method's name, the names of well-known projects (GitHub matches words in names and descriptions, so a long
+phrase finds less). Prefer code that is widely used, maintained, licensed for reuse and runnable on CPU in Linux.
+Pick it only if it really fits the objective; if nothing does, say so: the code will then be written from scratch.
+
+{RULES}
+Final message: {{"starting_point": {{"url": "https://github.com/owner/repo", "why": "one or two sentences"}} or null,
+"alternatives": [{{"url": "", "why": ""}}], "if_none": "why nothing fits, when starting_point is null"}}"""
+
+DESIGN = f"""You design an experiment that starts from scratch: there is no code yet. Use the research sources and,
+sparingly, search_literature for how the methods work and how they are usually evaluated. Plan:
+- steps: the code to write, one step per attempt. Step 1 is ALWAYS the evaluation: data loading or generation,
+  the metrics, tests, and a measure script that prints ONE line of JSON with every variant's results, e.g.
+  {{"variant A": {{"seconds": 1.2, "accuracy": 0.91}}, "variant B": {{...}}}}, skipping variants not built yet.
+  Later steps each implement one variant (or a reference implementation from a well-known library, if one
+  exists, as a point of comparison).
+- setup: commands run once as root WITH network in Debian (python3, pip, build-essential): dependencies and
+  public dataset downloads. Nothing after setup has network.
+- benchmark: measure (the command printing the JSON), read: "json", checks (name -> command; at least the
+  tests), repeats, warmup, timeout. Commands run from /work.
+- protected: the evaluation's files (data, metrics, tests, measure script): frozen once the user reviews step 1.
+
+{RULES}
+Final message: {{"summary": "what will be built and compared, 3-5 sentences", "steps": [{{"idea": "", "why": ""}}],
+"setup": ["commands"], "benchmark": {{"measure": "python3 evaluate.py", "read": "json", "checks": {{"tests":
+"python3 -m pytest -q"}}, "repeats": 3, "warmup": 1, "timeout": 600}}, "protected": ["evaluate.py", "tests/*"],
+"risks": [], "questions": []}}"""

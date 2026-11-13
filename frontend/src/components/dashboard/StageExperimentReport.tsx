@@ -1,24 +1,28 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ArrowRight, PenLine, RotateCcw } from 'lucide-react';
+import { ArrowRight, Download, PenLine, RotateCcw } from 'lucide-react';
 import type { Attempt, ExperimentBrief, ExperimentDecision, Lab } from '@/lib/types';
 import { Button, SectionLabel, StageHeader, inputClass } from './ui';
 import AttemptsTable from './AttemptsTable';
+import ResultsTable from './ResultsTable';
 
 const TITLES: Record<Attempt['verdict'], string> = {
   baseline: 'Baseline measured', improved: 'It got better', 'no gain': 'No real change', worse: 'It got worse',
-  'failed checks': 'A check failed', crashed: 'It didn’t run',
+  'failed checks': 'A check failed', crashed: 'It didn’t run', works: 'It works',
 };
 
 /** After every attempt: what happened, every result so far, and the user's decision. */
-export default function StageExperimentReport({ brief, lab, notebook, onDecide, isProcessing }: {
+export default function StageExperimentReport({ brief, lab, notebook, onDecide, onDownload, isProcessing }: {
   brief: ExperimentBrief;
   lab: Lab;
   notebook: Attempt[];
   onDecide: (decision: ExperimentDecision, direction?: string) => void;
+  onDownload: () => void;
   isProcessing: boolean;
 }) {
+  const building = lab.mode === 'build';
+  const results = [...notebook].reverse().find(a => a.verdict === 'works' && a.results)?.results;
   const [direction, setDirection] = useState('');
   const [revising, setRevising] = useState(!lab.ready);
   const report = lab.report;
@@ -34,10 +38,29 @@ export default function StageExperimentReport({ brief, lab, notebook, onDecide, 
         </p>
       </StageHeader>
 
+      {building && results && (
+        <section className="space-y-3">
+          <SectionLabel>Results of the latest working code (no baseline)</SectionLabel>
+          <ResultsTable results={results} />
+        </section>
+      )}
+
+      {building && !lab.frozen && lab.ready && (
+        <section className="p-4 border border-mistral-orange/40 bg-mistral-orange/5 text-sm text-mistral-black/85 space-y-1">
+          <p className="font-semibold">Review the evaluation before you continue.</p>
+          <p>Continuing freezes these files, so no variant can be helped by changing how it is measured: {lab.spec.protected.join(', ') || 'none listed'}.</p>
+        </section>
+      )}
+
       {notebook.length > 0 && (
         <section className="space-y-3">
-          <SectionLabel>Every attempt so far</SectionLabel>
-          <AttemptsTable attempts={notebook} metric={brief.metric.name} goal={brief.metric.goal} />
+          <div className="flex items-center justify-between gap-3">
+            <SectionLabel>Every {building ? 'step' : 'attempt'} so far</SectionLabel>
+            <Button variant="secondary" onClick={onDownload} className="!py-1.5 !px-3 !text-xs">
+              <Download className="w-3.5 h-3.5" aria-hidden /> Download code
+            </Button>
+          </div>
+          <AttemptsTable attempts={notebook} metric={brief.metric.name} goal={brief.metric.goal} scores={!building} />
         </section>
       )}
 

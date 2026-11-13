@@ -1,7 +1,7 @@
 import json
 import uuid
 import asyncio
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Response
 from sse_starlette.sse import EventSourceResponse
 from api.models import ResearchStartRequest, ResearchResumeRequest, ExperimentBriefRequest
 from experiments.brief import normalise_brief, missing_fields
@@ -149,6 +149,17 @@ async def save_experiment_brief(thread_id: str, request: ExperimentBriefRequest,
     brief = normalise_brief(request.brief, default_target=snapshot.values.get("repo_url", ""))
     await graph.aupdate_state(config, {"experiment_brief": brief})
     return {"brief": brief, "missing": missing_fields(brief)}
+
+@router.get("/{thread_id}/code")
+async def download_experiment_code(thread_id: str, req: Request, user=Depends(get_current_user)):
+    """The experiment's code as a zip, with LUME_RUN.md to reproduce the results."""
+    from experiments.package import code_zip
+    await verify_session(thread_id, user.id)
+    values = (await req.app.state.graph.aget_state({"configurable": {"thread_id": thread_id}})).values or {}
+    if not (values.get("lab") or {}).get("workspace"):
+        raise HTTPException(status_code=404, detail="This session has no experiment code")
+    data, name = await asyncio.to_thread(code_zip, values)
+    return Response(content=data, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 @router.get("/{thread_id}")
 async def get_research_session(thread_id: str, req: Request, user=Depends(get_current_user)):

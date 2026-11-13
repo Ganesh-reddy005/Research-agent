@@ -27,6 +27,13 @@ class Workspace:
             raise WorkspaceError(f"git {args[0]} failed: {result.stderr.strip()[-500:]}")
         return result.stdout
 
+    def git_bytes(self, *args: str) -> bytes:
+        """A git command's raw output (e.g. an archive)."""
+        result = subprocess.run([*GIT, *args], cwd=self.path, capture_output=True, stdin=subprocess.DEVNULL)
+        if result.returncode != 0:
+            raise WorkspaceError(f"git {args[0]} failed: {result.stderr.decode(errors='replace').strip()[-500:]}")
+        return result.stdout
+
     @classmethod
     def clone(cls, source: str, name: str, ref: str | None = None) -> "Workspace":
         """A fresh copy of source (a repository URL or a local git folder) at ref, or its default branch."""
@@ -43,6 +50,19 @@ class Workspace:
         (path / ".git" / "info" / "exclude").write_text("__pycache__/\n*.pyc\n.pytest_cache/\n")
         if ref:
             workspace.git("checkout", "--quiet", ref)
+        return workspace
+
+    @classmethod
+    def create(cls, name: str) -> "Workspace":
+        """An empty workspace, for code written from scratch."""
+        path = WORKSPACES / name
+        if path.exists():
+            raise WorkspaceError(f"A workspace named {name} already exists")
+        path.mkdir(parents=True)
+        subprocess.run([*GIT, "init", "--quiet", str(path)], check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        (path / ".git" / "info" / "exclude").write_text("__pycache__/\n*.pyc\n.pytest_cache/\n")
+        workspace = cls(path)
+        workspace.snapshot("empty workspace")
         return workspace
 
     def head(self) -> str:
