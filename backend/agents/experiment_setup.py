@@ -30,7 +30,9 @@ async def understand_node(state):
     code = await asyncio.to_thread(CodeTools, workspace.path)
     await report_progress(f"Reading the code: {len(code.graph.files)} source files")
     ctx = ToolContext(code=code, target=brief["target"], goal=brief["metric"]["goal"])
-    result, usage = await run_phase("understand", "experiment_understand", UNDERSTAND, labs.brief_text(brief), ctx)
+    direction = (state.get("experiment_decision") or {}).get("direction", "")  # rereading after a failed setup
+    task = labs.brief_text(brief) + (f"\n\nThe user's correction (it overrides the brief): {direction}" if direction else "")
+    result, usage = await run_phase("understand", "experiment_understand", UNDERSTAND, task, ctx)
     spec = labs.normalise_spec({**(result.get("benchmark") or {}), "protected": result.get("protected") or []})
     lab = {**(state.get("lab") or {}), "mode": "improve", "frozen": True,  # protected files apply from the start
            "workspace": str(workspace.path), "base_commit": workspace.head(), "ready": False, "hypotheses": [],
