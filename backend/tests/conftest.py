@@ -107,3 +107,12 @@ def no_price_list(monkeypatch):
     """LLM costs are priced from OpenRouter's list; tests never fetch it."""
     import utils.costs
     monkeypatch.setattr(utils.costs, "_load_prices", lambda: None)
+
+
+@pytest.fixture(autouse=True)
+def no_diagram_calls(monkeypatch):
+    """The writer plans diagrams with a model; tests that don't fake it get "no diagrams", never a real call."""
+    import figures.diagrams
+    async def none(messages, agent_name=None, **kwargs):
+        return AIMessage(content='{"diagrams": []}')
+    monkeypatch.setattr(figures.diagrams, "ainvoke_llm", none)

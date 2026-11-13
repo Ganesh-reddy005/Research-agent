@@ -33,3 +33,5 @@ tree-sitter-java
 ripgrep  # the rg binary, for the agent's grep
 # Experiment sandbox: generated code runs in Docker containers
 llm-sandbox[docker]
+# Paper figures: charts of measured results
+matplotlib>=3.9

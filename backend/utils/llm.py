@@ -33,7 +33,8 @@ def get_llm(agent_name: str = None, temperature: float = 0.2, streaming: bool = 
         "experiment_design": "EXPERIMENT_MODEL",
         "experiment_plan": "EXPERIMENT_MODEL",
         "experiment_reflect": "EXPERIMENT_MODEL",
-        "experiment_code": "CODING_MODEL"
+        "experiment_code": "CODING_MODEL",
+        "figure_planning": "PLANNING_MODEL"
     }
 
     # Per-agent model -> DEFAULT_MODEL -> built-in default

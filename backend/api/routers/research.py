@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/research", tags=["research"])
 SESSION_FIELDS = [
     "topic", "research_mode", "clarification_questions", "user_answers", "research_brief",
     "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
-    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief", "lab", "notebook", "last_attempt",
+    "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief", "lab", "notebook", "last_attempt", "figures",
 ]
 
 def pending_question(snapshot) -> str:

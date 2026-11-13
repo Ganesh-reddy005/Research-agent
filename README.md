@@ -34,7 +34,8 @@ Paste a public GitHub link and Lume writes a paper about *your* project:
 ### IEEE-style papers
 - The paper is typeset IEEE-style: two columns, an *Abstract*— block, *Index Terms*—, and sections numbered I, II, III with subsections A, B.
 - References list only cited works, numbered by first citation, in IEEE format, e.g. `A. Author et al., "Title," arXiv, 2026. [Online]. Available: …`.
-- Export as **PDF** (via the browser's print engine, with real selectable text), **LaTeX** using the official `IEEEtran` class (ready for Overleaf), or **Markdown**.
+- **Figures and tables:** charts and tables of experiment results are drawn by code from the measured numbers (matplotlib; the model never writes a number into a figure), and architecture or method diagrams are planned by the model as boxes and arrows and compiled to Mermaid, so their syntax is always valid. The writer places them with `[[FIGURE:id]]` and refers to them with `[[REF:id]]`; a placement pass after every rewrite keeps each figure exactly once, inside a body section, so the paper's structure can't break. They are numbered by first appearance (Fig. 1, TABLE I), and wide ones span both columns.
+- Export as **PDF** (via the browser's print engine, with real selectable text), **LaTeX** using the official `IEEEtran` class (ready for Overleaf; a zip with `figures/*.png` when the paper has figures), or **Markdown** (tables as tables, diagrams as Mermaid code).
 
 ### Ask about your sources (hybrid RAG)
 The review step's chat uses a full retrieval pipeline:
@@ -137,6 +138,7 @@ A small agent loop (`graph/brainstorm.py`): the model either answers or calls se
 │   ├── experiments/     # coding agent: brief, lab state, prompts, agent runtime and tools,
 │   │                    # harness (build, checks, measure), notebook, git workspace, zip package
 │   ├── codegraph/       # tree-sitter code graph and PageRank repo map
+│   ├── figures/         # paper figures: charts and tables from results, diagrams, placement
 │   ├── sandbox/         # Docker sandbox (no network after setup, capped resources) + Dockerfile
 │   ├── api/
 │   │   ├── main.py      # app, lifespan (Postgres checkpointer), routers

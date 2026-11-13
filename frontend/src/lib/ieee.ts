@@ -1,6 +1,8 @@
 // Typesetting a Lume paper in IEEE style: parsing, citation renumbering, reference
 // formatting, LaTeX (IEEEtran) export and print-to-PDF.
 import type { Source } from './types';
+import { roman } from './numerals';
+import { FIGURE_LINE, FIGURE_REF, type Numbering } from './figures';
 
 export type PaperSection = { level: 2 | 3; title: string; body: string };
 export type Paper = { title: string; abstract: string; keywords: string; sections: PaperSection[] };
@@ -13,7 +15,8 @@ export const MAX_PAGES = 15;
 
 /** Words in the abstract and sections (not the references). */
 export const paperWords = (paper: Paper) =>
-  [paper.abstract, ...paper.sections.map(s => s.body)].join(' ').split(/\s+/).filter(Boolean).length;
+  [paper.abstract, ...paper.sections.map(s => s.body)].join(' ')
+    .replace(/\[\[(FIGURE|REF):[^\]]*\]\]/g, ' ').split(/\s+/).filter(Boolean).length;
 
 /** "I. Introduction", "1. Introduction", "Section 2: X" -> plain heading text. */
 const cleanHeading = (text: string) =>
@@ -87,13 +90,6 @@ export function renumberCitations(paper: Paper, sources: Source[]) {
   return { paper: renumbered, references: cited };
 }
 
-const ROMAN: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
-export function roman(n: number) {
-  let out = '';
-  for (const [value, numeral] of ROMAN) while (n >= value) { out += numeral; n -= value; }
-  return out;
-}
-
 /** Section numbering: I, II, III for sections; A, B, C for subsections within a section. */
 export function sectionLabels(sections: PaperSection[]) {
   let major = 0, minor = 0;
@@ -140,12 +136,16 @@ const LATEX_SPECIALS: Record<string, string> = {
 };
 const escapeLatex = (text: string) => text.replace(/[\\&%$#_{}~^]/g, c => LATEX_SPECIALS[c]);
 
-function inlineToLatex(text: string) {
+const latexLabel = (id: string, numbering?: Numbering) =>
+  `${numbering?.get(id)?.figure.kind === 'table' ? 'tab' : 'fig'}:${id}`;
+
+function inlineToLatex(text: string, numbering?: Numbering) {
   const links: string[] = [];
-  let out = text.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (_, label, url) => {
-    links.push(`${escapeLatex(label)} (\\url{${url}})`);
-    return `\u0000${links.length - 1}\u0000`;
-  });
+  const keep = (latex: string) => { links.push(latex); return `\u0000${links.length - 1}\u0000`; };
+  let out = text
+    .replace(FIGURE_REF, (_, id: string) => numbering?.has(id)
+      ? keep(`${numbering.get(id)!.figure.kind === 'table' ? 'Table' : 'Fig.'}~\\ref{${latexLabel(id, numbering)}}`) : 'the figure')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (_, label, url) => keep(`${escapeLatex(label)} (\\url{${url}})`));
   out = escapeLatex(out)
     .replace(CITATION, (_, list: string) => `\\cite{${list.split(',').map(n => `ref${n.trim()}`).join(',')}}`)
     .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
@@ -154,31 +154,67 @@ function inlineToLatex(text: string) {
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => links[Number(i)]);
 }
 
-function blockToLatex(body: string) {
+/** A tabular for a header row and body rows; wide tables (more than three columns) span both columns. */
+function tabular(columns: string[], rows: string[][], caption: string, label: string, numbering?: Numbering) {
+  const env = columns.length > 3 ? 'table*' : 'table';
+  const line = (cells: string[]) => `${cells.map(c => inlineToLatex(c, numbering)).join(' & ')} \\\\`;
+  return [`\\begin{${env}}[!t]`, caption && `\\caption{${inlineToLatex(caption, numbering)}}`, label && `\\label{${label}}`, '\\centering',
+    `\\begin{tabular}{${'l'.repeat(columns.length)}}`, '\\hline', line(columns), '\\hline', ...rows.map(line), '\\hline',
+    '\\end{tabular}', `\\end{${env}}`].filter(Boolean).join('\n');
+}
+
+function figureToLatex(id: string, numbering?: Numbering, wide?: Set<string>) {
+  const entry = numbering?.get(id);
+  if (!entry) return '';
+  const { figure } = entry;
+  if (figure.kind === 'table' && figure.table) return tabular(figure.table.columns, figure.table.rows, figure.caption, `tab:${id}`, numbering);
+  const [env, width] = wide?.has(id) ? ['figure*', '\\textwidth'] : ['figure', '\\columnwidth'];
+  return [`\\begin{${env}}[!t]`, '\\centering', `\\includegraphics[width=${width},height=0.4\\textheight,keepaspectratio]{figures/${id}.png}`,
+    `\\caption{${inlineToLatex(figure.caption, numbering)}}`, `\\label{fig:${id}}`, `\\end{${env}}`].join('\n');
+}
+
+const cells = (row: string) => row.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+const isRule = (row: string) => /^\s*\|?\s*:?-{3,}/.test(row);
+
+function blockToLatex(body: string, numbering?: Numbering, wide?: Set<string>) {
   const out: string[] = [];
   let list: 'itemize' | 'enumerate' | null = null;
   const closeList = () => { if (list) { out.push(`\\end{${list}}`); list = null; } };
+  const lines = body.split('\n');
 
-  for (const line of body.split('\n')) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const figure = line.match(FIGURE_LINE);
+    if (figure) { closeList(); out.push(figureToLatex(figure[1], numbering, wide)); continue; }
+    if (line.trim().startsWith('|') && isRule(lines[i + 1] ?? '')) {  // a Markdown table written in the text
+      closeList();
+      const rows: string[][] = [];
+      let j = i + 2;
+      for (; j < lines.length && lines[j].trim().startsWith('|'); j++) rows.push(cells(lines[j]));
+      out.push(tabular(cells(line), rows, '', '', numbering));
+      i = j - 1;
+      continue;
+    }
     const bullet = line.match(/^\s*[-*]\s+(.*)/);
     const numbered = line.match(/^\s*\d+[.)]\s+(.*)/);
     const item = bullet || numbered;
     if (item) {
       const kind = bullet ? 'itemize' : 'enumerate';
       if (list !== kind) { closeList(); out.push(`\\begin{${kind}}`); list = kind; }
-      out.push(`  \\item ${inlineToLatex(item[1])}`);
+      out.push(`  \\item ${inlineToLatex(item[1], numbering)}`);
     } else {
       closeList();
-      out.push(line.trim() ? inlineToLatex(line.trim()) : '');
+      out.push(line.trim() ? inlineToLatex(line.trim(), numbering) : '');
     }
   }
   closeList();
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
-export function toLatex(paper: Paper, references: Source[]) {
+/** IEEEtran source. With figures, images are expected in figures/<id>.png next to the .tex (see the zip export). */
+export function toLatex(paper: Paper, references: Source[], numbering?: Numbering, wide?: Set<string>) {
   const sections = paper.sections
-    .map(s => `\\${s.level === 2 ? 'section' : 'subsection'}{${escapeLatex(s.title)}}\n${blockToLatex(s.body)}`)
+    .map(s => `\\${s.level === 2 ? 'section' : 'subsection'}{${escapeLatex(s.title)}}\n${blockToLatex(s.body, numbering, wide)}`)
     .join('\n\n');
   const bib = references
     .map((s, i) => `\\bibitem{ref${i + 1}} ${escapeLatex(formatReference(s).replace(/ \[Online\]\. Available: .*$/, ''))}${
@@ -191,6 +227,7 @@ export function toLatex(paper: Paper, references: Source[]) {
 \\usepackage[T1]{fontenc}
 \\usepackage{cite}
 \\usepackage{url}
+\\usepackage{graphicx}
 
 \\begin{document}
 
@@ -235,6 +272,18 @@ export const IEEE_CSS = `
 .ieee-paper .ieee-refs { list-style: none; margin: 0; padding: 0; font-size: 12.5px; line-height: 1.35; }
 .ieee-paper .ieee-refs li { display: grid; grid-template-columns: 2.2em 1fr; margin-bottom: 5px; break-inside: avoid; }
 .ieee-paper .ieee-refs a { word-break: break-all; }
+.ieee-paper .ieee-figure { break-inside: avoid; margin: 12px 0 14px; }
+.ieee-paper .ieee-figure img { display: block; width: 100%; height: auto; margin: 0 auto; }
+.ieee-paper .ieee-figure img.ieee-diagram { width: auto; max-width: 100%; max-height: 360px; }
+.ieee-paper .ieee-figure figcaption { font-size: 12.5px; line-height: 1.35; text-align: justify; margin-top: 6px; }
+.ieee-paper .ieee-figure-loading { height: 140px; background: #f3f3f3; }
+.ieee-paper .ieee-wide { column-span: all; }
+.ieee-paper .ieee-table-caption { font-size: 12px; font-variant: small-caps; text-align: center !important; margin: 0 0 6px !important; }
+.ieee-paper table { border-collapse: collapse; width: 100%; font-size: 12.5px; line-height: 1.3; margin: 0 0 10px; }
+.ieee-paper th, .ieee-paper td { padding: 3px 6px; text-align: left; vertical-align: top; }
+.ieee-paper thead th { border-top: 1px solid #111; border-bottom: 0.6px solid #111; font-weight: normal; }
+.ieee-paper tbody tr:last-child td { border-bottom: 1px solid #111; }
+.ieee-paper .ieee-table-figure { overflow-x: auto; }
 @media print {
   @page { size: letter; margin: 0.75in 0.625in; }
   body { margin: 0; }
@@ -245,6 +294,8 @@ export const IEEE_CSS = `
   .ieee-paper .ieee-abstract, .ieee-paper .ieee-keywords { font-size: 9pt; }
   .ieee-paper h2, .ieee-paper h3 { font-size: 10pt; }
   .ieee-paper .ieee-refs { font-size: 8pt; }
+  .ieee-paper .ieee-figure figcaption, .ieee-paper table { font-size: 8pt; }
+  .ieee-paper .ieee-figure-loading { display: none; }
 }
 `;
 

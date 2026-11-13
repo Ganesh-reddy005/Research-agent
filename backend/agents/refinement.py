@@ -1,6 +1,7 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils.llm import ainvoke_llm
 from agents.paper_length import editing_rule, editing_max_tokens
+from figures import place_figures
 
 async def refinement_node(state):
     print("--- REFINEMENT AGENT: Polishing final report ---")
@@ -26,6 +27,11 @@ CITATIONS:
 - Never remove, renumber or invent citation numbers. When you merge or shorten sentences, keep their citations.
 - Do NOT write a References section; it is generated automatically from the cited sources.
 
+FIGURES AND TABLES:
+- Keep every line such as [[FIGURE:fig-attempts]] exactly as written, on its own line, in the same section.
+- Keep every reference such as [[REF:fig-attempts]] exactly as written; it becomes "Fig. 1" or "Table I".
+- Don't add figures, tables or images of your own.
+
 POLISHING RULES:
 1. No markdown bolding (**text**). Academic papers use plain text.
 2. {editing_rule(state)}
@@ -46,4 +52,5 @@ Critique Feedback to Incorporate:
     # The whole paper is rewritten in one call, so allow a long output
     response = await ainvoke_llm(messages, agent_name="refinement", temperature=0.1, max_tokens=editing_max_tokens(state))
     print("--- REFINEMENT AGENT: Report finalized ---")
-    return {"final_report": response.content, "current_step": "refinement"}
+    final = place_figures(response.content, state.get("figures") or [])  # whatever the edit did to the markers
+    return {"final_report": final, "current_step": "refinement"}

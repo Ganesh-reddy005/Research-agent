@@ -502,6 +502,7 @@ export default function Dashboard({ user }: { user: User }) {
                     topic={research.topic ?? 'Research report'}
                     report={report}
                     sources={research.raw_sources ?? []}
+                    figures={research.figures ?? []}
                     audit={research.citation_audit_log}
                     targetPages={research.target_pages}
                     reportRef={reportRef}

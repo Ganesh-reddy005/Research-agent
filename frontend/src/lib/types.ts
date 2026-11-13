@@ -185,10 +185,24 @@ export type ResearchState = {
   experiment_brief?: ExperimentBrief;
   lab?: Lab;
   notebook?: Attempt[];
+  figures?: PaperFigure[];
   pending_question?: string;  // an agent paused mid-step to ask the user
 };
 
 export type ResearchDepth = 'light' | 'deep';
+
+/** A figure or table in the paper. Charts and tables are made from measured results; diagrams illustrate
+ *  what the paper describes. The text places each with a [[FIGURE:id]] line and refers to it as [[REF:id]]. */
+export type PaperFigure = {
+  id: string;
+  kind: 'chart' | 'table' | 'diagram';
+  origin: 'measured' | 'illustrative';
+  caption: string;
+  section?: string;
+  svg?: string;                                     // chart
+  table?: { columns: string[]; rows: string[][] };  // table
+  mermaid?: string;                                 // diagram
+};
 
 export type SessionSnapshot = { thread_id: string; next: string[]; question?: string; state: ResearchState };
 

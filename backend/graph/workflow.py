@@ -58,6 +58,7 @@ class AgentState(TypedDict, total=False):
     launch_experiments: bool  # the user launched the coding agent from the brief
     lab: Dict[str, Any]  # the coding agent's working state: workspace, plan, benchmark, image, report
     notebook: List[Dict[str, Any]]  # every attempt, baseline first
+    figures: List[Dict[str, Any]]  # the paper's charts, tables and diagrams (see figures/)
     last_attempt: Dict[str, Any]
     experiment_decision: Dict[str, Any]  # after each report: continue, change plan (with a direction) or stop
 

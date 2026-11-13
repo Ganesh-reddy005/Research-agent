@@ -5,6 +5,7 @@ from evidence import section_evidence
 from agents.project_context import is_project_paper, project_context
 from agents.paper_length import writer_rule, evidence_size
 from experiments.lab import results_context
+from figures import build_figures, figure_notes, place_figures
 
 def number_evidence(passages, sources):
     """Label each passage with its source's citation number. [n] is raw_sources[n - 1],
@@ -54,6 +55,9 @@ async def writer_node(state):
             {"title": "Conclusion", "description": "Summary and future work"}
         ]
 
+    await report_progress("Preparing figures and tables")
+    figures = await build_figures(state, sections)
+
     for i, section in enumerate(sections, start=1):
         title = section.get("title")
         description = section.get("description")
@@ -82,6 +86,7 @@ STRICT FORMATTING & LENGTH RULES:
 5. Do not write the section heading; it is added automatically.
 {rules}
 {results_context(state)}
+{figure_notes(figures, title)}
 Synthesis Context:
 {synthesis}
 
@@ -98,4 +103,4 @@ Evidence Passages:
         print(f"Completed {title}. ({len(response.content)} characters)")
         full_report += f"\n\n## {title}\n\n{response.content}\n"
 
-    return {"draft_report": full_report, "current_step": "writer"}
+    return {"draft_report": place_figures(full_report, figures), "figures": figures, "current_step": "writer"}
