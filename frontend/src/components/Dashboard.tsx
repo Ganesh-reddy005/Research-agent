@@ -26,17 +26,20 @@ import StageExperimentBrief from './dashboard/StageExperimentBrief';
 import StageExperimentPlan from './dashboard/StageExperimentPlan';
 import StageExperimentReport from './dashboard/StageExperimentReport';
 import StageExperimentStart from './dashboard/StageExperimentStart';
+import StageAgentQuestion from './dashboard/StageAgentQuestion';
 import StageCompleted from './dashboard/StageCompleted';
 import StageBrainstorm from './dashboard/StageBrainstorm';
 import StageStalled from './dashboard/StageStalled';
 import { Button } from './dashboard/ui';
 import { agentStep } from './dashboard/agents';
 
-type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'brief' | 'expstart' | 'expplan' | 'expreport' | 'completed' | 'stalled';
+type Stage = 'idle' | 'brainstorm' | 'loading' | 'working' | 'clarification' | 'planning' | 'review' | 'brief' | 'question' | 'expstart' | 'expplan' | 'expreport' | 'completed' | 'stalled';
 type Panel = 'activity' | 'library' | null;
 
 // Where the graph paused (its next node) decides what the user sees.
 function stageFromNext(next: string[], state: ResearchState): Stage {
+  // An agent asked something mid-step: the answer comes before anything else
+  if (next.length && state.pending_question) return 'question';
   // The coding agent's pauses are told apart by the step that paused
   if (next.length && state.current_step === 'exp_scout') return 'expstart';
   if (next.length && state.current_step === 'exp_plan') return 'expplan';
@@ -48,7 +51,7 @@ function stageFromNext(next: string[], state: ResearchState): Stage {
   return 'stalled'; // stopped mid-run (e.g. connection dropped); can be continued
 }
 
-const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, brief: 3, expstart: 3, expplan: 3, expreport: 3, completed: 4, stalled: 2 };
+const STAGE_STEP: Partial<Record<Stage, number>> = { clarification: 0, planning: 1, review: 3, brief: 3, question: 3, expstart: 3, expplan: 3, expreport: 3, completed: 4, stalled: 2 };
 
 export default function Dashboard({ user }: { user: User }) {
   const [stage, setStage] = useState<Stage>('idle');
@@ -132,12 +135,13 @@ export default function Dashboard({ user }: { user: User }) {
         ? { ...prev, text: prev.text + token }
         : { agent, startedAt: Date.now(), text: token }));
     },
-    onInterrupt: (tid, next, step) => {
+    onInterrupt: (tid, next, step, question) => {
       setThreadId(tid);
       setIsProcessing(false);
       setLive(null);
       // The paused-before node, plus the step that paused where two pauses share one node
-      setStage(stageFromNext(next, { current_step: step }));
+      setResearch(prev => ({ ...prev, pending_question: question || undefined }));
+      setStage(stageFromNext(next, { current_step: step, pending_question: question }));
       refreshSessions();
     },
     onDone: (tid) => {
@@ -237,6 +241,11 @@ export default function Dashboard({ user }: { user: User }) {
   const handleDownloadCode = () =>
     downloadExperimentCode(threadId!).catch(err => setError(err instanceof Error ? err.message : String(err)));
 
+  const handleAnswerQuestion = (answer: string) =>
+    run(3, signal => resumeResearch(threadId!, 'answer_question', { answer }, callbacks, signal));
+
+  const handleRetryPlan = () => run(3, signal => resumeResearch(threadId!, 'retry_plan', {}, callbacks, signal));
+
   const handleApproveExperimentPlan = (data: { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }) =>
     run(3, signal => resumeResearch(threadId!, 'approve_experiment_plan', data, callbacks, signal));
 
@@ -305,9 +314,9 @@ export default function Dashboard({ user }: { user: User }) {
     setStage('loading');
     try {
       const snapshot = await getResearchSession(tid);
-      setResearch(snapshot.state);
+      setResearch({ ...snapshot.state, pending_question: snapshot.question || undefined });
       if (snapshot.state.research_mode) setDepth(snapshot.state.research_mode);
-      setStage(stageFromNext(snapshot.next, snapshot.state));
+      setStage(stageFromNext(snapshot.next, { ...snapshot.state, pending_question: snapshot.question }));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStage('stalled');
@@ -471,11 +480,14 @@ export default function Dashboard({ user }: { user: User }) {
                     isProcessing={isProcessing}
                   />
                 )}
+                {stage === 'question' && research.pending_question && (
+                  <StageAgentQuestion question={research.pending_question} onAnswer={handleAnswerQuestion} isProcessing={isProcessing} />
+                )}
                 {stage === 'expstart' && research.lab?.start && (
                   <StageExperimentStart start={research.lab.start} onChoose={handleChooseStart} isProcessing={isProcessing} />
                 )}
                 {stage === 'expplan' && research.lab && (
-                  <StageExperimentPlan lab={research.lab} onApprove={handleApproveExperimentPlan} isProcessing={isProcessing} />
+                  <StageExperimentPlan lab={research.lab} onApprove={handleApproveExperimentPlan} onRetry={handleRetryPlan} isProcessing={isProcessing} />
                 )}
                 {stage === 'expreport' && research.lab && research.experiment_brief && (
                   <StageExperimentReport brief={research.experiment_brief} lab={research.lab} notebook={research.notebook ?? []}

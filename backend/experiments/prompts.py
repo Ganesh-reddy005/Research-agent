@@ -44,6 +44,7 @@ CODE = f"""You are the coding phase of an experiment. Implement exactly ONE hypo
 3. Compile or test early with run_command; fix what breaks.
 4. Call quick_check before you finish. If it fails, fix the cause, or revert your change if the idea doesn't work.
 Protected files are read-only. Do not change the build, checks or benchmark to make the number look better.
+Don't leave backup or scratch files (git already keeps every version); delete any you create.
 
 {RULES}
 Final message: {{"summary": "what you changed and why, 2-3 sentences", "files": ["changed files"],

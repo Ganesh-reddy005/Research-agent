@@ -36,7 +36,6 @@ def lab(tmp_path, monkeypatch):
     subprocess.run(["git", "-C", str(origin), "add", "-A"], check=True)
     subprocess.run(["git", "-C", str(origin), "-c", "user.name=x", "-c", "user.email=x@x", "commit", "-qm", "init"], check=True)
     monkeypatch.setattr("experiments.workspace.WORKSPACES", tmp_path / "ws")
-    monkeypatch.setattr("experiments.lab.WORKSPACES", tmp_path / "ws")
     for mod in (setup_mod, loop_mod):
         monkeypatch.setattr(mod, "DockerSandbox", lambda path, **kw: FakeBox(__import__("pathlib").Path(path)))
     tasks = []
@@ -208,3 +207,88 @@ def test_code_download_includes_the_diff_and_how_to_reproduce(client, lab):
     notes = bundle.read("LUME_RUN.md").decode()
     assert "## Measure\n    ./bench" in notes and "#2 [improved] cache the result" in notes
     assert "+150" in bundle.read("changes.diff").decode() and bundle.read("SPEED").decode() == "150\n"
+
+def test_a_failed_design_can_be_tried_again_without_redoing_the_scout(client, lab, monkeypatch):
+    http, graph = client
+    origin, tasks = lab
+    real = start_mod.run_phase
+    calls = {"design": 0}
+    async def flaky(phase, *args):
+        if phase == "design":
+            calls["design"] += 1
+            if calls["design"] == 1:
+                return {"error": "the final answer wasn't valid JSON"}, {}
+        return await real(phase, *args)
+    monkeypatch.setattr(start_mod, "run_phase", flaky)
+    to_brief_pause(http, graph)
+    resume(http, "launch_experiments")
+    resume(http, "choose_start", {"scratch": True})
+    assert state(graph).values["lab"]["error"] and not state(graph).values["lab"]["hypotheses"]
+
+    resume(http, "retry_plan")
+    snap = state(graph)
+    assert snap.values["current_step"] == "exp_plan" and not snap.values["lab"]["error"]
+    assert snap.values["lab"]["hypotheses"][0]["idea"] == "write the evaluation"
+    assert [p for p, _ in tasks].count("scout") == 1 and calls["design"] == 2  # only the design ran again
+
+def test_a_question_from_the_agent_reaches_the_user_and_the_answer_reaches_the_agent(client, lab, monkeypatch):
+    http, graph = client
+    from langgraph.types import interrupt
+    real = start_mod.run_phase
+    async def asking(phase, *args):
+        if phase == "design":  # like the ask_user tool: pause until the user answers
+            answer = interrupt({"question": "Include the built-in sort as a reference?"})
+            steps = [{"idea": "write the evaluation"}, {"idea": "implement quicksort"}]
+            if answer.lower().startswith("yes"):
+                steps.append({"idea": "add the built-in sort as a reference"})
+            return {"summary": "s", "steps": steps, "benchmark": {"measure": "python3 evaluate.py", "read": "json"}}, {}
+        return await real(phase, *args)
+    monkeypatch.setattr(start_mod, "run_phase", asking)
+    to_brief_pause(http, graph)
+    resume(http, "launch_experiments")
+    body = resume(http, "choose_start", {"scratch": True})
+    assert '"question": "Include the built-in sort as a reference?"' in body
+    assert http.get(f"/api/research/{THREAD}").json()["question"] == "Include the built-in sort as a reference?"
+
+    res = http.post("/api/research/resume", json={"thread_id": THREAD, "action": "answer_question", "data": {"answer": " "}})
+    assert res.status_code == 400  # an empty answer is refused
+    resume(http, "answer_question", {"answer": "Yes, as a reference point"})
+    snap = state(graph)
+    assert snap.values["current_step"] == "exp_plan"
+    assert [h["idea"] for h in snap.values["lab"]["hypotheses"]][-1] == "add the built-in sort as a reference"
+    assert http.get(f"/api/research/{THREAD}").json()["question"] == ""
+
+def test_from_scratch_a_failed_step_is_retried_with_its_error_and_nothing_freezes_until_it_works(client, lab, monkeypatch):
+    http, graph = client
+    origin, tasks = lab
+    real = start_mod.run_phase
+    tries = {"n": 0}
+    async def first_eval_broken(phase, agent_name, system, task, ctx):
+        if phase == "code" and "write the evaluation" in task:
+            tries["n"] += 1
+            if tries["n"] == 1:  # puts the tests in the wrong place: the check fails
+                tasks.append((phase, task))
+                ctx.edits.write_file("evaluate.py", "print('{}')\n")
+                return {"summary": "wrote it"}, {}
+        return await real(phase, agent_name, system, task, ctx)
+    monkeypatch.setattr(start_mod, "run_phase", first_eval_broken)
+    monkeypatch.setattr(loop_mod, "run_phase", first_eval_broken)
+    from sandbox.base import CommandResult
+    def run(self, command, timeout=None):  # the tests check fails until the evaluation step has really been written
+        if "pytest" in command and not (self.root / "evaluation.py").exists():
+            return CommandResult(command, 1, "", "no tests ran", 0.01)
+        return CommandResult(command, 0, (self.root / "RESULTS.json").read_text() if (self.root / "RESULTS.json").exists() else "{}", "", 0.01)
+    monkeypatch.setattr(FakeBox, "run", run)
+    to_brief_pause(http, graph)
+    resume(http, "launch_experiments")
+    resume(http, "choose_start", {"scratch": True})
+    resume(http, "approve_experiment_plan", {"hypotheses": state(graph).values["lab"]["hypotheses"]})
+    snap = state(graph)
+    assert snap.values["notebook"][0]["verdict"] == "failed checks"
+    assert "Check 'tests': pytest" in tasks[-1][1] and "Measure: python3 evaluate.py" in tasks[-1][1]  # it saw the commands
+
+    resume(http, "experiment_decision", {"decision": "continue"})
+    snap = state(graph)
+    assert snap.values["lab"]["frozen"] is False  # the evaluation never worked: nothing to freeze
+    assert snap.values["notebook"][-1]["hypothesis"] == "write the evaluation"  # the same step again, not the next one
+    assert "This step was tried before and failed" in tasks[-1][1]

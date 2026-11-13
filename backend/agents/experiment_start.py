@@ -8,7 +8,7 @@ from experiments.agent_runtime import run_phase
 from experiments.prior_work import repositories_in_sources
 from experiments.prompts import DESIGN, SCOUT
 from experiments.toolbox import ToolContext
-from experiments.workspace import WORKSPACES, Workspace
+from experiments.workspace import Workspace, workspace_path
 from utils.events import report_progress
 
 IMPROVE, BUILD = "improve", "build"
@@ -39,7 +39,7 @@ async def design_node(state):
     print("--- EXPERIMENT: DESIGN FROM SCRATCH ---")
     brief, previous = state["experiment_brief"], state.get("lab") or {}
     await report_progress("Designing the experiment: the evaluation first, then what to build and compare")
-    existing = WORKSPACES / state["thread_id"]
+    existing = workspace_path(state["thread_id"])
     workspace = Workspace(existing) if existing.exists() else await asyncio.to_thread(Workspace.create, state["thread_id"])
     sources = "\n".join(f"- {s.get('title')}" for s in (state.get("raw_sources") or [])[:SOURCES_SHOWN])
     task = f"{labs.brief_text(brief)}\n\nResearch sources found so far:\n{sources or 'none'}"

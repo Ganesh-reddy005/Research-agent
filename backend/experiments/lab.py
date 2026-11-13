@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from experiments import notebook as nb
 from experiments.harness import BenchmarkSpec, TIME
-from experiments.workspace import WORKSPACES, Workspace
+from experiments.workspace import Workspace, workspace_path
 
 PENDING, DONE = "pending", "done"
 _URL = re.compile(r"(https?://\S+|git@\S+)")
@@ -24,7 +24,7 @@ def clone_source(target: str) -> str | None:
 
 def open_workspace(target: str, name: str) -> Workspace:
     """The session's workspace, cloned on first use."""
-    existing = WORKSPACES / name
+    existing = workspace_path(name)
     if existing.exists():
         return Workspace(existing)
     source = clone_source(target)
@@ -79,6 +79,27 @@ def brief_text(brief: dict) -> str:
         if brief.get(key):
             lines.append(f"{label}:\n" + "\n".join(f"- {item}" for item in brief[key]))
     return "\n".join(lines)
+
+
+def code_task(brief: dict, lab: dict, hypothesis: dict, notebook: list[dict]) -> str:
+    """What the coding phase is told: the brief, the exact commands that will grade its work, the idea,
+    and, when it retries a step, what went wrong last time."""
+    spec = lab.get("spec") or {}
+    grading = [f"Build: {spec['build']}" if spec.get("build") else "Build: none",
+               *(f"Check '{name}': {command}" for name, command in (spec.get("checks") or {}).items()),
+               f"Measure: {spec.get('measure', '')} (read as {spec.get('read', '')})"]
+    if spec.get("read") == "json":
+        grading.append("The measure command must print ONE line of JSON on its last line: {\"variant\": {\"metric\": number}}")
+    parts = [brief_text(brief), "Your work is graded from the working directory with exactly these commands:\n" + "\n".join(grading),
+             f"Protected files (read-only): {', '.join(spec.get('protected') or []) or 'none'}" if lab.get("frozen", True) else
+             "The evaluation is not frozen yet: you are writing it, so the files above may be created.",
+             f"Hypothesis to implement: {hypothesis['idea']}\nWhy: {hypothesis.get('why', '')}"]
+    earlier = [a for a in notebook if a.get("hypothesis") == hypothesis["idea"]]
+    if earlier:
+        last = earlier[-1]
+        parts.append(f"This step was tried before and failed ({last.get('error') or last.get('verdict')}). Log:\n"
+                     f"{(last.get('log') or '')[-800:]}\nFix that cause this time.")
+    return "\n\n".join(parts)
 
 
 def plan_task(brief: dict, lab: dict, notebook: list[dict], direction: str) -> str:

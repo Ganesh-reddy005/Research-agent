@@ -76,6 +76,22 @@ export default function StageExperimentReport({ brief, lab, notebook, onDecide, 
         </section>
       )}
 
+      {latest?.trace && latest.trace.length > 0 && (
+        <details className="border border-mistral-black/10 bg-white">
+          <summary className="px-4 py-3 cursor-pointer text-sm font-semibold text-mistral-black/80">
+            What the agent did ({latest.trace.length} tool call{latest.trace.length === 1 ? '' : 's'})
+          </summary>
+          <ol className="px-4 pb-4 space-y-2 text-xs font-mono text-mistral-black/80 max-h-80 overflow-y-auto">
+            {latest.trace.map((step, i) => (
+              <li key={i} className="break-words">
+                <span className="text-mistral-orange">{i + 1}. {step.tool}</span>({step.args})
+                {step.result && <span className="block text-mistral-black/60">→ {step.result}</span>}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
       {report?.next && (
         <section className="space-y-2">
           <SectionLabel>Suggested next</SectionLabel>

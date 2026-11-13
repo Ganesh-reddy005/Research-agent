@@ -11,6 +11,13 @@ WORKSPACES = Path(os.getenv("LUME_WORKSPACES", Path.home() / ".lume" / "workspac
 GIT = ["git", "-c", "user.name=Lume", "-c", "user.email=lume@localhost", "-c", "commit.gpgsign=false",
        "-c", "core.hooksPath=/dev/null"]
 MAX_DIFF_CHARS = 20_000
+# Caches, build output and backup copies never belong in an attempt's diff (git already keeps every version)
+EXCLUDE = "__pycache__/\n*.pyc\n.pytest_cache/\n*.bak\n*.orig\n*.rej\n*~\n*.swp\n"
+
+
+def workspace_path(name: str) -> Path:
+    """Where a session's workspace lives, looked up at call time (so tests can redirect WORKSPACES)."""
+    return WORKSPACES / name
 
 
 class WorkspaceError(Exception):
@@ -37,7 +44,7 @@ class Workspace:
     @classmethod
     def clone(cls, source: str, name: str, ref: str | None = None) -> "Workspace":
         """A fresh copy of source (a repository URL or a local git folder) at ref, or its default branch."""
-        path = WORKSPACES / name
+        path = workspace_path(name)
         if path.exists():
             raise WorkspaceError(f"A workspace named {name} already exists")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,8 +53,7 @@ class Workspace:
         if result.returncode != 0:
             raise WorkspaceError(f"Couldn't clone {source}: {result.stderr.strip()[-500:]}")
         workspace = cls(path)
-        # Caches and build output never belong in an attempt's diff
-        (path / ".git" / "info" / "exclude").write_text("__pycache__/\n*.pyc\n.pytest_cache/\n")
+        (path / ".git" / "info" / "exclude").write_text(EXCLUDE)
         if ref:
             workspace.git("checkout", "--quiet", ref)
         return workspace
@@ -55,12 +61,12 @@ class Workspace:
     @classmethod
     def create(cls, name: str) -> "Workspace":
         """An empty workspace, for code written from scratch."""
-        path = WORKSPACES / name
+        path = workspace_path(name)
         if path.exists():
             raise WorkspaceError(f"A workspace named {name} already exists")
         path.mkdir(parents=True)
         subprocess.run([*GIT, "init", "--quiet", str(path)], check=True, capture_output=True, stdin=subprocess.DEVNULL)
-        (path / ".git" / "info" / "exclude").write_text("__pycache__/\n*.pyc\n.pytest_cache/\n")
+        (path / ".git" / "info" / "exclude").write_text(EXCLUDE)
         workspace = cls(path)
         workspace.snapshot("empty workspace")
         return workspace

@@ -134,3 +134,33 @@ def test_edit_tools_change_code_but_never_protected_files(code):
     assert edits.write_file(".git/config", "x").endswith("outside the target.")
     assert edits.write_file("src/fast.c", "static int fast_dot(int n) { return n; }\n").startswith("Wrote src/fast.c")
     assert code.find_definition("fast_dot").startswith("src/fast.c:1")  # the code graph sees the new file
+
+def test_a_failing_tool_reports_to_the_agent_instead_of_ending_its_run(code, monkeypatch):
+    monkeypatch.setattr(code, "find_definition", lambda name: 1 / 0)
+    tool = next(t for t in build_tools("understand", ctx(code)) if t.name == "find_definition")
+    assert tool.invoke({"name": "x"}).startswith("find_definition failed: ZeroDivisionError")
+
+def test_quick_check_reports_a_results_table(code):
+    from experiments.edit_tools import EditTools
+    from experiments.harness import BenchmarkSpec
+    from sandbox.base import CommandResult
+    class Box:
+        def run(self, command, timeout=None):
+            return CommandResult(command, 0, '{"quicksort": {"seconds": 1.5}}', "", 0.1)
+    edits = EditTools(code, Box(), BenchmarkSpec(measure="python3 evaluate.py", read="json"))
+    assert edits.quick_check() == "Builds, checks pass, one run of the measure printed: quicksort.seconds 1.5. The grader will run the full repeats."
+
+def test_the_trace_records_each_tool_call_and_survives_the_step_limit(code, monkeypatch):
+    from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+    from langchain_core.messages import AIMessage
+    import experiments.agent_runtime as runtime
+    class Looping(GenericFakeChatModel):  # calls find_definition forever, never answers
+        def bind_tools(self, tools, **kw): return self
+    calls = iter([AIMessage(content="", tool_calls=[{"name": "find_definition", "args": {"name": "dot_product"}, "id": str(i)}])
+                  for i in range(100)])
+    monkeypatch.setattr(runtime, "get_llm", lambda *a, **k: Looping(messages=calls))
+    monkeypatch.setitem(runtime.MAX_STEPS, "understand", 3)
+    result, _ = asyncio.run(runtime.run_phase("understand", "x", "system", "task", ctx(code)))
+    assert result["error"].startswith("stopped after 3 steps")
+    assert result["trace"][0] == {"tool": "find_definition", "args": "name=dot_product",
+                                  "result": "src/kernel.c:1-3 function: static int dot_product(int n) {"}

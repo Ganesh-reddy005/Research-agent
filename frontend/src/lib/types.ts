@@ -109,6 +109,7 @@ export type Attempt = {
   stage?: string;
   error?: string;
   log?: string;
+  trace?: { tool: string; args: string; result: string }[];  // what the agent did, call by call
 };
 
 export type ExperimentReport = {
@@ -178,11 +179,12 @@ export type ResearchState = {
   experiment_brief?: ExperimentBrief;
   lab?: Lab;
   notebook?: Attempt[];
+  pending_question?: string;  // an agent paused mid-step to ask the user
 };
 
 export type ResearchDepth = 'light' | 'deep';
 
-export type SessionSnapshot = { thread_id: string; next: string[]; state: ResearchState };
+export type SessionSnapshot = { thread_id: string; next: string[]; question?: string; state: ResearchState };
 
 export type SessionSummary = {
   thread_id: string;

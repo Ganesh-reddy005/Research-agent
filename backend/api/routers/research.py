@@ -2,10 +2,11 @@ import json
 import uuid
 import asyncio
 from fastapi import APIRouter, Request, Depends, HTTPException, Response
+from langgraph.types import Command
 from sse_starlette.sse import EventSourceResponse
 from api.models import ResearchStartRequest, ResearchResumeRequest, ExperimentBriefRequest
 from experiments.brief import normalise_brief, missing_fields
-from api.experiment_actions import ACTIONS as EXPERIMENT_ACTIONS, experiment_update
+from api.experiment_actions import ACTIONS as EXPERIMENT_ACTIONS, experiment_update, retry_from
 from utils.auth import get_current_user, get_supabase_client, verify_session, ensure_profile
 from repo.github import parse_github_url, RepoError
 
@@ -17,6 +18,13 @@ SESSION_FIELDS = [
     "research_plan", "raw_sources", "assistance_summary", "draft_report", "final_report",
     "citation_audit_log", "current_step", "repo_url", "project_profile", "target_pages", "search_plan", "experiment_brief", "lab", "notebook", "last_attempt",
 ]
+
+def pending_question(snapshot) -> str:
+    """A question an agent asked the user (ask_user) that the graph is waiting on, if any."""
+    for item in getattr(snapshot, "interrupts", ()) or ():
+        if isinstance(item.value, dict) and item.value.get("question"):
+            return str(item.value["question"])
+    return ""
 
 # Agents whose LLM output is prose worth showing live; the rest emit JSON
 STREAMED_AGENTS = {"assistance", "synthesis", "writer", "critic", "refinement"}
@@ -47,7 +55,8 @@ async def stream_graph(graph, graph_input, config, thread_id, on_complete=None):
         snapshot = await graph.aget_state(config)
         if snapshot.next:
             # The step that paused tells apart two pauses before the same node (review vs. brief)
-            yield event("interrupt", next=snapshot.next, step=snapshot.values.get("current_step"))
+            yield event("interrupt", next=snapshot.next, step=snapshot.values.get("current_step"),
+                        question=pending_question(snapshot))
         else:
             if on_complete:
                 await on_complete()
@@ -107,7 +116,15 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
     config = {"configurable": {"thread_id": request.thread_id}}
     data = request.data or {}
     
-    if request.action == "answer":
+    graph_input = None
+    if request.action == "answer_question":  # an agent asked something mid-step; it continues with the answer
+        if not pending_question(await graph.aget_state(config)):
+            raise HTTPException(status_code=409, detail="No question is waiting for an answer")
+        answer = str(data.get("answer", "")).strip()
+        if not answer:
+            raise HTTPException(status_code=400, detail="Write an answer")
+        graph_input = Command(resume=answer)
+    elif request.action == "answer":
         await graph.aupdate_state(config, {"user_answers": data.get("answers", {})})
     elif request.action == "approve":
         updates = {
@@ -122,6 +139,9 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
                 raise HTTPException(status_code=400, detail="Edited plan must contain at least one section")
             updates["research_plan"] = edited_plan
         await graph.aupdate_state(config, updates)
+    elif request.action == "retry_plan":
+        values = (await graph.aget_state(config)).values or {}
+        await graph.aupdate_state(config, {"lab": {**values.get("lab", {}), "error": ""}}, as_node=retry_from(values))
     elif request.action in EXPERIMENT_ACTIONS:
         values = (await graph.aget_state(config)).values or {}
         await graph.aupdate_state(config, experiment_update(request.action, values, data))
@@ -136,7 +156,7 @@ async def resume_research(request: ResearchResumeRequest, req: Request, user=Dep
         supabase = get_supabase_client()
         await asyncio.to_thread(supabase.table("sessions").update({"status": "completed"}).eq("thread_id", request.thread_id).execute)
 
-    return EventSourceResponse(stream_graph(graph, None, config, request.thread_id, on_complete=mark_completed), ping=20)
+    return EventSourceResponse(stream_graph(graph, graph_input, config, request.thread_id, on_complete=mark_completed), ping=20)
 
 @router.put("/{thread_id}/brief")
 async def save_experiment_brief(thread_id: str, request: ExperimentBriefRequest, req: Request, user=Depends(get_current_user)):
@@ -170,5 +190,6 @@ async def get_research_session(thread_id: str, req: Request, user=Depends(get_cu
     return {
         "thread_id": thread_id,
         "next": list(snapshot.next),
+        "question": pending_question(snapshot),
         "state": {k: values[k] for k in SESSION_FIELDS if k in values},
     }

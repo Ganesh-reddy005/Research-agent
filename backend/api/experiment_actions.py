@@ -54,9 +54,21 @@ def _decide(values: dict, data: dict) -> dict:
         raise HTTPException(status_code=400, detail="Say how the plan should change")
     update = {"experiment_decision": {"decision": decision, "direction": direction}}
     lab = values.get("lab") or {}
-    if lab.get("mode") == "build" and not lab.get("frozen") and decision != STOP:
-        update["lab"] = {**lab, "frozen": True}  # the user has seen the evaluation: from now on it can't change
+    evaluation_works = any(a.get("verdict") == "works" for a in values.get("notebook") or [])
+    if lab.get("mode") == "build" and not lab.get("frozen") and decision != STOP and evaluation_works:
+        update["lab"] = {**lab, "frozen": True}  # the user has seen a working evaluation: from now on it can't change
     return update
+
+
+def retry_from(values: dict) -> str:
+    """When planning failed, the step to resume after so only the failed one runs again: design (from
+    scratch), reading the code, or just the planning."""
+    if values.get("current_step") != "exp_plan":
+        raise HTTPException(status_code=409, detail="Only a plan can be retried")
+    lab = values.get("lab") or {}
+    if lab.get("mode") == "build" and not lab.get("ready"):
+        return "exp_scout"  # -> design again
+    return "exp_understand" if (lab.get("env") or {}).get("summary") else "experiment_brief"  # -> plan / read again
 
 
 def experiment_update(action: str, values: dict, data: dict) -> dict:

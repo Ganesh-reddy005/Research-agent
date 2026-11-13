@@ -83,12 +83,17 @@ def missing_fields(brief: dict) -> list[str]:
 
 
 def json_object(content: str) -> dict:
-    match = re.search(r"\{.*\}", content, re.DOTALL)
-    try:
-        data = json.loads(match.group(0)) if match else {}
-    except json.JSONDecodeError:
-        return {}
-    return data if isinstance(data, dict) else {}
+    """The largest JSON object in a model's answer, wherever it sits: answers wrap it in prose or code
+    fences, and may mention other braces (code, examples) before or after it."""
+    decoder, best = json.JSONDecoder(), {}
+    for start in (m.start() for m in re.finditer(r"\{", content or "")):
+        try:
+            data, end = decoder.raw_decode(content, start)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict) and end - start > len(json.dumps(best)):
+            best = data
+    return best
 
 
 def _context(state) -> str:

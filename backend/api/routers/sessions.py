@@ -21,8 +21,8 @@ def _delete_collections(thread_id: str) -> None:
 def _delete_experiment(thread_id: str) -> None:
     """The coding agent's workspace on disk and the task's Docker image, if the session had experiments."""
     import shutil
-    from experiments.workspace import WORKSPACES
-    shutil.rmtree(WORKSPACES / thread_id, ignore_errors=True)
+    from experiments.workspace import workspace_path
+    shutil.rmtree(workspace_path(thread_id), ignore_errors=True)
     try:
         import docker
         docker.from_env().images.remove(f"lume-task:{thread_id[:12]}", force=True)

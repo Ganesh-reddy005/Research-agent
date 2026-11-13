@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { BenchmarkSpec, Hypothesis, Lab } from '@/lib/types';
 import { Button, SectionLabel, StageHeader, inputClass } from './ui';
 import BenchmarkFields from './BenchmarkFields';
 
-export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
+export default function StageExperimentPlan({ lab, onApprove, onRetry, isProcessing }: {
   lab: Lab;
   onApprove: (data: { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }) => void;
+  onRetry: () => void;  // planning failed: run the failed step again
   isProcessing: boolean;
 }) {
   const done = lab.hypotheses.filter(h => h.status === 'done');
@@ -73,7 +74,12 @@ export default function StageExperimentPlan({ lab, onApprove, isProcessing }: {
       <BenchmarkFields setup={setup} spec={spec} locked={lab.ready} onChange={(s, b) => { setSetup(s); setSpec(b); }} />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-end pt-6 border-t border-mistral-black/10">
-        {!valid && <span className="text-sm text-mistral-black/60">Add at least one idea{lab.ready ? '' : ' and a measure command'}.</span>}
+        {!valid && <span className="text-sm text-mistral-black/60">Add at least one idea{lab.ready ? '' : ' and a measure command'}, or try again.</span>}
+        {lab.error && (
+          <Button variant="secondary" onClick={onRetry} disabled={isProcessing} className="!px-6 !py-3 mt-6">
+            <RotateCcw className="w-4 h-4" aria-hidden /> Try again
+          </Button>
+        )}
         <Button onClick={approve} disabled={!valid} loading={isProcessing} className="!px-6 !py-3">
           {lab.ready ? 'Approve and run the next attempt'
             : lab.mode === 'build' ? 'Approve, set up and write the evaluation' : 'Approve, set up and measure the baseline'} <ArrowRight className="w-4 h-4" aria-hidden />

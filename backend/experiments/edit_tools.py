@@ -63,4 +63,7 @@ class EditTools:
         result = run_attempt(self.box, self.spec, quick=True)
         if result["error"]:
             return f"Failed at {result['stage']}: {result['error']}\n{result['log'][-OUTPUT_CHARS:]}"
+        if result.get("results") is not None:  # a results table (code written from scratch)
+            table = "; ".join(f"{name} {v['mean']:.4g}" for name, v in result["results"].items()) or "no results yet"
+            return f"Builds, checks pass, one run of the measure printed: {table}. The grader will run the full repeats."
         return f"Builds, checks pass, one measurement: {result['metric']:.4g}. The grader will run the full repeats."

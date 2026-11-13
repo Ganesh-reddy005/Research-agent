@@ -7,6 +7,7 @@ import functools
 import inspect
 from dataclasses import dataclass, field
 from langchain_core.tools import StructuredTool
+from langgraph.errors import GraphBubbleUp
 from langgraph.types import interrupt
 from experiments import notebook as nb
 from experiments.code_tools import CodeTools
@@ -109,16 +110,31 @@ def _functions(ctx: ToolContext) -> dict:
                 "quick_check": ctx.edits.quick_check} if ctx.edits else {})}
 
 
+def _failed(name: str, error: Exception) -> str:
+    return f"{name} failed: {type(error).__name__}: {error}. Work around it, or finish with what you have."
+
+
 def _limited(name: str, func, budget: ToolBudget):
-    """func behind the budget, with its signature kept so the model sees the real parameters."""
+    """func behind the budget, with its signature kept so the model sees the real parameters. A tool that
+    fails tells the agent, instead of ending its run; pauses for the user (ask_user) still propagate."""
     if inspect.iscoroutinefunction(func):
         @functools.wraps(func)
         async def call(*args, **kwargs):
-            return budget.take(name) or await func(*args, **kwargs)
+            try:
+                return budget.take(name) or await func(*args, **kwargs)
+            except GraphBubbleUp:
+                raise
+            except Exception as error:
+                return _failed(name, error)
     else:
         @functools.wraps(func)
         def call(*args, **kwargs):
-            return budget.take(name) or func(*args, **kwargs)
+            try:
+                return budget.take(name) or func(*args, **kwargs)
+            except GraphBubbleUp:
+                raise
+            except Exception as error:
+                return _failed(name, error)
     return call
 
 

@@ -7,7 +7,7 @@ import type {
 export type EventCallbacks = {
   onStep: (step: string, state: ResearchState, threadId: string) => void;
   onThought: (agent: string, token: string) => void;
-  onInterrupt: (threadId: string, next: string[], step?: string) => void;  // step: the agent that paused
+  onInterrupt: (threadId: string, next: string[], step?: string, question?: string) => void;  // step: the agent that paused
   onDone: (threadId: string) => void;
   onError: (error: string) => void;
   onAgentStart?: (agent: string, threadId: string) => void;
@@ -69,7 +69,7 @@ async function handleSSEResponse(
           } else if (currentEvent === 'error') {
             callbacks.onError(data.error);
           } else if (currentEvent === 'interrupt') {
-            callbacks.onInterrupt(data.thread_id, data.next, data.step);
+            callbacks.onInterrupt(data.thread_id, data.next, data.step, data.question);
           } else if (currentEvent === 'step') {
             callbacks.onStep(data.step, data.state, data.thread_id);
           } else if (currentEvent === 'thought') {
@@ -117,12 +117,13 @@ export type ResumeData =
   | { hypotheses: Hypothesis[]; setup?: string[]; spec?: BenchmarkSpec }
   | { decision: ExperimentDecision; direction?: string }
   | { url: string } | { scratch: true }
+  | { answer: string }
   | Record<string, never>;
 
 export async function resumeResearch(
   threadId: string,
   action: 'answer' | 'approve' | 'continue' | 'plan_experiments'
-    | 'launch_experiments' | 'choose_start' | 'approve_experiment_plan' | 'experiment_decision',
+    | 'launch_experiments' | 'choose_start' | 'approve_experiment_plan' | 'experiment_decision' | 'retry_plan' | 'answer_question',
   data: ResumeData,
   callbacks: EventCallbacks,
   signal?: AbortSignal

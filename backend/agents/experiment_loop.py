@@ -43,7 +43,7 @@ async def attempt_node(state):
     box = await asyncio.to_thread(DockerSandbox, workspace.path, image=lab["image"])
     try:
         ctx = ToolContext(code=code, target=brief["target"], goal=goal, notebook=notebook, edits=EditTools(code, box, spec))
-        task = f"{labs.brief_text(brief)}\n\nHypothesis to implement: {hypothesis['idea']}\nWhy: {hypothesis.get('why', '')}"
+        task = labs.code_task(brief, lab, hypothesis, notebook)
         result, usage = await run_phase("code", "experiment_code", CODE, task, ctx)
     finally:
         await asyncio.to_thread(box.close)
@@ -54,11 +54,14 @@ async def attempt_node(state):
               {"checks": {}, "metric": None, "spread": None, "stage": "code", "error": "no code was changed", "log": ""})
     entry = nb.record(notebook, goal, hypothesis["idea"], result.get("summary", ""), graded["checks"], graded["metric"],
                       spread=graded["spread"] or 0.0, cost_usd=cost_usd(usage),
-                      results=graded.get("results") if spec.read == RESULTS and not graded["error"] else
-                      ({} if spec.read == RESULTS else None))
+                      # an attempt that errored (no change, crash) has no results, so it can never read as "works"
+                      results=graded.get("results") if spec.read == RESULTS and not graded["error"] else None)
     entry.update(commit=commit, files=changed, stage=graded["stage"], error=graded["error"] or result.get("error", ""),
-                 log=graded["log"][-LOG_CHARS:], tokens=tokens(usage))
-    hypotheses = [{**h, "status": labs.DONE, "attempt": entry["n"]} if h["id"] == hypothesis["id"] else h for h in lab["hypotheses"]]
+                 log=graded["log"][-LOG_CHARS:], tokens=tokens(usage), trace=result.get("trace", []))
+    # From scratch, a step that failed stays pending: the next attempt retries it, knowing what went wrong
+    retry = lab.get("mode") == "build" and entry["verdict"] != nb.WORKS
+    hypotheses = [{**h, "status": labs.PENDING if retry else labs.DONE, "attempt": entry["n"]} if h["id"] == hypothesis["id"] else h
+                  for h in lab["hypotheses"]]
     best = commit if entry["verdict"] in (nb.IMPROVED, nb.WORKS) else lab["best_commit"]
     lab = spend({**lab, "hypotheses": hypotheses, "best_commit": best}, usage)
     return {"lab": lab, "notebook": notebook + [entry], "last_attempt": entry, "current_step": "exp_attempt"}
@@ -71,6 +74,8 @@ async def reflect_node(state):
     pending = [h["idea"] for h in lab.get("hypotheses", []) if h.get("status") == labs.PENDING]
     facts = (f"{labs.brief_text(brief)}\n\nLab notebook:\n{nb.render(notebook, goal)}\n\nThis attempt: {attempt.get('hypothesis')}"
              f"\nVerdict: {attempt.get('verdict')}; stage reached: {attempt.get('stage')}; error: {attempt.get('error') or 'none'}"
+             f"\nChecks (these ran; report them as they are): "
+             + (", ".join(f"{name} {'passed' if ok else 'FAILED'}" for name, ok in (attempt.get('checks') or {}).items()) or "none ran") +
              f"\nWhat the agent changed: {attempt.get('change') or 'n/a'}; files: {', '.join(attempt.get('files', [])) or 'none'}"
              f"\nLog tail:\n{attempt.get('log', '')[-800:]}\n\nIdeas still planned: {'; '.join(pending) or 'none'}"
              f"\nAttempts left: {labs.attempts_left(state)}"
