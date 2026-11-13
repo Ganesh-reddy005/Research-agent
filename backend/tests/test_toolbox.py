@@ -183,3 +183,41 @@ def test_the_trace_records_each_tool_call_and_survives_the_step_limit(code, monk
     assert result["error"].startswith("stopped after 3 steps")
     assert result["trace"][0] == {"tool": "find_definition", "args": "name=dot_product",
                                   "result": "src/kernel.c:1-3 function: static int dot_product(int n) {"}
+
+def scripted_model(answer_when):
+    """A model that keeps calling find_definition until answer_when(its input) is true, then answers JSON."""
+    from langchain_core.language_models.chat_models import BaseChatModel
+    from langchain_core.messages import AIMessage
+    from langchain_core.outputs import ChatGeneration, ChatResult
+    class Scripted(BaseChatModel):
+        seen: list = []
+        @property
+        def _llm_type(self): return "scripted"
+        def bind_tools(self, tools, **kw): return self
+        def _generate(self, messages, stop=None, run_manager=None, **kw):
+            self.seen.append(messages[-1].content)
+            if answer_when(messages[-1].content):
+                reply = AIMessage(content='{"summary": "a dot product kernel", "key_files": ["src/kernel.c"]}')
+            else:
+                reply = AIMessage(content="", tool_calls=[{"name": "find_definition", "args": {"name": "dot_product"}, "id": str(len(self.seen))}])
+            return ChatResult(generations=[ChatGeneration(message=reply)])
+    return Scripted()
+
+def run_understand(code, monkeypatch, model, steps=5):
+    import experiments.agent_runtime as runtime
+    monkeypatch.setattr(runtime, "get_llm", lambda *a, **k: model)
+    monkeypatch.setitem(runtime.MAX_STEPS, "understand", steps)
+    return asyncio.run(runtime.run_phase("understand", "x", "system", "task", ctx(code)))[0]
+
+def test_near_the_step_limit_the_agent_is_told_to_answer(code, monkeypatch):
+    model = scripted_model(lambda last: "turn(s) left" in str(last))
+    result = run_understand(code, monkeypatch, model)
+    assert result["summary"] == "a dot product kernel" and "error" not in result and "note" not in result
+    assert len(result["trace"]) == 3  # explored for three turns, then answered when warned two turns before the limit
+
+def test_out_of_steps_answers_from_what_was_found_instead_of_losing_it(code, monkeypatch):
+    model = scripted_model(lambda last: "out of steps" in str(last))  # ignores the warning
+    result = run_understand(code, monkeypatch, model)
+    assert result["key_files"] == ["src/kernel.c"] and "error" not in result
+    assert result["note"].startswith("answered at the 5-step limit")
+    assert result["trace"] and all(t["tool"] == "find_definition" for t in result["trace"])

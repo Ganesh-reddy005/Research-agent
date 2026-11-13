@@ -35,8 +35,14 @@ async def understand_node(state):
     lab = {**(state.get("lab") or {}), "mode": "improve", "frozen": True,  # protected files apply from the start
            "workspace": str(workspace.path), "base_commit": workspace.head(), "ready": False, "hypotheses": [],
            "env": labs.normalise_env(result),
-           "setup": [str(c) for c in result.get("setup") or [] if c], "spec": spec, "error": result.get("error", "")}
+           "setup": [str(c) for c in result.get("setup") or [] if c], "spec": spec, "error": result.get("error", ""),
+           "phases": {"understand": phase_record(result)}}
     return {"lab": spend(lab, usage), "notebook": [], "current_step": "exp_understand"}
+
+
+def phase_record(result: dict) -> dict:
+    """What a phase did, kept for the plan screen: its tool calls, and how it ended if not cleanly."""
+    return {"trace": result.get("trace", []), "note": str(result.get("note") or result.get("error") or "")}
 
 
 async def plan_node(state):
@@ -51,7 +57,8 @@ async def plan_node(state):
     result, usage = await run_phase("plan", "experiment_plan", PLAN, labs.plan_task(brief, lab, notebook, direction), ctx)
     hypotheses = labs.normalise_hypotheses(result.get("hypotheses"), lab.get("hypotheses", []))
     lab = {**lab, "hypotheses": hypotheses, "plan_notes": str(result.get("notes", "")), "approved": False,
-           "error": result.get("error", "") if not hypotheses else ""}
+           "error": result.get("error", "") if not hypotheses else "",
+           "phases": {**(lab.get("phases") or {}), "plan": phase_record(result)}}
     return {"lab": spend(lab, usage), "experiment_decision": {}, "current_step": "exp_plan"}
 
 

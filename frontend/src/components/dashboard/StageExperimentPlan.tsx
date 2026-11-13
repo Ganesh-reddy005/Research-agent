@@ -5,6 +5,7 @@ import { ArrowRight, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { BenchmarkSpec, Hypothesis, Lab } from '@/lib/types';
 import { Button, SectionLabel, StageHeader, inputClass } from './ui';
 import BenchmarkFields from './BenchmarkFields';
+import AgentTrace from './AgentTrace';
 
 export default function StageExperimentPlan({ lab, onApprove, onRetry, isProcessing }: {
   lab: Lab;
@@ -17,6 +18,9 @@ export default function StageExperimentPlan({ lab, onApprove, onRetry, isProcess
   const [setup, setSetup] = useState(lab.setup);
   const [spec, setSpec] = useState(lab.spec);
   const update = (i: number, patch: Partial<Hypothesis>) => setIdeas(ideas.map((h, j) => (j === i ? { ...h, ...patch } : h)));
+  // Reading the code can end at its step limit; say so (the plan's own failure is lab.error)
+  const notes = [lab.phases?.understand?.note && `Reading the code: ${lab.phases.understand.note}`,
+                 lab.phases?.plan?.note && !lab.error && `Planning: ${lab.phases.plan.note}`].filter((n): n is string => !!n);
   const valid = ideas.some(h => h.idea.trim()) && (lab.ready || spec.measure.trim());
 
   const approve = () => onApprove({
@@ -40,9 +44,10 @@ export default function StageExperimentPlan({ lab, onApprove, onRetry, isProcess
           )}
         </section>
       )}
-      {(lab.error || (lab.env?.questions?.length ?? 0) > 0) && (
+      {(lab.error || notes.length > 0 || (lab.env?.questions?.length ?? 0) > 0) && (
         <section className="p-4 border border-mistral-orange/40 bg-mistral-orange/5 text-sm text-mistral-black/85 space-y-1">
           {lab.error && <p>{lab.error}</p>}
+          {notes.map(n => <p key={n}>{n}</p>)}
           {lab.env?.questions?.map(q => <p key={q}>Open question: {q}</p>)}
         </section>
       )}
@@ -71,6 +76,10 @@ export default function StageExperimentPlan({ lab, onApprove, onRetry, isProcess
         </Button>
       </section>
 
+      <div className="space-y-2">
+        <AgentTrace title="How Lume read the code" trace={lab.phases?.understand?.trace} />
+        <AgentTrace title="How Lume planned" trace={lab.phases?.plan?.trace} />
+      </div>
       <BenchmarkFields setup={setup} spec={spec} locked={lab.ready} onChange={(s, b) => { setSetup(s); setSpec(b); }} />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-end pt-6 border-t border-mistral-black/10">

@@ -109,8 +109,13 @@ export type Attempt = {
   stage?: string;
   error?: string;
   log?: string;
-  trace?: { tool: string; args: string; result: string }[];  // what the agent did, call by call
+  trace?: TraceStep[];  // what the agent did, call by call
 };
+
+export type TraceStep = { tool: string; args: string; result: string };
+
+/** How one phase before the plan went: its tool calls, and a note if it hit the step limit or failed. */
+export type PhaseRecord = { trace: TraceStep[]; note: string };
 
 export type ExperimentReport = {
   findings?: string;
@@ -143,6 +148,7 @@ export type Lab = {
   hypotheses: Hypothesis[];
   plan_notes?: string;
   error?: string;
+  phases?: { understand?: PhaseRecord; plan?: PhaseRecord };
   report?: ExperimentReport;
   cost_usd?: number;
   tokens?: number;
