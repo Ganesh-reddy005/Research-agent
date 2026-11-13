@@ -2,7 +2,7 @@
 
 **Lume** takes a research idea from question to paper. It scopes the question with you, plans the paper, searches Semantic Scholar, arXiv, OpenAlex, CORE, the web and your own PDFs, and then writes an IEEE-style draft. Every citation points to a source it actually retrieved. Built with **LangGraph**, **FastAPI** and **Next.js**.
 
-Lume is built for computer-science researchers first. The next major capability on the roadmap is **running experiments**: the agent writes the code, runs it in an isolated sandbox and puts the real results and figures into the paper.
+Lume is built for computer-science researchers first. It can also **run experiments**: a coding agent starts from existing code (a repository you name, or open-source code it finds) or writes it from scratch, runs attempts in an isolated CPU sandbox, reports to you after every attempt, and puts the measured results into the paper.
 
 ![Lume](frontend/public/hero_img.png)
 
@@ -13,7 +13,7 @@ A multi-agent pipeline with checkpoints where you stay in control:
 
 1. **Clarify:** Lume asks a few questions to pin down scope, baselines and what counts as a result.
 2. **Plan:** you review the research plan, edit, add or remove sections, and approve it before anything is searched.
-3. **Gather sources:** parallel searches across Semantic Scholar, arXiv, OpenAlex, CORE, the web (Tavily) and your private library. The top sources are read in full and indexed in Qdrant.
+3. **Gather sources:** parallel searches across Semantic Scholar, arXiv, OpenAlex, CORE, the web (Tavily) and your private library. The top sources are read in full and indexed in Qdrant. When a publisher refuses (403), Lume tries other legal routes to the same paper before falling back to its abstract: the arXiv PDF, an open-access PDF from Semantic Scholar or OpenAlex, Unpaywall (with `CONTACT_EMAIL`), then Tavily Extract. A page under 3,000 characters doesn't count as the full text.
 4. **Review:** read a summary and ask questions about the sources before Lume writes.
 5. **Write and verify:**
    - Each section is written from evidence passages labelled with their reference numbers.
@@ -53,8 +53,9 @@ A chat for exploring ideas before committing to a project:
 After the sources are reviewed, choose **Plan experiments first** instead of writing the draft straight away.
 - **Brief:** Lume drafts the objective, metric, checks that must still pass and what must not change; you edit it.
 - **Starting point:** a repository you name, or existing open-source code Lume finds (you confirm before it is read), or code written from scratch when nothing fits.
-- **Plan:** Lume reads the code (a tree-sitter code graph, not embeddings) and proposes setup, build, checks, the measure command, protected files and ranked ideas. Nothing runs until you approve.
-- **Attempts:** each one edits code in a Docker sandbox with no network, then a fresh sandbox grades it: build, checks, then repeated measurements (hyperfine for timings). After every attempt you see a report and decide: continue, change the plan, or stop.
+- **Plan:** Lume reads the code (a tree-sitter code graph, not embeddings) and proposes setup, build, checks, the measure command, protected files and ranked ideas, checked against the project's issues and pull requests and the literature. Setup is the only step with network, so it also fetches models and data the benchmark needs. Nothing runs until you approve, and you can edit every field. The plan screen shows each tool call the agent made.
+- **Agent tools:** repo map, outline, find definition and references, ripgrep search, file reads, literature and GitHub search, and `ask_user` when only you can answer. Each phase has a turn limit; near it the agent is told to answer, and if it still runs out it answers from what it found instead of losing the work.
+- **Attempts:** each one edits code in a Docker sandbox with no network, then a fresh sandbox grades it: build, checks, then repeated measurements (hyperfine for timings). After every attempt you see a report and decide: continue, change the plan (your note reaches the agent), or stop. A failed command reports its own error, and exit codes 126/127 are spelled out (not executable, command not found).
 - **Honest results:** improving existing code is compared with its baseline; code written from scratch shows a results table (variant × metric, mean ± spread), with the evaluation written first and frozen once you review it. Protected files can't be changed, and failures are reported too.
 - **Download:** the code as a zip with `LUME_RUN.md` (how to reproduce it) and, for existing code, `changes.diff`. The paper is written from the measured results.
 
@@ -62,14 +63,14 @@ After the sources are reviewed, choose **Plan experiments first** instead of wri
 - **Live progress:** the current agent with an elapsed timer, real progress messages ("Writing section 3 of 6: …"), the paper streaming as it's written, and a readable activity log.
 - **Private library:** upload PDFs, which are searched alongside public sources in every project.
 - **History:** every research project and brainstorm is saved and reopens where you left off. Sessions are persisted with LangGraph's Postgres checkpointer.
-- **Resilience:** transient LLM failures (dropped streams, 5xx errors, rate limits) are retried automatically.
+- **Resilience:** transient LLM failures (dropped streams, 5xx errors, rate limits) are retried automatically, and Qdrant writes go in batches that are retried on connection resets and timeouts. A stopped or failed run shows the step it continues from and reruns only that step.
 
 ## Roadmap
 
 | Status | Capability |
 |---|---|
 | Next | **Grounded citations:** check that each cited passage actually supports its sentence; click a citation to see the exact passage; move the paper writer onto hybrid retrieval |
-| In progress | **Experiments:** the CPU coding agent above runs locally in Docker. Next: several repositories per experiment, figures from runs, and a cloud GPU sandbox for training |
+| In progress | **Experiments:** the CPU coding agent above runs locally in Docker. Next: starting-point cards with stars, license and activity, several repositories per experiment, figures from runs, and a cloud GPU sandbox for training |
 | Planned | **More autonomy:** gap-driven re-search, parallel section writers, critic-driven revision loops, budget limits |
 | Planned | **Judge model:** a probabilistic verifier for citation checks, reranking and rubric-based critique |
 
@@ -88,6 +89,18 @@ graph TD
     Retriever --> Indexer
     Indexer --> Assistance
     Assistance -.->|you review and ask questions| Synthesis
+    Assistance -.->|plan experiments first| Brief[Experiment brief]
+    Brief -.->|you edit the brief| Start{Starting point}
+    Start -->|a repository| Understand[Read the code]
+    Start -.->|you confirm, or from scratch| Design
+    Understand --> ExpPlan[Experiment plan]
+    Design --> ExpPlan
+    ExpPlan -.->|you approve| Setup[Setup and baseline]
+    Setup --> Report
+    Attempt --> Report[Report]
+    Report -.->|continue| Attempt
+    Report -.->|change plan| ExpPlan
+    Report -.->|stop| Synthesis
     Synthesis --> Writer
     Writer --> Critic
     Critic --> Refinement
@@ -121,6 +134,10 @@ A small agent loop (`graph/brainstorm.py`): the model either answers or calls se
 │   ├── repo/            # repository ingestion: github (provider), filetypes, scanner,
 │   │                    # profiler (LLM project profile), indexing (code chunks → Qdrant)
 │   ├── evidence/        # passages the writer cites: literature + project code (next: experiment runs)
+│   ├── experiments/     # coding agent: brief, lab state, prompts, agent runtime and tools,
+│   │                    # harness (build, checks, measure), notebook, git workspace, zip package
+│   ├── codegraph/       # tree-sitter code graph and PageRank repo map
+│   ├── sandbox/         # Docker sandbox (no network after setup, capped resources) + Dockerfile
 │   ├── api/
 │   │   ├── main.py      # app, lifespan (Postgres checkpointer), routers
 │   │   └── routers/     # research, chat (RAG), brainstorm, library, sessions
@@ -143,7 +160,9 @@ A small agent loop (`graph/brainstorm.py`): the model either answers or calls se
 | Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/research/start` | Start a research project from a `topic` or a `repo_url`, with optional `pages` (SSE) |
-| POST | `/api/research/resume` | Answer questions, approve or edit the plan, or continue (SSE) |
+| POST | `/api/research/resume` | Answer questions, approve or edit the plan, continue; for experiments: choose the starting point, approve the plan, retry it, decide after a report, answer the agent's question (SSE) |
+| PUT | `/api/research/{thread_id}/brief` | Save an edited experiment brief |
+| GET | `/api/research/{thread_id}/code` | Download the experiment code as a zip |
 | GET | `/api/research/{thread_id}` | Restore a saved session |
 | POST | `/api/research/chat` | Ask about a session's sources (hybrid RAG) |
 | POST | `/api/research/brainstorm` | Brainstorm message with live search (SSE) |
@@ -183,7 +202,8 @@ Key variables in `backend/.env`:
 |---|---|
 | `OPENROUTER_API_KEY` | LLMs and embeddings |
 | `TAVILY_API_KEY` | Web search |
-| `OPENALEX_API_KEY`, `CORE_API_KEY`, `CONTACT_EMAIL` | Optional: academic search (CORE is skipped without a key) |
+| `OPENALEX_API_KEY`, `CORE_API_KEY` | Optional: academic search (CORE is skipped without a key) |
+| `CONTACT_EMAIL` | Recommended: OpenAlex's polite pool, and Unpaywall (finds legal free copies of paywalled papers; skipped without it) |
 | `SEMANTIC_SCHOLAR_API_KEY` | Recommended: Semantic Scholar finds well-known papers best, but anonymous access is usually rate limited. Without a key, Lume skips it for 10 minutes after it refuses. [Get a free key](https://www.semanticscholar.org/product/api#api-key-form) |
 | `DATABASE_URL` | Supabase Postgres, used by the LangGraph checkpointer |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Auth checks, sessions and library tables |
@@ -191,6 +211,8 @@ Key variables in `backend/.env`:
 | `GITHUB_TOKEN` | Optional: raises GitHub's API limit from 60 to 5,000 requests an hour for repository papers |
 | `DEFAULT_MODEL` and `*_MODEL` | Model per agent (see below) |
 | `EMBEDDING_MODEL` | Embedding model; the vector size is detected automatically |
+| `EXPERIMENT_MODEL`, `CODING_MODEL` | Coding agent: reading code, planning and reports, and the code edits (must support tool calling) |
+| `SANDBOX_CPUS`, `SANDBOX_MEMORY`, `LUME_WORKSPACES` | Optional: sandbox limits (default 5 cores, 4 GB) and where target code is cloned |
 
 **Choosing models:**
 - Each agent reads its own variable: `CLARIFICATION_MODEL`, `PLANNING_MODEL`, `RETRIEVAL_MODEL` (also used for query rewriting and reranking), `ASSISTANCE_MODEL`, `SYNTHESIS_MODEL`, `WRITING_MODEL`, `CRITIC_MODEL`, `REFINEMENT_MODEL`, `BRAINSTORM_MODEL` (must support tool calling), `CHAT_MODEL` and `REPO_ANALYSIS_MODEL` (reads ~30K characters of code; use a strong model).
@@ -238,6 +260,8 @@ One sandbox test runs real containers when Docker is running and the base image 
   on conflict (id) do nothing;
   ```
 - **Repository analysis comes back generic:** the profile fell back to the repo's name and description because the model's JSON was cut off. Reasoning models spend part of their output budget on thinking, so set `REPO_ANALYSIS_MODEL` to a strong non-reasoning model.
+- **Experiment plan stays disabled ("Add at least one idea and a measure command"):** approval needs at least one idea and a measure command. If reading the code ended without them, press **Try again**, or fill the fields yourself: the measure is a shell command (e.g. `./build/bench --model m.gguf`), not a description. Keep the brief to one metric the code can print.
+- **Baseline failed with exit code 127:** a program in the build, check or measure command doesn't exist in the sandbox. The report quotes the command. Add what it needs to Setup, or fix the command.
 - **Changed `EMBEDDING_MODEL`:** existing Qdrant collections keep their old vector size. Delete them, or switch back to the original model.
 
 ## License
